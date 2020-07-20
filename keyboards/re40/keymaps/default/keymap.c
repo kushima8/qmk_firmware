@@ -18,40 +18,52 @@
 enum layer_number {
     _FIRST = 0,
     _SECOND,
-    _FN
+    _LOWER,
+    _RAISE,
+    _ADJUST
 };
 
-enum custom_keycodes {
-  RGBRST = SAFE_RANGE
-};
-
-#define FIRST  TO(_FIRST)
+#define FIRST TO(_FIRST)
 #define SECOND TO(_SECOND)
-#define KC_FN  MO(_FN)
+#define LOWER MO(_LOWER)
+#define RAISE MO(_RAISE)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_FIRST] = LAYOUT(
-        KC_ESC,     KC_1,    KC_2,      KC_3,   KC_4,   KC_5,   KC_6,                           KC_7,   KC_8,   KC_9,       KC_0,   KC_MINS,    KC_EQL,     KC_BSLS,    KC_GRV,
-        KC_TAB,     KC_Q,    KC_W,      KC_E,   KC_R,   KC_T,                                   KC_Y,   KC_U,   KC_I,       KC_O,   KC_P,       KC_LBRC,    KC_RBRC,    KC_BSPC,
-        KC_LCTL,    KC_A,    KC_S,      KC_D,   KC_F,   KC_G,                                   KC_H,   KC_J,   KC_K,       KC_L,   KC_SCLN,    KC_QUOT,    KC_ENT,
-        KC_LSFT,    KC_Z,    KC_X,      KC_C,   KC_V,   KC_B,                                   KC_N,   KC_M,   KC_COMM,    KC_DOT, KC_SLSH,    KC_RSFT,    KC_FN,
-        KC_LCTL,    KC_FN,   KC_LALT,           KC_SPC, KC_SPC,          SECOND,      SECOND,   KC_SPC, KC_SPC,             KC_RALT,KC_RGUI
+        KC_ESC,     KC_Q, KC_W, KC_E,   KC_R,   KC_T,                           KC_Y,   KC_U,   KC_I,   KC_O,   KC_P,   KC_BSPC,
+        KC_LCTL,    KC_A, KC_S, KC_D,   KC_F,   KC_G,                           KC_H,   KC_J,   KC_K,   KC_L,   KC_SCLN,KC_QUOT,
+        KC_LSFT,    KC_Z, KC_X, KC_C,   KC_V,   KC_B,                           KC_N,   KC_M,   KC_COMM,KC_DOT, KC_SLSH,KC_RSFT,
+                                        LOWER,  KC_SPC, SECOND,         SECOND, KC_ENT, RAISE
     ),
     [_SECOND] = LAYOUT(
-        KC_ESC,     KC_1,    KC_2,      KC_3,   KC_4,   KC_5,   KC_6,                           KC_7,   KC_8,   KC_9,       KC_0,   KC_MINS,    KC_EQL,     KC_BSLS,    KC_GRV,
-        KC_TAB,     KC_Q,    KC_W,      KC_E,   KC_R,   KC_T,                                   KC_Y,   KC_U,   KC_I,       KC_O,   KC_P,       KC_LBRC,    KC_RBRC,    KC_BSPC,
-        KC_LCTL,    KC_A,    KC_S,      KC_D,   KC_F,   KC_G,                                   KC_H,   KC_J,   KC_K,       KC_L,   KC_SCLN,    KC_QUOT,    KC_ENT,
-        KC_LSFT,    KC_Z,    KC_X,      KC_C,   KC_V,   KC_B,                                   KC_N,   KC_M,   KC_COMM,    KC_DOT, KC_SLSH,    KC_RSFT,    KC_FN,
-        KC_LCTL,    KC_FN,   KC_LALT,           KC_SPC, KC_SPC,          FIRST,        FIRST,   KC_SPC, KC_SPC,             KC_RALT,KC_RGUI
+        KC_ESC,     KC_Q, KC_W, KC_E,   KC_R,   KC_T,                           KC_Y,   KC_U,   KC_I,   KC_O,   KC_P,   KC_BSPC,
+        KC_LCTL,    KC_A, KC_S, KC_D,   KC_F,   KC_G,                           KC_H,   KC_J,   KC_K,   KC_L,   KC_SCLN,KC_QUOT,
+        KC_LSFT,    KC_Z, KC_X, KC_C,   KC_V,   KC_B,                           KC_N,   KC_M,   KC_COMM,KC_DOT, KC_SLSH,KC_RSFT,
+                                        LOWER,  KC_SPC, FIRST,           FIRST, KC_ENT, RAISE
     ),
-    [_FN] = LAYOUT(
-        _______,    KC_F1,   KC_F2,     KC_F3,  KC_F4,  KC_F5,  KC_F6,                          KC_F7,  KC_F8,  KC_F9,      KC_F10, KC_F11,     KC_F12,     KC_INS,     KC_DEL,
-        KC_CAPS,    RGB_TOG, RGBRST,    RGB_HUI,RGB_SAI,RGB_VAI,                                _______,_______,KC_PSCR,    KC_SLCK,KC_PAUS,    KC_UP,      _______,    _______,
-        _______,    _______, RGB_MOD,   RGB_HUD,RGB_SAD,RGB_VAD,                                _______,_______,KC_HOME,    KC_PGUP,KC_LEFT,    KC_RGHT,    _______,
-        _______,    _______, _______,   _______,_______,_______,                                _______,_______,KC_END,     KC_PGDN,KC_DOWN,    _______,    _______,
-        _______,    _______, _______,           _______,_______,         _______,      _______, _______,_______,            _______,_______
-    )
+    [_LOWER] = LAYOUT(
+        KC_ESC,     KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                   KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_DEL,
+        KC_LCTL,    _______, _______, _______, _______, _______,                KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, _______, _______,
+        KC_LSFT,    _______, _______, _______, KC_LGUI, KC_LALT,                _______, _______, _______, _______, _______, KC_RSFT,
+                                               _______, KC_SPC,  KC_1,    KC_2, KC_ENT,  _______
+    ),
+    [_RAISE] = LAYOUT(
+        KC_ESC,     KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_TILD,
+        KC_TAB,     _______, RGB_TOG,  RGB_HUI, RGB_SAI, RGB_VAI,                _______, KC_MINS, KC_EQL,  KC_BSLS, KC_LCBR, KC_RCBR,
+        KC_LSFT,    _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD,                _______, _______, _______, _______, _______, KC_RSFT,
+                                               _______, KC_SPC,  KC_3,    KC_4, KC_ENT,  _______
+    ),
+    [_ADJUST] = LAYOUT(
+        KC_ESC,     KC_F1,KC_F2,KC_F3,  KC_F4,   KC_F5,                          KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,
+        KC_CAPS,    _______, _______, _______, _______, _______,                 _______, _______, _______, _______, _______, KC_F12,
+        KC_LSFT,    _______, _______, _______, _______, _______,                 _______, _______, _______, _______, _______, KC_RSFT,
+                                               _______, KC_SPC,  KC_5,     KC_6, KC_ENT,  _______
+    ),
 };
+
+uint32_t layer_state_set_user(uint32_t state) {
+    return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
+}
 
 #ifdef OLED_DRIVER_ENABLE
 
@@ -83,8 +95,14 @@ static void print_status_narrow(void) {
         case _SECOND:
             oled_write_ln_P(PSTR("2"), false);
             break;
-        case _FN:
-            oled_write_ln_P(PSTR("FN"), false);
+        case _LOWER:
+            oled_write_ln_P(PSTR("↓"), false);
+            break;
+        case _RAISE:
+            oled_write_ln_P(PSTR("↑"), false);
+            break;
+        case _ADJUST:
+            oled_write_ln_P(PSTR("-"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);
@@ -94,13 +112,19 @@ static void print_status_narrow(void) {
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _FIRST:
-            oled_write_P(PSTR("1st\n"), false);
+            oled_write_P(PSTR("1st"), false);
             break;
         case _SECOND:
-            oled_write_P(PSTR("2nd\n"), false);
+            oled_write_P(PSTR("2nd"), false);
             break;
-        case _FN:
-            oled_write_ln_P(PSTR("FN\n"), false);
+        case _LOWER:
+            oled_write_P(PSTR("Low"), false);
+            break;
+        case _RAISE:
+            oled_write_P(PSTR("Rai"), false);
+            break;
+        case _ADJUST:
+            oled_write_P(PSTR("Adj"), false);
             break;
         default:
             oled_write_ln_P(PSTR("Undef"), false);
@@ -135,16 +159,16 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
                 if (clockwise) {
-                    tap_code(KC_1);
+                    tap_code(KC_UP);
                 } else {
-                    tap_code(KC_2);
+                    tap_code(KC_DOWN);
                 }
                 break;
             case _SECOND:
                 if (clockwise) {
-                    tap_code(KC_8);
+                    tap_code(KC_7);
                 } else {
-                    tap_code(KC_9);
+                    tap_code(KC_8);
                 }
                 break;
             default:
@@ -154,16 +178,16 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
                 if (clockwise) {
-                    tap_code(KC_4);
+                    tap_code(KC_DOWN);
                 } else {
-                    tap_code(KC_3);
+                    tap_code(KC_UP);
                 }
                 break;
             case _SECOND:
                 if (clockwise) {
-                    tap_code(KC_7);
+                    tap_code(KC_9);
                 } else {
-                    tap_code(KC_6);
+                    tap_code(KC_0);
                 }
                 break;
             default:
