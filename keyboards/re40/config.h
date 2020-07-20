@@ -48,6 +48,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* COL2ROW, ROW2COL*/
 #define DIODE_DIRECTION COL2ROW
 
+#define MASTER_RIGHT
+
+#define OLED_FONT_H "./lib/glcdfont.c"
+
 /* Rotary encoder define*/
 #define ENCODERS_PAD_A { C6 }
 #define ENCODERS_PAD_B { B6 }
@@ -256,5 +260,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* Bootmagic Lite key configuration */
 // #define BOOTMAGIC_LITE_ROW 0
 // #define BOOTMAGIC_LITE_COLUMN 0
-
-#define OLED_FONT_H "./lib/glcdfont.c"
