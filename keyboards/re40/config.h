@@ -73,7 +73,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef RGB_DI_PIN
 #define RGBLED_NUM 40
 #define RGBLED_SPLIT { 20, 20 }
-#define RGBLIGHT_ANIMATIONS
+#define RGBLIGHT_EFFECT_STATIC_GRADIENT
+//#define RGBLIGHT_ANIMATIONS
 //   #define RGBLIGHT_HUE_STEP 8
 //   #define RGBLIGHT_SAT_STEP 8
 //   #define RGBLIGHT_VAL_STEP 8

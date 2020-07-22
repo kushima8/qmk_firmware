@@ -19,49 +19,82 @@
 enum layer_number {
     _FIRST = 0,
     _SECOND,
+    _TENKEY,
+    _VIM_INS,
+    _VIM_NML,
     _LOWER,
     _RAISE,
     _ADJUST
 };
 
-#define FIRST TO(_FIRST)
-#define SECOND TO(_SECOND)
-#define LOWER MO(_LOWER)
-#define RAISE MO(_RAISE)
+enum custom_keycodes {
+    VIM_A = SAFE_RANGE,
+    VIM_C
+};
 
-/* Hold=>GUI, Tap=>ESC */
-#define GUI_ESC LGUI_T(KC_ESC)
+#define FIRST  TO(_FIRST)
+#define SECOND TO(_SECOND)
+#define LOWER  MO(_LOWER)
+#define RAISE  MO(_RAISE)
+#define TENKEY TO(_TENKEY)
+#define VIM_NML TO(_VIM_NML)
+#define VIM_INS TO(_VIM_INS)
+
+#define GUI_ESC LGUI_T(KC_ESC) // Hold=>GUI, Tap=>ESC
+#define GUI_GRV LGUI_T(KC_GRV) // Hold=>GUI, Tap=>GRV
+
+/* vim */
+#define VIM_B C(KC_LEFT)
+#define VIM_W C(KC_RGHT)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_FIRST] = LAYOUT(
         GUI_ESC,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, KC_BSPC,
-        KC_LCTL,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
-        KC_LALT,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
+        KC_LALT,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
+        KC_LCTL,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
                                               LOWER,  KC_SPC, KC_MUTE,  SECOND,  KC_ENT,   RAISE
     ),
     [_SECOND] = LAYOUT(
         GUI_ESC,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, KC_BSPC,
-        KC_LCTL,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
-        KC_LSFT,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RALT,
-                                              LOWER,  KC_SPC, _______,   FIRST,  KC_ENT,   RAISE
+        KC_LSFT,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
+        KC_LCTL,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RALT,
+                                              LOWER,  KC_SPC, XXXXXXX,   FIRST,  KC_ENT,   RAISE
+    ),
+    [_TENKEY] = LAYOUT(
+          FIRST, XXXXXXX,   KC_UP, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_7,    KC_8,    KC_9, KC_MINS, KC_SLSH, XXXXXXX,
+        XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, XXXXXXX, XXXXXXX,                      KC_4,    KC_5,    KC_6, KC_PPLS, KC_PAST, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      KC_1,    KC_2,    KC_3,  KC_DOT, JP_BSLS, XXXXXXX,
+                                              LOWER,  KC_SPC, XXXXXXX,   FIRST,  KC_ENT,   RAISE
+    ),
+    [_VIM_INS] = LAYOUT(
+        VIM_NML,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, KC_BSPC,
+        KC_LALT,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
+        KC_LCTL,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
+                                              LOWER,  KC_SPC, XXXXXXX,   FIRST,  KC_ENT,   RAISE
+    ),
+    [_VIM_NML] = LAYOUT(
+        XXXXXXX, XXXXXXX,   VIM_W,    KC_Y, XXXXXXX, XXXXXXX,                 C(KC_INS), C(KC_Z), VIM_INS, XXXXXXX,S(KC_INS),KC_LEFT,
+        XXXXXXX,   VIM_A, XXXXXXX,S(KC_DEL),XXXXXXX, XXXXXXX,                   KC_LEFT, KC_DOWN,   KC_UP, KC_RGHT, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX,  KC_DEL,   VIM_C,   FIRST,   VIM_B,                     KC_F3, XXXXXXX, XXXXXXX, XXXXXXX,   KC_F3, XXXXXXX,
+                                            XXXXXXX, KC_RGHT, XXXXXXX,   FIRST,  KC_ENT, XXXXXXX
     ),
     [_LOWER] = LAYOUT(
-        KC_LGUI, _______, KC_UP,   _______, _______, _______,                      KC_7,    KC_8,    KC_9, KC_MINS, KC_SLSH,  KC_DEL,
-        _______, KC_LEFT, KC_DOWN, KC_RGHT, _______, _______,                      KC_4,    KC_5,    KC_6, KC_PPLS, KC_PAST, _______,
-        _______, _______, _______, _______, _______, _______,                      KC_1,    KC_2,    KC_3,  KC_DOT, KC_COMM, _______,
-                                            _______,  KC_TAB, _______, _______,    KC_0, _______
+        KC_LGUI,    KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                      KC_6,    KC_7,    KC_8,    KC_9,    KC_0,  KC_DEL,
+        _______,  KC_TAB, _______, _______, _______, _______,                   KC_LEFT, KC_DOWN,   KC_UP, KC_RGHT, _______, _______,
+        _______, _______, _______, _______, VIM_NML, _______,                   _______, _______, _______, _______, JP_BSLS, _______,
+                                            _______,  KC_TAB, _______, _______, _______, _______
     ),
     [_RAISE] = LAYOUT(
-        _______, JP_EXLM, JP_AT,   JP_HASH, JP_DLR,  JP_PERC,                   JP_CIRC, JP_AMPR, JP_ASTR, JP_LPRN, JP_RPRN, JP_TILD,
-        _______, _______, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI,                   _______, JP_MINS, JP_PLUS,  JP_EQL, JP_LCBR, JP_RCBR,
-        _______, _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD,                   _______, _______, _______, _______, JP_BSLS, _______, // TODO: JP_BSLS does not work well.
-                                            _______, _______, _______, _______,  KC_APP, _______
+        GUI_GRV, JP_EXLM,   JP_AT, JP_HASH, JP_DLR,  JP_PERC,                   JP_CIRC, JP_AMPR, JP_ASTR, JP_LPRN, JP_RPRN,  JP_GRV,
+        _______, _______, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI,                   _______, JP_MINS, JP_PLUS,  JP_EQL, JP_LBRC, JP_RBRC,
+        _______, _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD,                    TENKEY, _______, _______, _______, JP_UNDS, _______,
+                                            _______,  KC_TAB, _______, _______,  KC_APP, _______
     ),
     [_ADJUST] = LAYOUT(
-        _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,     KC_F5,                     KC_F6,   KC_F7,   KC_F8,   KC_F9,  KC_F10,  KC_F11,
+        _______,   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,                     KC_F6,   KC_F7,   KC_F8,   KC_F9,  KC_F10,  KC_F11,
         KC_CAPS, _______, _______, _______, _______, _______,                   _______, _______, _______, _______, _______,  KC_F12,
-        _______, _______, _______, _______, _______, _______,                   _______, _______, _______, _______, _______, _______,
-                                            _______,  KC_SPC, _______, _______,  KC_ENT, _______
+        _______, _______, _______, _______, _______, _______,                   _______, _______, _______, _______, JP_PIPE, _______,
+                                            _______, _______, _______, _______,  KC_ENT, _______
     ),
 };
 
@@ -78,7 +111,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_LALT);
                 is_alt_pressed = false;
             }
-            break;
+            return true;
+        case VIM_A:
+            tap_code(KC_RGHT);
+            layer_move(_VIM_INS);
+            return false;
+        case VIM_C:
+            tap_code(KC_DEL);
+            layer_move(_VIM_INS);
+            return false;
     }
     return true;
 }
@@ -106,50 +147,40 @@ static void print_status_narrow(void) {
         oled_write_ln_P(PSTR("WIN"), false);
     }
 
-    switch (get_highest_layer(default_layer_state)) {
-        case _FIRST:
-            oled_write_ln_P(PSTR("1"), false);
-            break;
-        case _SECOND:
-            oled_write_ln_P(PSTR("2"), false);
-            break;
-        case _LOWER:
-            oled_write_ln_P(PSTR("↓"), false);
-            break;
-        case _RAISE:
-            oled_write_ln_P(PSTR("↑"), false);
-            break;
-        case _ADJUST:
-            oled_write_ln_P(PSTR("-"), false);
-            break;
-        default:
-            oled_write_P(PSTR("Undef"), false);
-    }
-    oled_write_P(PSTR("\n\n"), false);
+    oled_write_ln_P(PSTR(""), false);
     // Print current layer
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _FIRST:
-            oled_write_P(PSTR("1st"), false);
+            oled_write_ln_P(PSTR("1st"), false);
             break;
         case _SECOND:
-            oled_write_P(PSTR("2nd"), false);
+            oled_write_ln_P(PSTR("2nd"), false);
             break;
         case _LOWER:
-            oled_write_P(PSTR("Low"), false);
+            oled_write_ln_P(PSTR("Low"), false);
             break;
         case _RAISE:
-            oled_write_P(PSTR("Rai"), false);
+            oled_write_ln_P(PSTR("Rai"), false);
             break;
         case _ADJUST:
-            oled_write_P(PSTR("Adj"), false);
+            oled_write_ln_P(PSTR("Adj"), false);
+            break;
+        case _TENKEY:
+            oled_write_P(PSTR("10Key"), false);
+            break;
+        case _VIM_NML:
+            oled_write_P(PSTR("Vim-N"), false);
+            break;
+        case _VIM_INS:
+            oled_write_P(PSTR("Vim-I"), false);
             break;
         default:
-            oled_write_ln_P(PSTR("Undef"), false);
+            oled_write_P(PSTR("Undef"), false);
     }
-    oled_write_P(PSTR("\n\n"), false);
+    oled_write_ln_P(PSTR(""), false);
     led_t led_usb_state = host_keyboard_led_state();
-    oled_write_ln_P(PSTR("CPSLK"), led_usb_state.caps_lock);
+    oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
