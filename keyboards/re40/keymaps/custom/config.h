@@ -16,4 +16,5 @@
 
 #pragma once
 
-// place overrides here
+#define TAPPING_TERM 200
+#define RGBLIGHT_SLEEP = yes
