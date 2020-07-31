@@ -1,4 +1,4 @@
-/* Copyright 2020 kushima8
+/* Copyright 2019 kushima8
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,10 +96,10 @@ static void print_status_narrow(void) {
             oled_write_ln_P(PSTR("2"), false);
             break;
         case _LOWER:
-            oled_write_ln_P(PSTR("â†“"), false);
+            oled_write_ln_P(PSTR("↓"), false);
             break;
         case _RAISE:
-            oled_write_ln_P(PSTR("â†‘"), false);
+            oled_write_ln_P(PSTR("↑"), false);
             break;
         case _ADJUST:
             oled_write_ln_P(PSTR("-"), false);

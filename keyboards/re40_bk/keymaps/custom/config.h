@@ -1,4 +1,5 @@
 /* Copyright 2020 kushima8
+/* Copyright 2020 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,5 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#pragma once
 
-#include "re40.h"
+#define TAPPING_TERM 200
+#define RGBLIGHT_SLEEP = yes

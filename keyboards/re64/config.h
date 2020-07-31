@@ -24,12 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PRODUCT_ID   0x3430
 #define DEVICE_VER   0x0001
 #define MANUFACTURER kushima8
-#define PRODUCT      re40
-#define DESCRIPTION  40% split keyboard
+#define PRODUCT      re64
+#define DESCRIPTION  60% split keyboard
 
 /* key matrix size */
-#define MATRIX_ROWS 8
-#define MATRIX_COLS 6
+#define MATRIX_ROWS 10
+#define MATRIX_COLS 7
 
 /*
  * Keyboard Matrix Assignments
@@ -48,7 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* COL2ROW, ROW2COL */
 #define DIODE_DIRECTION COL2ROW
 
-#define MASTER_RIGHT
+//#define MASTER_RIGHT
 
 #define OLED_FONT_H "./lib/glcdfont.c"
 
@@ -72,8 +72,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define RGB_DI_PIN D3
 #ifdef RGB_DI_PIN
-    #define RGBLED_NUM 40
-    #define RGBLED_SPLIT { 20, 20 }
+    #define RGBLED_NUM 64
+    #define RGBLED_SPLIT { 30, 34 }
 //#    define RGBLIGHT_HUE_STEP 8
 //#    define RGBLIGHT_SAT_STEP 8
 //#    define RGBLIGHT_VAL_STEP 8

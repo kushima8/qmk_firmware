@@ -1,1 +1,1 @@
-# The default keymap for re40
+# The custom keymap for re40
