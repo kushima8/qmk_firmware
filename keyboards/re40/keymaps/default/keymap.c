@@ -1,5 +1,5 @@
 /* Copyright 2020 kushima8
-/* Copyright 2020 utubo
+ * Copyright 2020 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
         XXXXXXX,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
+        XXXXXXX,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
@@ -172,10 +172,6 @@ static void print_status_narrow(void) {
     oled_write_ln_P(PSTR(""), false);
     led_t led_usb_state = host_keyboard_led_state();
     oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
-
-    // Print tap count
-    oled_write_ln_P(PSTR(""), false);
-    oled_write(tap_count, false);
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
@@ -204,11 +200,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
             case _SECOND:
-            case _THAAD:
                 tap_code(clockwise ? KC_WH_D : KC_WH_U);
-                break;
-            case _FN:
-                tap_code(clockwise ? KC_DOWN : KC_UP);
                 break;
             default:
                 break;
@@ -218,11 +210,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
             case _SECOND:
-            case _THAAD:
                 tap_code(clockwise ? KC_WH_U : KC_WH_D);
-                break;
-            case _FN:
-                tap_code(clockwise ? KC_UP : KC_DOWN);
                 break;
             default:
                 break;

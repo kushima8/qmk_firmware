@@ -1,5 +1,5 @@
 /* Copyright 2020 kushima8
-/* Copyright 2020 utubo
+ * Copyright 2020 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,-------+-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------+-------+-------.
         _______,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,KC_F6  ,                     KC_F7  ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,KC_F12 ,KC_INS ,KC_DEL ,
     // |-------+-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,                             _______,_______,KC_PSCR,KC_SLCK,KC_PAUS,KC_UP  ,_______,_______,
+        KC_CAPS,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,                             _______,_______,KC_PSCR,KC_SLCK,KC_PAUS,KC_UP  ,_______,_______,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------|
         _______,_______,RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,                             _______,_______,KC_HOME,KC_PGUP,KC_LEFT,KC_RGHT,_______,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
@@ -130,10 +130,6 @@ static void print_status_narrow(void) {
     oled_write_ln_P(PSTR(""), false);
     led_t led_usb_state = host_keyboard_led_state();
     oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
-
-    // Print tap count
-    oled_write_ln_P(PSTR(""), false);
-    oled_write(tap_count, false);
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
