@@ -1,4 +1,5 @@
 /* Copyright 2020 kushima8
+/* Copyright 2020 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,56 +15,106 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include QMK_KEYBOARD_H
+#include "keymap_jp.h"
 
 enum layer_number {
     _FIRST = 0,
     _SECOND,
+    _TENKEY,
+    _CONFIG,
     _LOWER,
     _RAISE,
     _ADJUST
 };
 
-#define FIRST TO(_FIRST)
+#define FIRST  TO(_FIRST)
 #define SECOND TO(_SECOND)
-#define LOWER MO(_LOWER)
-#define RAISE MO(_RAISE)
+#define LOWER  MO(_LOWER)
+#define RAISE  MO(_RAISE)
+#define TENKEY TO(_TENKEY)
+#define CONFIG TO(_CONFIG)
+
+#define TT_CTLR  LCTL_T(KC_TAB)  // Hold=>Control, Tap=>TAB
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_FIRST] = LAYOUT(
-        KC_ESC,     KC_Q, KC_W, KC_E,   KC_R,   KC_T,                           KC_Y,   KC_U,   KC_I,   KC_O,   KC_P,   KC_BSPC,
-        KC_LCTL,    KC_A, KC_S, KC_D,   KC_F,   KC_G,                           KC_H,   KC_J,   KC_K,   KC_L,   KC_SCLN,KC_QUOT,
-        KC_LSFT,    KC_Z, KC_X, KC_C,   KC_V,   KC_B,                           KC_N,   KC_M,   KC_COMM,KC_DOT, KC_SLSH,KC_RSFT,
-                                        LOWER,  KC_SPC, SECOND,         SECOND, KC_ENT, RAISE
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        KC_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                             KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        TT_CTLR,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                             KC_H   ,KC_J   ,KC_K   ,KC_L   ,JP_SCLN,JP_QUOT,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        RAISE  ,KC_SPC ,TENKEY,      SECOND ,KC_ENT ,LOWER
+    //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_SECOND] = LAYOUT(
-        KC_ESC,     KC_Q, KC_W, KC_E,   KC_R,   KC_T,                           KC_Y,   KC_U,   KC_I,   KC_O,   KC_P,   KC_BSPC,
-        KC_LCTL,    KC_A, KC_S, KC_D,   KC_F,   KC_G,                           KC_H,   KC_J,   KC_K,   KC_L,   KC_SCLN,KC_QUOT,
-        KC_LSFT,    KC_Z, KC_X, KC_C,   KC_V,   KC_B,                           KC_N,   KC_M,   KC_COMM,KC_DOT, KC_SLSH,KC_RSFT,
-                                        LOWER,  KC_SPC, FIRST,           FIRST, KC_ENT, RAISE
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        KC_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                             KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        TT_CTLR,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                             KC_H   ,KC_J   ,KC_K   ,KC_L   ,JP_SCLN,JP_QUOT,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        RAISE  ,KC_SPC ,TENKEY,      FIRST  ,KC_ENT ,LOWER
+    //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_LOWER] = LAYOUT(
-        KC_ESC,     KC_1,    KC_2,    KC_3,    KC_4,    KC_5,                   KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_DEL,
-        KC_LCTL,    _______, _______, _______, _______, _______,                KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT, _______, _______,
-        KC_LSFT,    _______, _______, _______, KC_LGUI, KC_LALT,                _______, _______, _______, _______, _______, KC_RSFT,
-                                               _______, KC_SPC,  KC_1,    KC_2, KC_ENT,  _______
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        _______,KC_1   ,KC_2   ,KC_3   ,KC_4   ,KC_5   ,                             KC_6   ,KC_7   ,KC_8   ,KC_9   ,KC_0   ,_______,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             KC_LEFT,KC_DOWN,KC_UP  ,KC_RGHT,KC_INS ,KC_DEL ,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             _______,KC_APP ,KC_HOME,KC_END ,KC_PSCR,_______,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        _______,_______,_______,     _______,_______,_______
+    //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_RAISE] = LAYOUT(
-        KC_ESC,     KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,                KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_TILD,
-        KC_TAB,     _______, RGB_TOG,  RGB_HUI, RGB_SAI, RGB_VAI,                _______, KC_MINS, KC_EQL,  KC_BSLS, KC_LCBR, KC_RCBR,
-        KC_LSFT,    _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD,                _______, _______, _______, _______, _______, KC_RSFT,
-                                               _______, KC_SPC,  KC_3,    KC_4, KC_ENT,  _______
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        _______,KC_EXLM,KC_AT  ,KC_HASH,KC_DLR ,KC_PERC,                             KC_CIRC,KC_AMPR,KC_ASTR,KC_LPRN,KC_RPRN,KC_TILD,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             _______,KC_UNDS,KC_PLUS,KC_LCBR,KC_RCBR,KC_PIPE,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,_______,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        _______,_______,_______,     _______,_______,_______
+    //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_ADJUST] = LAYOUT(
-        KC_ESC,     KC_F1,KC_F2,KC_F3,  KC_F4,   KC_F5,                          KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,
-        KC_CAPS,    _______, _______, _______, _______, _______,                 _______, _______, _______, _______, _______, KC_F12,
-        KC_LSFT,    _______, _______, _______, _______, _______,                 _______, _______, _______, _______, _______, KC_RSFT,
-                                               _______, KC_SPC,  KC_5,     KC_6, KC_ENT,  _______
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        _______,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,                             KC_F6  ,KC_F   ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,KC_F12 ,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,LSFT_T(KC_PWR),
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        _______,_______,_______,     _______,_______,_______
+    //                                 `-------+-------+-------|    |-------+-------+-------'
+    ),
+    [_TENKEY] = LAYOUT(
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        XXXXXXX,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        RAISE  ,XXXXXXX,FIRST  ,     CONFIG ,XXXXXXX ,LOWER
+    //                                 `-------+-------+-------|    |-------+-------+-------'
+    ),
+    [_CONFIG] = LAYOUT(
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,_______,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,                             _______,_______,_______,_______,_______,_______,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        _______,_______,RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,                             _______,_______,_______,_______,_______,_______,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        _______,_______,_______,     TENKEY ,_______,_______
+    //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
 };
-
-uint32_t layer_state_set_user(uint32_t state) {
-    return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
-}
 
 #ifdef OLED_DRIVER_ENABLE
 
@@ -79,7 +130,7 @@ static void render_logo(void) {
 
 static void print_status_narrow(void) {
     // Print current mode
-    oled_write_P(PSTR("\n\n"), false);
+    oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("MODE"), false);
     oled_write_ln_P(PSTR(""), false);
     if (keymap_config.swap_lctl_lgui) {
@@ -88,50 +139,43 @@ static void print_status_narrow(void) {
         oled_write_ln_P(PSTR("WIN"), false);
     }
 
-    switch (get_highest_layer(default_layer_state)) {
-        case _FIRST:
-            oled_write_ln_P(PSTR("1"), false);
-            break;
-        case _SECOND:
-            oled_write_ln_P(PSTR("2"), false);
-            break;
-        case _LOWER:
-            oled_write_ln_P(PSTR("â†“"), false);
-            break;
-        case _RAISE:
-            oled_write_ln_P(PSTR("â†‘"), false);
-            break;
-        case _ADJUST:
-            oled_write_ln_P(PSTR("-"), false);
-            break;
-        default:
-            oled_write_P(PSTR("Undef"), false);
-    }
-    oled_write_P(PSTR("\n\n"), false);
+    oled_write_ln_P(PSTR(""), false);
     // Print current layer
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _FIRST:
-            oled_write_P(PSTR("1st"), false);
+            oled_write_ln_P(PSTR("1st"), false);
             break;
         case _SECOND:
-            oled_write_P(PSTR("2nd"), false);
+            oled_write_ln_P(PSTR("2nd"), false);
             break;
         case _LOWER:
-            oled_write_P(PSTR("Low"), false);
+            oled_write_ln_P(PSTR("Low"), false);
             break;
         case _RAISE:
-            oled_write_P(PSTR("Rai"), false);
+            oled_write_ln_P(PSTR("Rai"), false);
             break;
         case _ADJUST:
-            oled_write_P(PSTR("Adj"), false);
+            oled_write_ln_P(PSTR("Adj"), false);
+            break;
+        case _TENKEY:
+            oled_write_P(PSTR("10Key"), false);
+            break;
+        case _CONFIG:
+            oled_write_ln_P(PSTR("Conf"), false);
             break;
         default:
-            oled_write_ln_P(PSTR("Undef"), false);
+            oled_write_P(PSTR("Undef"), false);
     }
-    oled_write_P(PSTR("\n\n"), false);
+
+    // Print Capslock
+    oled_write_ln_P(PSTR(""), false);
     led_t led_usb_state = host_keyboard_led_state();
-    oled_write_ln_P(PSTR("CPSLK"), led_usb_state.caps_lock);
+    oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
+
+    // Print tap count
+    oled_write_ln_P(PSTR(""), false);
+    oled_write(tap_count, false);
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
@@ -156,39 +200,29 @@ void oled_task_user(void) {
 /* Rotary encoder settings */
 void encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
+        // Left rotary
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
-                if (clockwise) {
-                    tap_code(KC_UP);
-                } else {
-                    tap_code(KC_DOWN);
-                }
-                break;
             case _SECOND:
-                if (clockwise) {
-                    tap_code(KC_7);
-                } else {
-                    tap_code(KC_8);
-                }
+            case _THAAD:
+                tap_code(clockwise ? KC_WH_D : KC_WH_U);
+                break;
+            case _FN:
+                tap_code(clockwise ? KC_DOWN : KC_UP);
                 break;
             default:
                 break;
         }
     } else if (index == 1) {
+        // Right rotary Note:Reverse Rotation
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
-                if (clockwise) {
-                    tap_code(KC_DOWN);
-                } else {
-                    tap_code(KC_UP);
-                }
-                break;
             case _SECOND:
-                if (clockwise) {
-                    tap_code(KC_9);
-                } else {
-                    tap_code(KC_0);
-                }
+            case _THAAD:
+                tap_code(clockwise ? KC_WH_U : KC_WH_D);
+                break;
+            case _FN:
+                tap_code(clockwise ? KC_UP : KC_DOWN);
                 break;
             default:
                 break;
