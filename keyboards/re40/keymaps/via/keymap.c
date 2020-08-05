@@ -17,26 +17,19 @@
 #include QMK_KEYBOARD_H
 
 enum layer_number {
-    _FIRST = 0,
-    _SECOND,
-    _TENKEY,
-    _CONFIG,
+    _BASE = 0,
     _LOWER,
     _RAISE,
     _ADJUST
 };
 
-#define FIRST  TO(_FIRST)
-#define SECOND TO(_SECOND)
 #define LOWER  MO(_LOWER)
 #define RAISE  MO(_RAISE)
-#define TENKEY TO(_TENKEY)
-#define CONFIG TO(_CONFIG)
 
 #define TT_CTLR  LCTL_T(KC_TAB)  // Hold=>Control, Tap=>TAB
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    [_FIRST] = LAYOUT(
+    [_BASE] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
         KC_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                             KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
@@ -44,18 +37,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        RAISE  ,KC_SPC ,TENKEY,      SECOND ,KC_ENT ,LOWER
-    //                                 `-------+-------+-------|    |-------+-------+-------'
-    ),
-    [_SECOND] = LAYOUT(
-    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        KC_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                             KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        TT_CTLR,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                             KC_H   ,KC_J   ,KC_K   ,KC_L   ,KC_SCLN,KC_QUOT,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,
-    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        RAISE  ,KC_SPC ,TENKEY,      FIRST  ,KC_ENT ,LOWER
+                                        RAISE  ,KC_SPC ,RAISE  ,     LOWER  ,KC_ENT ,LOWER
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_LOWER] = LAYOUT(
@@ -91,28 +73,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                         _______,_______,_______,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
-    [_TENKEY] = LAYOUT(
-    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        XXXXXXX,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        XXXXXXX,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
-    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        RAISE  ,XXXXXXX,FIRST  ,     CONFIG ,KC_0   ,LOWER
-    //                                 `-------+-------+-------|    |-------+-------+-------'
-    ),
-    [_CONFIG] = LAYOUT(
-    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,_______,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,                             _______,_______,_______,_______,_______,_______,
-    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,                             _______,_______,_______,_______,_______,_______,
-    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        _______,_______,_______,     TENKEY ,_______,_______
-    //                                 `-------+-------+-------|    |-------+-------+-------'
-    ),
 };
 
 uint32_t layer_state_set_user(uint32_t state) {
@@ -146,11 +106,8 @@ static void print_status_narrow(void) {
     // Print current layer
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
-        case _FIRST:
-            oled_write_ln_P(PSTR("1st"), false);
-            break;
-        case _SECOND:
-            oled_write_ln_P(PSTR("2nd"), false);
+        case _BASE:
+            oled_write_ln_P(PSTR("Bas"), false);
             break;
         case _LOWER:
             oled_write_ln_P(PSTR("Low"), false);
@@ -160,12 +117,6 @@ static void print_status_narrow(void) {
             break;
         case _ADJUST:
             oled_write_ln_P(PSTR("Adj"), false);
-            break;
-        case _TENKEY:
-            oled_write_P(PSTR("10Key"), false);
-            break;
-        case _CONFIG:
-            oled_write_ln_P(PSTR("Conf"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);
@@ -201,8 +152,10 @@ void encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
         // Left rotary
         switch (get_highest_layer(layer_state)) {
-            case _FIRST:
-            case _SECOND:
+            case _BASE:
+            case _LOWER:
+            case _RAISE:
+            case _ADJUST:
                 tap_code(clockwise ? KC_WH_U : KC_WH_D);
                 break;
             default:
@@ -211,8 +164,10 @@ void encoder_update_user(uint8_t index, bool clockwise) {
     } else if (index == 1) {
         // Right rotary Note:Reverse Rotation
         switch (get_highest_layer(layer_state)) {
-            case _FIRST:
-            case _SECOND:
+            case _BASE:
+            case _LOWER:
+            case _RAISE:
+            case _ADJUST:
                 tap_code(clockwise ? KC_WH_U : KC_WH_D);
                 break;
             default:
