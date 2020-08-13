@@ -39,7 +39,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
         KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,FN     ,
     // |-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_LCTL,FN     ,KC_LGUI                ,KC_SPC ,KC_SPC ,SECOND ,     SECOND ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
+        KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,SECOND ,     SECOND ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
     // `-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------'
     ),
     [_FN] = LAYOUT(
@@ -65,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
         KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,KC_0   ,
     // |-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_LCTL,KC_LALT,KC_LGUI                ,KC_SPC ,KC_SPC ,THAAD  ,     THAAD  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
+        KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,THAAD  ,     THAAD  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
     // `-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------'
     ),
     [_THAAD] = LAYOUT(
@@ -78,7 +78,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
         KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,KC_0   ,
     // |-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_LCTL,KC_LALT,KC_LGUI                ,KC_SPC ,KC_SPC ,FIRST  ,     FIRST  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
+        KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,FIRST  ,     FIRST  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
     // `-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------'
     ),
 };
