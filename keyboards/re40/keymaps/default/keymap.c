@@ -99,7 +99,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        RAISE  ,XXXXXXX,FIRST  ,     CONFIG ,XXXXXXX ,LOWER
+                                        RAISE  ,XXXXXXX,FIRST  ,     CONFIG ,KC_0   ,LOWER
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_CONFIG] = LAYOUT(
@@ -203,7 +203,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
             case _SECOND:
-                tap_code(clockwise ? KC_WH_D : KC_WH_U);
+                tap_code(clockwise ? KC_WH_U : KC_WH_D);
                 break;
             default:
                 break;
