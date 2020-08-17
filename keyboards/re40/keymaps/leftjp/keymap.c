@@ -376,7 +376,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
                     register_code(KC_LALT); // unregister in process_record_user().
                     is_alt_pressed = true;
                 }
-                tap_code16(last_pressed);
+                tap_code16(clockwise ? KC_TAB : S(KC_TAB));
                 break;
             case _ADJUST:
                 tap_code(clockwise ? KC_VOLU : KC_VOLD);
