@@ -85,6 +85,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 #ifdef OLED_DRIVER_ENABLE
 
+/*
 static void render_logo(void) {
     static const char PROGMEM qmk_logo[] = {
         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
@@ -94,6 +95,7 @@ static void render_logo(void) {
 
     oled_write_P(qmk_logo, false);
 }
+*/
 
 static void print_status_narrow(void) {
     // Print current mode
@@ -140,11 +142,14 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 void oled_task_user(void) {
+    print_status_narrow();
+    /*
     if (is_keyboard_master()) {
         print_status_narrow();
     } else {
         render_logo();
     }
+    */
 }
 
 #endif
