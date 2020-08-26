@@ -31,8 +31,7 @@ enum custom_keycodes {
     RT_ENT = SAFE_RANGE, // Hold=>RAISE, Tap=>Enter
     RT_SPC,  // Hold=>RAISE, Tap=>Space
     LT_MHEN, // Hold=>LOWER, Tap=>Mukenkan
-    LT_HENK, // Hold=>LOWER, Tap=>Henkan
-    VI_NML
+    LT_HENK  // Hold=>LOWER, Tap=>Henkan
 };
 
 #define FIRST  TO(_FIRST)
@@ -60,26 +59,40 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                         LT_MHEN,RT_SPC ,CONFIG ,     SECOND ,RT_ENT ,LT_HENK
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
+    /*
+    [_SECOND] = LAYOUT(
+    // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
+        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,
+    // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
+        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,
+    // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
+                                        LOWER  ,XXXXXXX,XXXXXXX,     FIRST  ,XXXXXXX,RAISE
+    //                                 `-------+-------+-------|    |-------+-------+-------'
+
+    ),
+    */
     [_SECOND] = LAYOUT( // TODO: Oekaki for Lefty
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        _______,_______,_______,_______,_______,_______,                             KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,KC_ESC ,
+        FIRST  ,_______,_______,_______,_______,_______,                             KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,KC_Y   ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,_______,_______,_______,_______,                             KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,KC_ENT ,
+        _______,_______,_______,_______,_______,_______,                             KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,KC_H   ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,_______,_______,_______,_______,                             KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,KC_LSFT,
+        _______,_______,_______,_______,_______,_______,                             KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        _______,_______,_______,     _______,KC_LCTL,KC_LALT
+                                        _______,_______,_______,     KC_ESC ,KC_LCTL,KC_LSFT
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_TENKEY] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        GT_ESC ,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
+        FIRST  ,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        LOWER  ,RT_SPC ,XXXXXXX,     FIRST  ,KC_0   ,XXXXXXX
+                                        LOWER  ,RT_SPC ,XXXXXXX,     FIRST  ,KC_0   ,LOWER
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_CONFIG] = LAYOUT(
@@ -93,13 +106,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                         _______,_______,FIRST  ,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
-    [_LOWER] = LAYOUT( // Right edge keys for drowing with lefty.
+    [_LOWER] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        GT_ZKHK,JP_1   ,JP_2   ,JP_3   ,JP_4   ,JP_5   ,                             JP_6   ,JP_7   ,JP_8   ,JP_9   ,JP_0   ,LALT_T(KC_BSPC),
+        GT_ZKHK,JP_1   ,JP_2   ,JP_3   ,JP_4   ,JP_5   ,                             JP_6   ,JP_7   ,JP_8   ,JP_9   ,JP_0   ,_______,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        KC_TAB ,_______,KC_F2  ,_______,A(KC_F4),KC_F5 ,                             KC_LEFT,KC_DOWN,KC_UP  ,KC_RGHT,KC_DEL ,LCTL_T(KC_ESC),
+        KC_TAB ,_______,KC_F2  ,_______,A(KC_F4),KC_F5 ,                             KC_LEFT,KC_DOWN,KC_UP  ,KC_RGHT,KC_INS ,KC_DEL ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,_______,_______,_______,_______,                             KC_PSCR,KC_APP ,KC_HOME,KC_END ,KC_INS ,_______,
+        _______,_______,_______,_______,_______,_______,                             _______,KC_APP ,KC_HOME,KC_END ,KC_PSCR,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
                                         _______,_______,_______,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
@@ -108,9 +121,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
         KC_LGUI,JP_EXLM,JP_AT  ,JP_HASH,JP_DLR ,JP_PERC,                             JP_CIRC,JP_AMPR,JP_ASTR,JP_LPRN,JP_RPRN,JP_GRV ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        KC_TAB ,_______,_______,_______,_______,_______,                             JP_EQL ,JP_LCBR,JP_RCBR,JP_LBRC,JP_RBRC,JP_YEN ,
+        KC_TAB ,_______,_______,_______,_______,_______,                             JP_UNDS,JP_PLUS,JP_EQL ,JP_LBRC,JP_RBRC,JP_YEN ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,_______,_______,_______,_______,                             JP_PLUS,JP_UNDS,JP_LABK,JP_RABK,JP_QUES,_______,
+        _______,_______,_______,_______,_______,_______,                             JP_LCBR,JP_RCBR,JP_LABK,JP_RABK,JP_QUES,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
                                         _______,_______,_______,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
@@ -121,7 +134,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,KC_VOLU,KC_VOLD,KC_MUTE,RGB_TOG,_______,                             _______,_______,_______,_______,_______,KC_F12 ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,_______,_______,_______,VI_NML ,FIRST  ,                             TENKEY ,SECOND ,_______,_______,_______,LSFT_T(KC_PWR),
+        _______,_______,_______,_______,_______,_______,                             TENKEY ,SECOND ,_______,_______,_______,LSFT_T(KC_PWR),
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
                                         _______,_______,KC_MUTE,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
@@ -178,7 +191,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case JP_9:    return tap_when_shift(JP_LPRN);
             case JP_0:    return tap_when_shift(JP_RPRN);
             case JP_GRV:  return tap_when_shift(JP_TILD);
-            case JP_EQL:  return tap_when_shift(JP_PLUS);
             case JP_MINS: return tap_when_shift(JP_UNDS);
             case JP_QUOT: return tap_when_shift(JP_DQUO);
             case JP_SCLN: return tap_when_shift(JP_COLN);
@@ -253,6 +265,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (record->event.pressed) {
             if (dance) {
                 register_code(tapped_key);
+                last_pressed = 0; // skip tap_code when unpressed
             } else {
                 layer_on(hold_layer);
             }
@@ -282,18 +295,9 @@ static void render_logo(void) {
 }
 
 static void print_status_narrow(void) {
-    // Print current mode
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("MODE"), false);
-    oled_write_ln_P(PSTR(""), false);
-    if (keymap_config.swap_lctl_lgui) {
-        oled_write_ln_P(PSTR("MAC"), false);
-    } else {
-        oled_write_ln_P(PSTR("WIN"), false);
-    }
 
-    oled_write_ln_P(PSTR(""), false);
     // Print current layer
+    oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _FIRST:
@@ -321,10 +325,16 @@ static void print_status_narrow(void) {
             oled_write_P(PSTR("Undef"), false);
     }
 
-    // Print Capslock
-    oled_write_ln_P(PSTR(""), false);
+    // Print lock
     led_t led_usb_state = host_keyboard_led_state();
-    oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("NUM"), led_usb_state.num_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("CAPS"), led_usb_state.caps_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_P(PSTR("SCROL"), led_usb_state.scroll_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("KANA"), led_usb_state.kana);
 
     // Print tap count
     oled_write_ln_P(PSTR(""), false);
@@ -381,11 +391,8 @@ void encoder_update_user(uint8_t index, bool clockwise) {
             case _SECOND: // TODO: Oekaki for Lefty
                 tap_code(clockwise ? KC_DEL: KC_END);
                 break;
-            case _LOWER:
-                tap_code(clockwise ? KC_PGUP : KC_PGDN);
-                break;
             case _RAISE:
-                tap_code16(clockwise ? A(KC_PGUP) : A(KC_PGDN));
+                tap_code(clockwise ? KC_PGUP : KC_PGDN);
                 break;
             default:
                 break;
