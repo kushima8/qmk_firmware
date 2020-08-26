@@ -265,6 +265,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (record->event.pressed) {
             if (dance) {
                 register_code(tapped_key);
+                last_pressed = 0; // skip tap_code when unpressed
             } else {
                 layer_on(hold_layer);
             }
