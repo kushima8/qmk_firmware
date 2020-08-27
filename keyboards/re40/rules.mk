@@ -22,5 +22,5 @@ BLUETOOTH_ENABLE = no       # Enable Bluetooth
 AUDIO_ENABLE = no           # Audio output
 IOS_DEVICE_ENABLE = yes     # connect to IOS device (iPad,iPhone)
 ENCODER_ENABLE = yes        # Add rotary encoder support
-OLED_DRIVER_ENABLE = no     # Add OLED displays support
+OLED_DRIVER_ENABLE = yes    # Add OLED displays support
 SPLIT_KEYBOARD = yes
