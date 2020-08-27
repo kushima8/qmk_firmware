@@ -96,18 +96,8 @@ static void render_logo(void) {
 }
 
 static void print_status_narrow(void) {
-    // Print current mode
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("MODE"), false);
-    oled_write_ln_P(PSTR(""), false);
-    if (keymap_config.swap_lctl_lgui) {
-        oled_write_ln_P(PSTR("MAC"), false);
-    } else {
-        oled_write_ln_P(PSTR("WIN"), false);
-    }
 
     oled_write_ln_P(PSTR(""), false);
-    // Print current layer
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _FIRST:
@@ -126,10 +116,16 @@ static void print_status_narrow(void) {
             oled_write_P(PSTR("Undef"), false);
     }
 
-    // Print Capslock
-    oled_write_ln_P(PSTR(""), false);
     led_t led_usb_state = host_keyboard_led_state();
-    oled_write_P(PSTR("CPSLK"), led_usb_state.caps_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("NUM"), led_usb_state.num_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("CAPS"), led_usb_state.caps_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_P(PSTR("SCROL"), led_usb_state.scroll_lock);
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("KANA"), led_usb_state.kana);
+
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
