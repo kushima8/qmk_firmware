@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include QMK_KEYBOARD_H
+#include <stdio.h>
 
 enum layer_number {
     _BASE = 0,
@@ -112,15 +113,23 @@ static void print_status_narrow(void) {
             oled_write_P(PSTR("Undef"), false);
     }
 
-    led_t led_usb_state = host_keyboard_led_state();
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("NUM"), led_usb_state.num_lock);
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("CAPS"), led_usb_state.caps_lock);
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_P(PSTR("SCROL"), led_usb_state.scroll_lock);
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("KANA"), led_usb_state.kana);
+    #ifdef RGBLIGHT_ENABLE
+        oled_write_ln_P(PSTR(""), false);
+        oled_write_ln_P(PSTR("LED"), false);
+        oled_write_ln_P(PSTR(""), false);
+        static char rgbMode[26] = {0};
+        snprintf(rgbMode, sizeof(rgbMode), "M%d", rgblight_get_mode());
+        oled_write_ln(rgbMode, false);
+        static char rgbHue[26] = {0};
+        snprintf(rgbHue, sizeof(rgbHue), "H%d", rgblight_get_hue());
+        oled_write_ln(rgbHue, false);
+        static char rgbSat[26] = {0};
+        snprintf(rgbSat, sizeof(rgbSat), "S%d", rgblight_get_sat());
+        oled_write_ln(rgbSat, false);
+        static char rgbVal[26] = {0};
+        snprintf(rgbVal, sizeof(rgbVal), "V%d", rgblight_get_val());
+        oled_write_ln(rgbVal, false);
+    #endif
 
 }
 
