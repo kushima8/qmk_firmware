@@ -140,10 +140,11 @@ static bool is_raise_pressed;
 static bool lower_toggle;
 
 bool tap_when_shift(uint16_t keycode) {
-    if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
-        unregister_code(KC_LSFT);
+    uint8_t shift = keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT));
+    if (shift) {
+        unregister_mods(shift);
         tap_code16(keycode);
-        register_code(KC_LSFT);
+        register_mods(shift);
         return false;
     } else {
         return true;
