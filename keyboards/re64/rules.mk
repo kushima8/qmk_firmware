@@ -24,3 +24,4 @@ IOS_DEVICE_ENABLE = yes     # connect to IOS device (iPad,iPhone)e
 ENCODER_ENABLE = yes        # Add rotary encoder support
 OLED_DRIVER_ENABLE = no     # Add OLED displays support
 SPLIT_KEYBOARD = yes
+EXTRAFLAGS += -flto
