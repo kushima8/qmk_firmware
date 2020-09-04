@@ -64,7 +64,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------|
         KC_LCTL,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                             KC_H   ,KC_J   ,KC_K   ,KC_L   ,KC_SCLN,KC_QUOT,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
-        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,KC_0   ,
+        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,FN     ,
     // |-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
         KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,THAAD  ,     THAAD  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
     // `-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------'
@@ -77,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------|
         KC_LCTL,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                             KC_H   ,KC_J   ,KC_K   ,KC_L   ,KC_SCLN,KC_QUOT,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------|
-        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,KC_0   ,
+        KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,FN     ,
     // |-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
         KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,FIRST  ,     FIRST  ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI
     // `-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------'
@@ -121,18 +121,18 @@ static void print_status_narrow(void) {
         oled_write_ln_P(PSTR(""), false);
         oled_write_ln_P(PSTR("LED"), false);
         oled_write_ln_P(PSTR(""), false);
-        static char rgbMode[26] = {0};
-        snprintf(rgbMode, sizeof(rgbMode), "M%d", rgblight_get_mode());
-        oled_write_ln(rgbMode, false);
-        static char rgbHue[26] = {0};
-        snprintf(rgbHue, sizeof(rgbHue), "H%d", rgblight_get_hue());
-        oled_write_ln(rgbHue, false);
-        static char rgbSat[26] = {0};
-        snprintf(rgbSat, sizeof(rgbSat), "S%d", rgblight_get_sat());
-        oled_write_ln(rgbSat, false);
-        static char rgbVal[26] = {0};
-        snprintf(rgbVal, sizeof(rgbVal), "V%d", rgblight_get_val());
-        oled_write_ln(rgbVal, false);
+        static char rgbMode[6] = {0};
+        snprintf(rgbMode, sizeof(rgbMode), "M:%-3d", rgblight_get_mode());
+        oled_write(rgbMode, false);
+        static char rgbHue[6] = {0};
+        snprintf(rgbHue, sizeof(rgbHue), "H:%-3d", rgblight_get_hue());
+        oled_write(rgbHue, false);
+        static char rgbSat[6] = {0};
+        snprintf(rgbSat, sizeof(rgbSat), "S:%-3d", rgblight_get_sat());
+        oled_write(rgbSat, false);
+        static char rgbVal[6] = {0};
+        snprintf(rgbVal, sizeof(rgbVal), "V:%-3d", rgblight_get_val());
+        oled_write(rgbVal, false);
     #endif
 
 }
