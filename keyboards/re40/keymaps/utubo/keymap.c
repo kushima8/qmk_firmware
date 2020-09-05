@@ -106,7 +106,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
         KC_LGUI,JP_EXLM,JP_AT  ,JP_HASH,JP_DLR ,JP_PERC,                             JP_CIRC,JP_AMPR,JP_ASTR,JP_LPRN,JP_RPRN,JP_GRV ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        KC_TAB ,_______,_______,_______,_______,_______,                             JP_EQL ,JP_LCBR,JP_RCBR,JP_LBRC,JP_RBRC,JP_YEN ,
+      C(KC_TAB),_______,_______,_______,_______,_______,                             JP_EQL ,JP_LCBR,JP_RCBR,JP_LBRC,JP_RBRC,JP_YEN ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             JP_PLUS,JP_UNDS,JP_LABK,JP_RABK,JP_QUES,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
@@ -188,6 +188,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         case KC_TAB:
+            // RAISE-Tab => Ctrl-Tab
+            if (keyboard_report->mods & MOD_BIT(KC_LCTL)) {
+                return true;
+            }
             // LOWER-Tab => Alt-Tab
             if (record->event.pressed && is_lower_pressed && !is_alt_pressed) {
                 register_code(KC_LALT);
