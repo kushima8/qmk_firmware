@@ -29,9 +29,8 @@ enum layer_number {
 
 enum custom_keycodes {
     RT_ENT = SAFE_RANGE, // Hold=>RAISE, Tap=>Enter
-    RT_SPC,  // Hold=>RAISE, Tap=>Space
-    LT_MHEN, // Hold=>LOWER, Tap=>Mukenkan
-    LT_HENK  // Hold=>LOWER, Tap=>Henkan
+    LT_MHEN, // Hold=>LOWER, Dance=>RAISE, Tap=>Mukenkan
+    LT_HENK  // Hold=>LOWER, Dance=>RAISE, Tap=>Henkan
 };
 
 #define FIRST  TO(_FIRST)
@@ -56,7 +55,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         KC_LCTL,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,ST_MINS,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        LT_MHEN,RT_SPC ,CONFIG ,     SECOND ,RT_ENT ,LT_HENK
+                                        LT_MHEN,KC_SPC ,CONFIG ,     SECOND ,RT_ENT ,LT_HENK
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_SECOND] = LAYOUT( // TODO: Oekaki for Lefty
@@ -78,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        LOWER  ,RT_SPC ,XXXXXXX,     FIRST  ,KC_0   ,XXXXXXX
+                                        LOWER  ,KC_SPC ,XXXXXXX,     FIRST  ,KC_0   ,XXXXXXX
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_CONFIG] = LAYOUT(
@@ -100,7 +99,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             KC_PSCR,KC_APP ,KC_HOME,KC_END ,KC_INS ,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-                                        _______,_______,_______,     _______,_______,_______
+                                        _______,RAISE  ,_______,     _______,_______,_______
     //                                 `-------+-------+-------|    |-------+-------+-------'
     ),
     [_RAISE] = LAYOUT(
@@ -136,8 +135,6 @@ static uint16_t last_time = 0;
 static uint16_t last_pressed;
 static bool is_alt_pressed;
 static bool is_lower_pressed;
-static bool is_raise_pressed;
-static bool lower_toggle;
 
 bool tap_when_shift(uint16_t keycode) {
     uint8_t shift = keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT));
@@ -191,11 +188,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         case KC_TAB:
-            // RAISE-Tab => Ctrl-Tab
-            if (record->event.pressed && is_raise_pressed) {
-                tap_code16(C(KC_TAB));
-                return false;
-            }
             // LOWER-Tab => Alt-Tab
             if (record->event.pressed && is_lower_pressed && !is_alt_pressed) {
                 register_code(KC_LALT);
@@ -205,13 +197,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case LOWER:
         case LT_MHEN:
         case LT_HENK:
+            // dance LOWER
+            if (dance) {
+                layer_on(_RAISE);
+                return false;
+            }
             is_lower_pressed = record->event.pressed;
             if (is_lower_pressed) {
-                lower_toggle = !layer_state_is(_LOWER);
                 layer_on(_LOWER);
                 return false;
             }
             layer_off(_LOWER);
+            layer_off(_RAISE);
             // Close the task switcher opened with Alt-Tab.
             if (is_alt_pressed) {
                 unregister_code(KC_LALT);
@@ -220,32 +217,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (last_pressed != keycode) {
                 return false;
             }
-            // tap Ctrl-LOWER => toggle LOWER
-            if (keyboard_report->mods & MOD_BIT(KC_LCTL)) {
-                if (lower_toggle) {
-                    layer_on(_LOWER);
-                }
-                return false;
-            }
             // tap LOWER
             switch(keycode) {
                 case LT_MHEN: tap_code(JP_MHEN); break;
                 case LT_HENK: tap_code(JP_HENK); break;
             }
             return false;
-        case RAISE:
-            is_raise_pressed = record->event.pressed;
-            return true;
         case RT_ENT:
-            is_raise_pressed = record->event.pressed;
             tapped_key = KC_ENT;
             hold_layer = _RAISE;
             break;
-        case RT_SPC:
-            is_raise_pressed = record->event.pressed;
-            tapped_key = KC_SPC;
-            hold_layer = _RAISE;
-            break;
+        default:
+            return true;
     }
 
     // Tap-hold
