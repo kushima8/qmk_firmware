@@ -50,7 +50,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DIODE_DIRECTION COL2ROW
 
 /* Split hand configration */
-#define SPLIT_HAND_MATRIX_GRID B2, F4
+#define SPLIT_HAND_MATRIX_GRID E6, B1
 #define SPLIT_HAND_MATRIX_GRID_LOW_IS_RIGHT
 
 /* Rotary encoder define*/
