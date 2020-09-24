@@ -71,8 +71,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define RGB_DI_PIN D3
 #ifdef RGB_DI_PIN
-    #define RGBLED_NUM 64
-    #define RGBLED_SPLIT { 30, 34 }
+    #define RGBLED_NUM 68
+    #define RGBLED_SPLIT { 34, 34 }
 //#    define RGBLIGHT_HUE_STEP 8
 //#    define RGBLIGHT_SAT_STEP 8
 //#    define RGBLIGHT_VAL_STEP 8
