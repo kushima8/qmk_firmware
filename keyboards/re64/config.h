@@ -49,6 +49,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* COL2ROW, ROW2COL */
 #define DIODE_DIRECTION COL2ROW
 
+/* Split hand configration */
+#define SPLIT_HAND_MATRIX_GRID B5, B1
+#define SPLIT_HAND_MATRIX_GRID_LOW_IS_RIGHT
+
 /* Rotary encoder define*/
 #define ENCODERS_PAD_A { C6 }
 #define ENCODERS_PAD_B { B6 }
@@ -67,12 +71,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define RGB_DI_PIN D3
 #ifdef RGB_DI_PIN
-    #define RGBLED_NUM 64
-    #define RGBLED_SPLIT { 30, 34 }
+    #define RGBLED_NUM 68
+    #define RGBLED_SPLIT { 34, 34 }
 //#    define RGBLIGHT_HUE_STEP 8
 //#    define RGBLIGHT_SAT_STEP 8
 //#    define RGBLIGHT_VAL_STEP 8
-    #define RGBLIGHT_LIMIT_VAL 100 /* The maximum brightness level */
+    #define RGBLIGHT_LIMIT_VAL 150 /* The maximum brightness level */
 //#    define RGBLIGHT_SLEEP  /* If defined, the RGB lighting will be switched off when the host goes to sleep */
 /*== all animations enable ==*/
 //#    define RGBLIGHT_ANIMATIONS
