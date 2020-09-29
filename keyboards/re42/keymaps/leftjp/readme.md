@@ -1,1 +1,1 @@
-# The leftjp keymap for re40
+# The leftjp keymap for re42
