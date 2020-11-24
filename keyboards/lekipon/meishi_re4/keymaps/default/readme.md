@@ -1,1 +1,1 @@
-# The default keymap for 4xbs
+# The default keymap for Meishi RE4
