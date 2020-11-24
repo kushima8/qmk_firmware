@@ -16,8 +16,6 @@
 
 #pragma once
 
-//#define XXX KC_NO
-
 #include "quantum.h"
 
 /* This is a shortcut to help you visually see your layout.
@@ -30,6 +28,6 @@
  */
 #define LAYOUT( K00, K01, K02, K03 ) \
 { \
-    { K00, K01, K02, K03 }, \
+              { K00, K01, K02, K03 }, \
 }
 

@@ -1,4 +1,4 @@
-/* Copyright 2019 Lekipon
+/* Copyright 2020 Lekipon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,6 @@ enum custom_keycodes {
 enum layer_number {
     _HSV = 0,
 };
-
-// Defines the keycodes used by our macros in process_record_user
-#define XXXXXXX KC_NO
 
 int RGB_current_mode;
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -75,8 +72,6 @@ void keyboard_post_init_user(void) {
 #define HSV_SCRLK      84, 255, 128
 #define HSV_SCRLK_OFF  84, 255,  16
 
-
-
 void led_set_user(uint8_t usb_led) {
     if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
         sethsv(HSV_CAPS , (LED_TYPE *)&led[0]);
@@ -96,8 +91,6 @@ void led_set_user(uint8_t usb_led) {
     rgblight_set();
 }
 #endif
-
-
 
 
 /* Rotary encoder settings */
