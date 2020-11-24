@@ -6,7 +6,7 @@ A short description of the keyboard/project
 
 * Keyboard Maintainer: [Lekipon](https://github.com/Lekipon)
 * Hardware Supported: The PCBs, controllers supported
-* Hardware Availability: [yushakobo](https://yushakobo.jp/)
+* Hardware Availability: [yushakobo](https://yushakobo.jp/)(At rentalbox in real shop)
 
 Make example for this keyboard (after setting up your build environment):
 
