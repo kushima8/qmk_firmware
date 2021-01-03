@@ -58,9 +58,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define RGB_MATRIX_KEYPRESSES
 #    define RGB_MATRIX_FRAMEBUFFER_EFFECTS
 #    define RGB_MATRIX_MAXIMUM_BRIGHTNESS 120
-#    define RGB_MATRIX_HUE_STEP 8
-#    define RGB_MATRIX_SAT_STEP 8
-#    define RGB_MATRIX_VAL_STEP 5
+#    define RGB_MATRIX_HUE_STEP 17
+#    define RGB_MATRIX_SAT_STEP 17
+#    define RGB_MATRIX_VAL_STEP 12
 #    define RGB_MATRIX_SPD_STEP 10
 
 // Limitation on LED number: increases keyboard responsiveness
