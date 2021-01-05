@@ -1,4 +1,4 @@
-# The leftjp keymap for re42 for ME.
+# The leftjp keymap for re40 for ME.
 
 I'll update this key layout on how I feel that day.
 
