@@ -21,13 +21,13 @@ enum layer_number {
     _FIRST = 0,
     _FN,
     _SECOND,
-    _THAAD,
+    _THIRD,
 };
 
 #define FIRST  TO(_FIRST)
 #define FN  MO(_FN)
 #define SECOND TO(_SECOND)
-#define THAAD TO(_THAAD)
+#define THIRD TO(_THIRD)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_FIRST] = LAYOUT(
@@ -72,10 +72,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------|
         KC_5   ,KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,KC_RSFT,KC_UP  ,FN     ,
     // |-------+-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_6   ,KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,THAAD  ,     THAAD ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI,KC_LEFT,KC_DOWN,KC_RGHT
+        KC_6   ,KC_LCTL,FN     ,KC_LALT                ,KC_SPC ,KC_SPC ,THIRD  ,     THIRD ,KC_SPC ,KC_SPC         ,KC_RALT,KC_RGUI,KC_LEFT,KC_DOWN,KC_RGHT
     // `-------+-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------+-------'
     ),
-    [_THAAD] = LAYOUT(
+    [_THIRD] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------+-------+-------+-------.
         KC_1   ,KC_ESC ,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,KC_F6  ,                     KC_F7  ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,KC_F12 ,KC_INS,KC_DEL  ,KC_7   ,
     // |--------+-------+-------+-------+-------+-------+-------+------|                    |-------+-------+-------+-------+-------+-------+-------+-------+-------|
@@ -118,7 +118,7 @@ static void print_status_narrow(void) {
         case _SECOND:
             oled_write_ln_P(PSTR("2nd"), false);
             break;
-        case _THAAD:
+        case _THIRD:
             oled_write_ln_P(PSTR("3rd"), false);
             break;
         default:
@@ -171,7 +171,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
             case _SECOND:
-            case _THAAD:
+            case _THIRD:
                 tap_code(clockwise ? KC_WH_U : KC_WH_D);
                 break;
             case _FN:
@@ -185,7 +185,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         switch (get_highest_layer(layer_state)) {
             case _FIRST:
             case _SECOND:
-            case _THAAD:
+            case _THIRD:
                 tap_code(clockwise ? KC_WH_U : KC_WH_D);
                 break;
             case _FN:
