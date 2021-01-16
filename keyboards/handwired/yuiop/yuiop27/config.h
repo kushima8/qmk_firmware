@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Splitting
 //#define SPLIT_MODS_ENABLE
-#define SOFT_SERIAL_PIN D2
+//#define SOFT_SERIAL_PIN D2
 
 // RGB LED settings
 #define RGB_DI_PIN D3

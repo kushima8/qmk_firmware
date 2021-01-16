@@ -21,7 +21,7 @@ LEADER_ENABLE = no
 MIDI_ENABLE = no
 UNICODE_ENABLE = no
 BLUETOOTH_ENABLE = no
-SPLIT_KEYBOARD = yes
+SPLIT_KEYBOARD = no	# not yet
 
 # Disalbe RGB Matrix as default
 RGB_MATRIX_ENABLE = no
