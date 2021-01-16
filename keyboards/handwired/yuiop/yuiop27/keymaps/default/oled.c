@@ -25,9 +25,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!record->event.pressed) {
         return true;
     }
-    snprintf(keylog, sizeof(keylog), "K:%04X R:%d C:%d",
-            record->event.key.row, record->event.key.col,
-            keycode);
+    snprintf(keylog, sizeof(keylog), "K:%04X R:%d C:%d ",
+            keycode, record->event.key.row, record->event.key.col);
     return true;
 }
 
@@ -36,7 +35,7 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 void oled_task_user(void) {
-    oled_write_P(PSTR("YUIOP/27 rev.1"), false);
+    oled_write_ln_P(PSTR("YUIOP/27 rev.1"), false);
     oled_write(keylog, false);
 }
 
