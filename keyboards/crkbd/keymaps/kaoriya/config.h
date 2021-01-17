@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define KAORIYA_FIRMWARE_VERSION r2
+#define KAORIYA_FIRMWARE_VERSION r3
 
 #undef PRODUCT
 #define PRODUCT Corne +KaoriYa/KAORIYA_FIRMWARE_VERSION
