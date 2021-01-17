@@ -23,8 +23,8 @@ char kaoriya_verinfo[22] = {};
 
 void keyboard_post_init_user(void) {
     // compose version info string.
-    snprintf(kaoriya_verinfo, sizeof(kaoriya_verinfo), "+KaoriYa/%s+m%d",
-        STR(KAORIYA_FIRMWARE_VERSION), KEYMAP_VERSION);
+    snprintf(kaoriya_verinfo, sizeof(kaoriya_verinfo), "+KaoriYa/%s+m%s",
+        STR(KAORIYA_FIRMWARE_VERSION), STR(KEYMAP_VERSION));
     int l = strlen(kaoriya_verinfo);
     int m = sizeof(kaoriya_verinfo) - 1 - l;
     if (m > 0) {
