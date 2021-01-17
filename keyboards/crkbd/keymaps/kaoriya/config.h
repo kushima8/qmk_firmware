@@ -21,8 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#define KAORIYA_FIRMWARE_VERSION r2
+
 #undef PRODUCT
-#define PRODUCT Corne +KaoriYa r7
+#define PRODUCT Corne +KaoriYa/KAORIYA_FIRMWARE_VERSION
 
 #define LAYER_STATE_8BIT
 
@@ -107,3 +109,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define DISABLE_RGB_MATRIX_SPLASH
 #    define DISABLE_RGB_MATRIX_SOLID_SPLASH
 #endif
+
+extern const int kaoriya_mapver;
+extern char kaoriya_verinfo[];

@@ -18,3 +18,22 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 #endif
     return state;
 }
+
+#ifdef OLED_DRIVER_ENABLE
+
+void oled_render_layer_state(void) {
+    oled_write_P(PSTR("Layer: "), false);
+    if ((layer_state & 0b0001000) != 0) {
+        oled_write_ln_P(PSTR("Functions"), false);
+    } else if ((layer_state & 0b0000110) != 0) {
+        oled_write_ln_P(PSTR("Numbers"), false);
+    } else if ((layer_state & 0b1000000) != 0) {
+        oled_write_ln_P(PSTR("Systems"), false);
+    } else if ((layer_state & 0b0110000) != 0) {
+        oled_write_ln_P(PSTR("Shifts"), false);
+    } else {
+        oled_write_ln_P(PSTR("Default"), false);
+    }
+}
+
+#endif // OLED_DRIVER_ENABLE

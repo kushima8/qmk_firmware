@@ -1,4 +1,4 @@
-SRC += layer.c
+SRC += kaoriya.c layer.c
 # Enable console, disable OLED or RGBLIGHT
 #CONSOLE_ENABLE = yes
 
