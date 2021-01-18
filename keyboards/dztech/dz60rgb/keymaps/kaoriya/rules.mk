@@ -1,0 +1,2 @@
+LTO_ENABLE = yes
+NKRO_ENABLE = no
