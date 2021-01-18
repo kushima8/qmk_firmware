@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
-#define KEYMAP_VERSION 10
+#define KEYMAP_VERSION 11
 
 #include <stdio.h>
 
