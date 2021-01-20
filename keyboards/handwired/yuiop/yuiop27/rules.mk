@@ -2,6 +2,10 @@ MCU = atmega32u4
 
 BOOTLOADER = caterina
 
+# Split keyboard enabled
+SPLIT_KEYBOARD = yes
+SPLIT_TRANSPORT = mirror
+
 # Build Options
 LTO_ENABLE = yes
 
@@ -21,7 +25,6 @@ LEADER_ENABLE = no
 MIDI_ENABLE = no
 UNICODE_ENABLE = no
 BLUETOOTH_ENABLE = no
-SPLIT_KEYBOARD = no	# not yet
 
 # Disalbe RGB Matrix as default
 RGB_MATRIX_ENABLE = no
