@@ -41,7 +41,7 @@ void oled_task_user(void) {
     oled_write_ln_P(PSTR(STR(PRODUCT)), false);
     oled_write_ln(keylog, false);
 
-    snprintf(dbginfo, sizeof(dbginfo), "U:%02X H:%c", USBSTA, (isLeftHand ? 'L' : 'R'));
+    snprintf(dbginfo, sizeof(dbginfo), "M:%d H:%c", is_keyboard_master(), (isLeftHand ? 'L' : 'R'));
     oled_write_ln(dbginfo, false);
 }
 
