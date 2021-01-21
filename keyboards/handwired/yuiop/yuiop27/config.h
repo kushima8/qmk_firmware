@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEVICE_VER      0x0001
 #define MANUFACTURER    koron
 
-#define PRODUCT         YUIOP/27 Rev.2
+#define PRODUCT         YUIOP/27 Rev.3
 #define DESCRIPTION     Experimental Keyboard
 
 // Key matrix size and pins
