@@ -25,10 +25,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!record->event.pressed) {
         return true;
     }
-    snprintf(keylog, sizeof(keylog), "K:%04X R:%d C:%d M:%d",
-            keycode, record->event.key.row, record->event.key.col,
-					((USBSTA & (1 << VBUS)) ? 1 : 0));
-            //is_keyboard_master());
+    snprintf(keylog, sizeof(keylog), "K:%04X R:%d C:%d",
+            keycode, record->event.key.row, record->event.key.col);
     return true;
 }
 
@@ -36,12 +34,14 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   return rotation;
 }
 
+extern bool isLeftHand;
+
 static char dbginfo[24] = {};
 void oled_task_user(void) {
     oled_write_ln_P(PSTR(STR(PRODUCT)), false);
     oled_write_ln(keylog, false);
 
-    snprintf(dbginfo, sizeof(dbginfo), "U:%02X", USBSTA);
+    snprintf(dbginfo, sizeof(dbginfo), "U:%02X H:%c", USBSTA, (isLeftHand ? 'L' : 'R'));
     oled_write_ln(dbginfo, false);
 }
 

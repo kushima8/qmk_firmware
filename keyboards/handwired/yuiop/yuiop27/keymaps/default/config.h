@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define LAYER_STATE_8BIT
 
-#define MASTER_LEFT
+#define SPLIT_HAND_MATRIX_GRID B5, B1
+#define SPLIT_HAND_MATRIX_GRID_LOW_IS_RIGHT
 
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 200
