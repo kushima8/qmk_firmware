@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You s0hould have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -20,4 +20,23 @@
 
 
 // place overrides here
-#define ENCODER_RESOLUTION 3
+#define ENCODER_RESOLUTION 2
+
+
+// /*== all animations enable ==*/
+//#define RGBLIGHT_ANIMATIONS
+#undef RGBLIGHT_ANIMATIONS
+// /*== or choose animations ==*/
+   #define RGBLIGHT_EFFECT_RAINBOW_MOOD
+   #define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+   #define RGBLIGHT_EFFECT_KNIGHT
+   #define RGBLIGHT_EFFECT_TWINKLE
+   #define RGBLIGHT_EFFECT_STATIC_GRADIENT
+   #define RGBLIGHT_EFFECT_CHRISTMAS
+   #define RGBLIGHT_EFFECT_BREATHING
+
+//   #define RGBLIGHT_EFFECT_SNAKE
+//   #define RGBLIGHT_EFFECT_RGB_TEST
+//   #define RGBLIGHT_EFFECT_ALTERNATING
+
+
