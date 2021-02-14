@@ -30,7 +30,8 @@ enum layer_number {
 enum custom_keycodes {
     RT_ENT = SAFE_RANGE, // Hold=>RAISE, Tap=>Enter
     LT_MHEN, // Hold=>LOWER, Dance=>RAISE, Tap=>Mukenkan
-    LT_HENK  // Hold=>LOWER, Dance=>RAISE, Tap=>Henkan
+    LT_HENK, // Hold=>LOWER, Dance=>RAISE, Tap=>Henkan
+    ESC_BS   // Hold=>ESC, Tap=>BS
 };
 
 #define FIRST  TO(_FIRST)
@@ -44,7 +45,7 @@ enum custom_keycodes {
 #define GT_ZKHK LGUI_T(JP_ZKHK) // Hold=>GUI,   Tap=>JP_ZKHK
 #define AT_CAPS LALT_T(KC_CAPS) // Hold=>ALT,   Tap=>Caps
 #define AT_TAB  LALT_T(KC_TAB)  // Hold=>ALT,   Tap=>TAB
-#define ST_MINS LSFT_T(JP_MINS) // Hold=>Shift, Tap=>-
+#define ST_MINS RSFT_T(JP_MINS) // Hold=>Shift, Tap=>-
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_FIRST] = LAYOUT(
@@ -71,13 +72,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_TENKEY] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        GT_ESC ,XXXXXXX,KC_UP  ,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
+        GT_ESC ,_______,KC_UP  ,_______,_______,_______,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,XXXXXXX,XXXXXXX,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
+        AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,_______,_______,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,XXXXXXX,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
+        _______,_______,_______,_______,_______,_______,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,                        LOWER  ,KC_SPC ,XXXXXXX,     FIRST  ,KC_0   ,XXXXXXX                                ,_______
+        _______,                        LOWER  ,KC_SPC ,_______,     FIRST  ,KC_0   ,_______                                ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
     [_CONFIG] = LAYOUT(
@@ -93,7 +94,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_LOWER] = LAYOUT( // ESC and RALT are for lefty. KC_SLASH is for input a date.
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        GT_ZKHK,JP_1   ,JP_2   ,JP_3   ,JP_4   ,JP_5   ,                             JP_6   ,JP_7   ,JP_8   ,JP_9   ,JP_0   ,KC_ESC ,
+        GT_ZKHK,JP_1   ,JP_2   ,JP_3   ,JP_4   ,JP_5   ,                             JP_6   ,JP_7   ,JP_8   ,JP_9   ,JP_0   ,ESC_BS  ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         KC_TAB ,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5 ,                             KC_LEFT ,KC_DOWN,KC_UP  ,KC_RGHT,KC_DEL ,RALT_T(KC_INS),
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
@@ -150,11 +151,9 @@ bool tap_when_shift(uint16_t keycode) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     bool dance = false;
+    bool long_tapped = false;
     if (record->event.pressed) {
-        // Check tap dance
-        if (last_pressed == keycode && record->event.time - last_time < TAPPING_TERM) {
-            dance = true;
-        }
+        dance = (last_pressed == keycode && record->event.time - last_time <= TAPPING_TERM);
         last_pressed = keycode;
         last_time = record->event.time;
         // Count up taps.
@@ -180,10 +179,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case JP_QUOT: return tap_when_shift(JP_DQUO);
             case JP_SCLN: return tap_when_shift(JP_COLN);
         }
+    } else {
+        long_tapped = (last_pressed == keycode && record->event.time - last_time > TAPPING_TERM);
     }
 
     // tap-hold params
     uint16_t tapped_key = 0;
+    uint16_t long_tapped_key = 0;
     enum layer_number hold_layer = 0;
 
     switch (keycode) {
@@ -227,6 +229,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             tapped_key = KC_ENT;
             hold_layer = _RAISE;
             break;
+        case ESC_BS:
+            tapped_key = KC_BSPC;
+            long_tapped_key = KC_ESC;
+            break;
         default:
             return true;
     }
@@ -240,10 +246,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else {
                 layer_on(hold_layer);
             }
+        } else if (long_tapped_key) {
+            unregister_code(tapped_key);
+            tap_code(long_tapped? long_tapped_key : tapped_key);
         } else {
             layer_off(hold_layer);
             unregister_code(tapped_key);
-            if (last_pressed == keycode) {
+            if (!long_tapped && last_pressed == keycode) {
                 tap_code(tapped_key);
             }
         }
