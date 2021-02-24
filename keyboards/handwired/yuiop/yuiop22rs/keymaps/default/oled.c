@@ -19,15 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
-static char keylog[24] = {};
+#include "rs.h"
+
+static char keylog[2][24] = {};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!record->event.pressed) {
         return true;
     }
-    snprintf(keylog, sizeof(keylog), "K:%04X R:%d C:%d",
+    snprintf(keylog[0], sizeof(keylog[0]), "K:%04X R:%d C:%d",
             keycode, record->event.key.row, record->event.key.col);
     return true;
+}
+
+void rotary_switch_update_state_user(uint8_t state) {
+    snprintf(keylog[1], sizeof(keylog[1]), "RS:%02X", state);
+    oled_set_cursor(0, 2);
+    oled_write_ln(keylog[1], false);
+    oled_render();
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
@@ -36,7 +45,8 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 
 void oled_task_user(void) {
     oled_write_ln_P(PSTR(STR(PRODUCT)), false);
-    oled_write_ln(keylog, false);
+    oled_write_ln(keylog[0], false);
+    oled_write_ln(keylog[1], false);
 }
 
 #endif // OLED_DRIVER_ENABLE

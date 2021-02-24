@@ -15,20 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "quantum.h"
+extern uint8_t rotary_switch_state;
 
-#define LAYOUT( \
-                   K03, K04, \
-    K10, K11, K12, K13, K14, \
-    K20, K21, K22, K23, K24, \
-    K30, K31, K32, K33, K34, \
-    K40, K41, K42, K43, K44  \
-) \
-{ \
-    { KC_NO, KC_NO, KC_NO,   K03,   K04 }, \
-    {   K10,   K11,   K12,   K13,   K14 }, \
-    {   K20,   K21,   K22,   K23,   K24 }, \
-    {   K30,   K31,   K32,   K33,   K34 }, \
-    {   K40,   K41,   K42,   K43,   K44 }, \
-    { KC_NO, KC_NO, KC_NO, KC_NO, KC_NO }, \
-}
+void rotary_switch_update_state_kb(uint8_t state);
+void rotary_switch_update_state_user(uint8_t state);

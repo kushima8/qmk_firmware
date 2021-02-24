@@ -13,22 +13,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include QMK_KEYBOARD_H
 
-#include "quantum.h"
+#include "rs.h"
 
-#define LAYOUT( \
-                   K03, K04, \
-    K10, K11, K12, K13, K14, \
-    K20, K21, K22, K23, K24, \
-    K30, K31, K32, K33, K34, \
-    K40, K41, K42, K43, K44  \
-) \
-{ \
-    { KC_NO, KC_NO, KC_NO,   K03,   K04 }, \
-    {   K10,   K11,   K12,   K13,   K14 }, \
-    {   K20,   K21,   K22,   K23,   K24 }, \
-    {   K30,   K31,   K32,   K33,   K34 }, \
-    {   K40,   K41,   K42,   K43,   K44 }, \
-    { KC_NO, KC_NO, KC_NO, KC_NO, KC_NO }, \
+__attribute__((weak)) void rotary_switch_update_state_kb(uint8_t state) { rotary_switch_update_state_user(state); }
+
+__attribute__((weak)) void rotary_switch_update_state_user(uint8_t state) {}
+
+uint8_t rotary_switch_state = 0;
+
+void dip_switch_update_mask_kb(uint32_t state) { 
+    rotary_switch_state = (uint32_t)state;
+    rotary_switch_update_state_kb(rotary_switch_state);
 }
