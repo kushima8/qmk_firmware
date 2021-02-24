@@ -15,9 +15,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
-#ifdef OLED_DRIVER_ENABLE
-
 #include <stdio.h>
+
+#ifdef OLED_DRIVER_ENABLE
 
 static char keylog[2][24] = {};
 
@@ -28,13 +28,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     snprintf(keylog[0], sizeof(keylog[0]), "K:%04X R:%d C:%d",
             keycode, record->event.key.row, record->event.key.col);
     return true;
-}
-
-void rotary_switch_update_state_user(uint8_t state) {
-    snprintf(keylog[1], sizeof(keylog[1]), "RS:%02X", state);
-    oled_set_cursor(0, 2);
-    oled_write_ln(keylog[1], false);
-    oled_render();
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
@@ -48,3 +41,21 @@ void oled_task_user(void) {
 }
 
 #endif // OLED_DRIVER_ENABLE
+
+void rotary_switch_update_state_user(uint8_t state) {
+    // Change layer_state by rotary switch state.
+    layer_state_t next = layer_state & ~0b11111111110;
+    if (state >= 1 && state <= 9) {
+        next |= 1 << state;
+    }
+    if (next != layer_state) {
+        layer_state_set(next);
+    }
+
+#ifdef OLED_DRIVER_ENABLE
+    snprintf(keylog[1], sizeof(keylog[1]), "RS:%02X L:%04lX", state, (uint32_t)layer_state);
+    oled_set_cursor(0, 2);
+    oled_write_ln(keylog[1], false);
+    oled_render();
+#endif // OLED_DRIVER_ENABLE
+}
