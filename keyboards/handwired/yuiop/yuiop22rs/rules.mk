@@ -27,3 +27,6 @@ LEADER_ENABLE = no
 MIDI_ENABLE = no
 UNICODE_ENABLE = no
 BLUETOOTH_ENABLE = no
+
+# Rotary switch works with DIP switch driver.
+DIP_SWITCH_ENABLE = yes
