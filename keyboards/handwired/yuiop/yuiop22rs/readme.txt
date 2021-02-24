@@ -1,9 +1,9 @@
-# YUIOP27
+# YUIOP22RS
 
-An experimental half of 60% keyboard.
+An experimental 22 keys macro pad with a rotary switch.
 
 * Keyboard Maintainer: [MURAOKA Taro](https://github.com/koron)
-* Hardware Supported: YUIOP27 rev.1
+* Hardware Supported: YUIOP22RS rev.1
 * Hardware Availability: no
 
 Make example for this keyboard (after setting up your build environment):

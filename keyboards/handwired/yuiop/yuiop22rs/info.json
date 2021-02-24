@@ -1,0 +1,39 @@
+{
+  "keyboard_name": "YUIOP22RS",
+  "url": "https://github.com/koron/yuiop/tree/kaoriya/yuiop22rs",
+  "maintainer": "koron",
+  "width": 5.00,
+  "header": 5.00,
+  "layouts": {
+    "LAYOUT": {
+      "layout": [
+        {"label":"DEL",   "x":3.00, "y":0.00},
+        {"label":"ESC",   "x":4.00, "y":0.00},
+
+        {"label":"7",     "x":0.00, "y":1.00},
+        {"label":"8",     "x":1.00, "y":1.00},
+        {"label":"9",     "x":2.00, "y":1.00},
+        {"label":"PGUP",  "x":3.00, "y":1.00},
+        {"label":"HOME",  "x":4.00, "y":1.00},
+
+        {"label":"4",     "x":0.00, "y":2.00},
+        {"label":"5",     "x":1.00, "y":2.00},
+        {"label":"6",     "x":2.00, "y":2.00},
+        {"label":"PGDN",  "x":3.00, "y":2.00},
+        {"label":"END",   "x":4.00, "y":2.00},
+
+        {"label":"1",     "x":0.00, "y":3.00},
+        {"label":"2",     "x":1.00, "y":3.00},
+        {"label":"3",     "x":2.00, "y":3.00},
+        {"label":"DOWN",  "x":3.00, "y":3.00},
+        {"label":"UP",    "x":4.00, "y":3.00},
+
+        {"label":".",     "x":0.00, "y":4.00},
+        {"label":"0",     "x":1.00, "y":4.00},
+        {"label":"FN",    "x":2.00, "y":4.00},
+        {"label":"LEFT",  "x":3.00, "y":4.00},
+        {"label":"RIGHT", "x":4.00, "y":4.00}
+      ]
+    }
+  }
+}
