@@ -32,3 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {   K40,   K41,   K42,   K43,   K44 }, \
     { KC_NO, KC_NO, KC_NO, KC_NO, KC_NO }, \
 }
+
+extern uint8_t rotary_switch_state;
+
+void rotary_switch_update_state_kb(uint8_t state);
+void rotary_switch_update_state_user(uint8_t state);

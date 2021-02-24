@@ -14,3 +14,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "yuiop22rs.h"
+
+__attribute__((weak)) void rotary_switch_update_state_kb(uint8_t state) { rotary_switch_update_state_user(state); }
+
+__attribute__((weak)) void rotary_switch_update_state_user(uint8_t state) {}
+
+uint8_t rotary_switch_state = 0;
+
+void dip_switch_update_mask_kb(uint32_t state) { 
+    rotary_switch_state = (uint32_t)state;
+    rotary_switch_update_state_kb(rotary_switch_state);
+}

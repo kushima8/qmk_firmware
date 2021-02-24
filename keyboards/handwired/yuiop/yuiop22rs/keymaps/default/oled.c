@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
-#include "rs.h"
-
 static char keylog[2][24] = {};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
