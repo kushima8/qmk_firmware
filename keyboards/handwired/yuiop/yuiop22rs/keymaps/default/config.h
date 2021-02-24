@@ -15,9 +15,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define LAYER_STATE_8BIT
+#define LAYER_STATE_16BIT
 
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 200
+
+// List of row and col pairs
+#define DIP_SWITCH_MATRIX_GRID { {5,0}, {5,1}, {5,2}, {5,3} }
 
 #define NO_ACTION_ONESHOT
