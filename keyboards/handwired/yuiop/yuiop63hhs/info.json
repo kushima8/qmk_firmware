@@ -1,0 +1,14 @@
+{
+  "keyboard_name": "YUIOP63HHS",
+  "url": "https://github.com/koron/yuiop/tree/master/yuiop63hhs",
+  "maintainer": "koron",
+  "width": 15.50,
+  "header": 5,
+  "layouts": {
+    "LAYOUT": {
+      "layout": [
+        "TODO: describe layout"
+      ]
+    }
+  }
+}
