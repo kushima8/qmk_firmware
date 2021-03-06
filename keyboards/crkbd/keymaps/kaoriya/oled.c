@@ -54,6 +54,8 @@ void oled_render_keylog(void) {
     oled_write(keylog_str, false);
 }
 
+extern char kaoriya_verinfo[];
+
 void oled_render_logo(void) {
 #if 1
     static const char PROGMEM crkbd_logo[] = {
