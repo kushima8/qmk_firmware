@@ -109,6 +109,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define DISABLE_RGB_MATRIX_SPLASH
 #    define DISABLE_RGB_MATRIX_SOLID_SPLASH
 #endif
-
-extern const int kaoriya_mapver;
-extern char kaoriya_verinfo[];
