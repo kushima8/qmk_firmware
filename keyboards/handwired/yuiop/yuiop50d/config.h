@@ -45,6 +45,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 10
 
-// Disable some QMK Features as default.
-#define NO_ACTION_MACRO
-#define NO_ACTION_FUNCTION
+// RGB matrix settings
+#ifdef RGB_MATRIX_ENABLE
+# define DRIVER_LED_TOTAL 50
+# define RGB_MATRIX_KEYPRESSES
+# define RGB_MATRIX_FRAMEBUFFER_EFFECTS
+# define RGB_MATRIX_MAXIMUM_BRIGHTNESS 100
+#endif
