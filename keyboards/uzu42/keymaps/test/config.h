@@ -20,9 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-/* Select hand configuration */
+// Detect hand configuration (left or right) by matrix.
 #define SPLIT_HAND_MATRIX_GRID D7, B3
 #define SPLIT_HAND_MATRIX_GRID_LOW_IS_RIGHT
+
+// Detect master/slave configuration by USB instead of VBUS.
+#define SPLIT_USB_DETECT
+#define SPLIT_USB_TIMEOUT 500
 
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 200
