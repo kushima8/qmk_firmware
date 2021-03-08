@@ -24,9 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Select hand configuration */
 
-#define MASTER_LEFT
+//#define MASTER_LEFT
 // #define MASTER_RIGHT
 // #define EE_HANDS
+#define SPLIT_USB_DETECT
 
 #define SSD1306OLED
 
@@ -38,10 +39,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #undef RGBLED_NUM
 #define RGBLIGHT_ANIMATIONS
 #define RGBLED_NUM 54
-#define RGBLIGHT_LIMIT_VAL 120
-#define RGBLIGHT_HUE_STEP 10
+#define RGBLIGHT_LIMIT_VAL 100
+#define RGBLIGHT_HUE_STEP 17
 #define RGBLIGHT_SAT_STEP 17
-#define RGBLIGHT_VAL_STEP 17
+#define RGBLIGHT_VAL_STEP 10
 
 // Use the lily version to get the uzu42 logo instead of the qmk logo
 #define OLED_FONT_H "keymaps/default/glcdfont_uzu42.c"
