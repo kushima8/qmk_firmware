@@ -15,7 +15,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
+#ifdef RGBLIGHT_ENABLE
+
 void keyboard_post_init_user(void) {
-  rgblight_enable_noeeprom();
-  rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
+    // Force RGB lights to show test animation without writing toi EEPROM.
+    rgblight_enable_noeeprom();
+    rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 }
+#endif // RGBLIGHT_ENABLE
