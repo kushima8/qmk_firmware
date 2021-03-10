@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEVICE_VER      0x0001
 #define MANUFACTURER    koron
 
-#define PRODUCT         YUIOP22RS Rev.1
+#define PRODUCT         YUIOP22RS Rev.2
 #define DESCRIPTION     Experimental Keyboard
 
 // Key matrix size and pins
-#define MATRIX_ROWS 10
-#define MATRIX_COLS 6
+#define MATRIX_ROWS 6
+#define MATRIX_COLS 5
 #define MATRIX_ROW_PINS { B1, F7, F6, F5, F4, B6 }
 #define MATRIX_COL_PINS { D4, C6, D7, E6, B4 }
 #define DIODE_DIRECTION COL2ROW
@@ -38,13 +38,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // List of row and col pairs
 #define DIP_SWITCH_MATRIX_GRID { {5,0}, {5,1}, {5,2}, {5,3} }
+#define MATRIX_MASKED
 
 // Not implemented yet.
 //// Splitting
 //#define USE_SERIAL
 //#define SOFT_SERIAL_PIN D2
 //#define SPLIT_USB_DETECT
-
-// Disable some QMK Features as default.
-#define NO_ACTION_MACRO
-#define NO_ACTION_FUNCTION

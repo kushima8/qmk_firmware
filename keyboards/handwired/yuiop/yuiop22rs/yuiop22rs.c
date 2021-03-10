@@ -25,3 +25,12 @@ void dip_switch_update_mask_kb(uint32_t state) {
     rotary_switch_state = (uint32_t)state;
     rotary_switch_update_state_kb(rotary_switch_state);
 }
+
+matrix_row_t matrix_mask[MATRIX_ROWS] = {
+    0b11000,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b00000,
+};
