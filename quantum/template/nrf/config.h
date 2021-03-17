@@ -29,6 +29,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PRODUCT         %KEYBOARD%
 #define DESCRIPTION     A custom keyboard
 
+#define BMP_BOOTPIN_AS_RESET
+
+#define TAPPING_TERM_PER_KEY
+#define PERMISSIVE_HOLD
+#define PREVENT_STUCK_MODIFIERS
+#define IGNORE_MOD_TAP_INTERRUPT
+#define TAPPING_TERM 200
+
 /* key matrix size */
 #define MATRIX_ROWS_DEFAULT 1
 #define MATRIX_COLS_DEFAULT 3
@@ -54,6 +62,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define KEYMAP_PRIOR_LOCALE 0
 #define KEYMAP_ASCII 0
+
+#define DEBUG_ACTION
 
 
 /* COL2ROW, ROW2COL*/

@@ -35,15 +35,9 @@ NRF_VER_DIR = sdk$(NRFSDK_VER)
 
 COMMON_VPATH += $(DRIVER_PATH)/nrf52
 
-GIT_HASH = $(shell git log -1 --format="%h")
-CFLAGS += -DGIT_HASH=$(GIT_HASH)
+GIT_DESCRIBE = $(shell git describe --tags --long --dirty="\\*")
+CFLAGS += -DGIT_DESCRIBE=$(GIT_DESCRIBE)
 CFLAGS += -DTARGET=$(TARGET)
-
-ifeq ($(shell git diff --exit-code --quiet; echo $$?), 1)
-  CFLAGS += -DGIT_HAS_DIFF=-*
-else
-  CFLAGS += -DGIT_HAS_DIFF
-endif
 
 ifeq ($(MCU_SERIES), NRF52840)
   NRFSRC +=  $(TOP_DIR)/tmk_core/protocol/nrf/gcc_startup_nrf52840.S \
@@ -60,6 +54,8 @@ EXTRAINCDIRS += \
   $(TMK_PATH)/protocol/nrf \
   $(TMK_PATH)/protocol/nrf/$(NRF_VER_DIR) \
   $(TMK_PATH)/protocol/nrf/nrf52 \
+  $(TMK_PATH)/protocol/nrf/microshell/core \
+  $(TMK_PATH)/protocol/nrf/microshell/util \
   $(TMK_PATH)/protocol/chibios/lufa_utils \
 
   NRFCFLAGS += -DAPP_USBD_VID=VENDOR_ID
@@ -276,13 +272,13 @@ $(TARGET).ble.zip: $(TARGET).bin
 
 dfu_ble: $(TARGET).ble.zip
 
-$(TARGET).zip: $(BUILD_DIR)/$(TARGET).bin
+zip: $(BUILD_DIR)/$(TARGET).bin
 	if ! type "nrfutil" > /dev/null 2>&1; then \
 		echo 'ERROR: nrfutil is not found'; exit 1;\
 	fi
 	$(NRFUTIL) pkg generate --debug-mode --hw-version 52 --sd-req 0xA9 --application $(TARGET).bin $(TARGET).zip
 
-nrfutil: $(TARGET).zip
+nrfutil: zip
 	if $(GREP) -q -s Microsoft /proc/version; then \
 		echo 'ERROR: nrfutil cannot be automated within the Windows Subsystem for Linux (WSL) currently.'; \
 	else \
@@ -292,7 +288,7 @@ nrfutil: $(TARGET).zip
 			sleep 0.5; \
 			printf "."; \
 			ls /dev/tty* > /tmp/2; \
-			USB=`comm -13 /tmp/1 /tmp/2 | $(GREP) -o '/dev/tty.*'`; \
+			USB=`comm -13 /tmp/1 /tmp/2 | $(GREP) -o '/dev/tty.*' | head -n 1`; \
 			mv /tmp/2 /tmp/1; \
 		done; \
 		echo ""; \

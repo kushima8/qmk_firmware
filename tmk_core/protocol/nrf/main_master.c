@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdbool.h>
 #include "app_ble_func.h"
 #include "keycode_str_converter.h"
 #include "config_file_util.h"
@@ -54,7 +55,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "cli.h"
 #include "configurator.h"
 #include "bmp.h"
+#include "bmp_config.h"
 #include "bmp_encoder.h"
+#include "bmp_indicator_led.h"
 
 #ifndef MATRIX_SCAN_TIME_MS
 #define MATRIX_SCAN_TIME_MS 17
@@ -104,9 +107,12 @@ void main_tasks(void* context) {
   /* Main loop */
   timer_tick(MAINTASK_INTERVAL);
 
+  bmp_indicator_task(MAINTASK_INTERVAL);
+
   if (BMPAPI->app.get_config()->mode == SPLIT_SLAVE)
   {
     matrix_scan();
+    bmp_mode_transition_check();
 #if defined(RGBLIGHT_ENABLE) && defined(RGBLIGHT_ANIMATIONS)
     rgblight_task();
 #endif
@@ -114,6 +120,7 @@ void main_tasks(void* context) {
   else
   {
     bmp_keyboard_task();
+    bmp_mode_transition_check();
 #ifdef CONSOLE_ENABLE
     console_task();
 #endif
@@ -155,12 +162,29 @@ _Static_assert(sizeof(report_keyboard_t) == sizeof(bmp_api_key_report_t),
 
 void send_mouse(report_mouse_t *report) {
   if (get_ble_enabled()) {
+    static bool is_zeros_send = false;
+    if (report->buttons == 0 && report->x == 0 && report->y == 0
+        && report->v == 0 && report->h ==0) {
+      if (is_zeros_send) {
+        // skip no move packet if it has been already send
+        return;
+      }
+      else {
+        is_zeros_send = true;
+      }
+    }
+    else {
+      is_zeros_send = false;
+    }
+
     BMPAPI->ble.send_mouse((bmp_api_mouse_report_t*)report);
   }
+
   if (get_usb_enabled()) {
     BMPAPI->usb.send_mouse((bmp_api_mouse_report_t*)report);
   }
 }
+
 _Static_assert(sizeof(report_mouse_t) == sizeof(bmp_api_mouse_report_t),
         "Invalid report definition. Check MOUSE_SHARED_EP options");
 
@@ -199,15 +223,18 @@ int main(void) {
   keyboard_init();
   host_set_driver(driver);
 
-  rgblight_set_clipping_range(0, BMPAPI->app.get_config()->led.num);
-  rgblight_set_effect_range(0, BMPAPI->app.get_config()->led.num);
+  const bmp_api_config_t * config = BMPAPI->app.get_config();
+
+  rgblight_set_clipping_range(0, config->led.num);
+  rgblight_set_effect_range(0, config->led.num);
+
+  bmp_indicator_init(config->reserved[1]);
 
   BMPAPI->app.main_task_start(main_tasks, MAINTASK_INTERVAL);
-#ifdef BMP_ENCODER_ENABLE
-  bmp_encoder_init();
-#endif
+  bmp_encoder_init(get_bmp_encoder_config());
 
   for (;;) {
+    BMPAPI->app.process_task();
     BMPAPI->usb.process();
     cli_exec();
   }

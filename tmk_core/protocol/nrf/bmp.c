@@ -1,6 +1,28 @@
+/*
+Copyright 2019 Sekigon
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 
 #include "bmp.h"
+#include "bmp_config.h"
 #include "bmp_encoder.h"
+#include "bmp_custom_keycode.h"
+#include "bmp_process_extended_keycode.h"
+#include "bmp_indicator_led.h"
+#include "keycode_str_converter.h"
 
 #include <stdint.h>
 #include "quantum.h"
@@ -69,16 +91,61 @@
   #include "velocikey.h"
 #endif
 
+#include "keycode_str_converter.h"
+#include "config_file_util.h"
+#include "apidef.h"
+#include "cli.h"
+#include "bmp_matrix.h"
+
 #ifndef DISABLE_MSC
 #define DISABLE_MSC 0
 #endif
 
-#ifndef TAPPING_TERM
-#define TAPPING_TERM 200
+#ifndef BMP_FORCE_SAFE_MODE
+#define BMP_FORCE_SAFE_MODE false
 #endif
 
 
-static int sleep_enter_counter = -1;
+void bmp_action_exec(keyevent_t event)
+{
+    bmp_action_exec_impl(event);
+    action_exec(event);
+}
+
+int sleep_enter_counter = -1;
+int reset_counter = -1;
+int bootloader_jump_counter = -1;
+
+void bmp_mode_transition_check(void) {
+    // sleep flag check
+    if (sleep_enter_counter > 0)
+    {
+        sleep_enter_counter--;
+        if (sleep_enter_counter == 0)
+        {
+            bmp_enter_sleep();
+        }
+    }
+
+    // reset flag check
+    if (reset_counter > 0)
+    {
+        reset_counter--;
+        if (reset_counter == 0)
+        {
+            // reset without safemode flag
+            BMPAPI->app.reset(0);
+        }
+    }
+
+    // bootloader jump flag check
+    if (bootloader_jump_counter > 0) {
+        bootloader_jump_counter--;
+        if (bootloader_jump_counter == 0) {
+            BMPAPI->bootloader_jump();
+        }
+    }
+}
 
 /** \brief Keyboard task: Do keyboard routine jobs
  *
@@ -102,18 +169,11 @@ void bmp_keyboard_task(void)
     uint8_t keys_processed = 0;
 #endif
 
-#if defined(OLED_DRIVER_ENABLE) && !defined(OLED_DISABLE_TIMEOUT)
-    uint8_t ret = matrix_scan();
-#else
-    matrix_scan();
-#endif
+    uint32_t key_event_cnt = matrix_scan();
 
-#ifdef BMP_ENCODER_ENABLE
-    bmp_encoder_read();
-#endif
+    bmp_encoder_read(get_bmp_encoder_config(), key_event_cnt);
 
-    const bmp_api_config_t *config = BMPAPI->app.get_config();
-
+    const bmp_api_config_t * config = BMPAPI->app.get_config();
 
     if (is_keyboard_master()) {
         for (uint8_t r = 0; r < config->matrix.rows; r++) {
@@ -126,7 +186,7 @@ void bmp_keyboard_task(void)
                 if (debug_matrix) matrix_print();
                 for (uint8_t c = 0; c < config->matrix.cols; c++) {
                     if (matrix_change & ((matrix_row_t)1<<c)) {
-                        action_exec((keyevent_t){
+                        bmp_action_exec((keyevent_t){
                             .key = (keypos_t){ .row = r, .col = c },
                             .pressed = (matrix_row & ((matrix_row_t)1<<c)),
                             .time = (timer_read() | 1) /* time should not be 0 */
@@ -149,7 +209,7 @@ void bmp_keyboard_task(void)
     // we can get here with some keys processed now.
     if (!keys_processed)
 #endif
-    action_exec(TICK);
+    bmp_action_exec(TICK);
 
 MATRIX_LOOP_END:
 
@@ -161,7 +221,7 @@ MATRIX_LOOP_END:
     oled_task();
 #ifndef OLED_DISABLE_TIMEOUT
     // Wake up oled if user is using those fabulous keys!
-    if (ret)
+    if (key_event_cnt)
         oled_on();
 #endif
 #endif
@@ -209,14 +269,17 @@ MATRIX_LOOP_END:
         keyboard_set_leds(led_status);
     }
 
-    // sleep flag check
-    if (sleep_enter_counter > 0)
-    {
-        sleep_enter_counter--;
-        if (sleep_enter_counter == 0)
-        {
-            BMPAPI->app.enter_sleep_mode();
+    // auto sleep check
+    static uint32_t last_event_time = 0;
+    uint32_t auto_sleep_timeout = BMPAPI->app.get_config()->reserved[2] * 10 *
+                                  60 * 1000;  // * 10min * 60s/min * 1000ms/s
+
+    if (auto_sleep_timeout && key_event_cnt == 0 && !is_usb_connected()) {
+        if (timer_elapsed32(last_event_time) > auto_sleep_timeout) {
+            sleep_enter_counter = 1;
         }
+    } else {
+        last_event_time = timer_read32();
     }
 }
 
@@ -229,266 +292,140 @@ bmp_error_t nus_rcv_callback(const uint8_t* dat, uint32_t len)
     return BMP_OK;
 }
 
-#include "keycode_str_converter.h"
-#include "config_file_util.h"
-#include "apidef.h"
-#include "cli.h"
+static bool is_usb_connected_ = false;
+static bool is_ble_connected_ = false;
 
-char config_string[2048];
-char keymap_string[10*1024];
-bmp_qmk_config_t bmp_qmk_config;
-char qmk_config_string[1024];
-
-char *strnstr(const char *haystack, const char *needle, size_t len) {
-  int i;
-  size_t needle_len;
-
-  needle_len = strnlen(needle, len);
-
-  if (needle_len == 0)
-  {
-    return (char*)haystack;
-  }
-
-  for (i = 0; i <= (int)(len - needle_len); i++)
-  {
-    if ((haystack[0] == needle[0])
-        && (strncmp(haystack, needle, needle_len) == 0))
-    {
-      return (char *) haystack;
-    }
-
-    haystack++;
-  }
-  return NULL;
-}
-
-void parse_and_save_config(void)
-{
-    bmp_api_config_t config;
-    json_config_convert_inst_t inst;
-    json_to_config_conv_inst_init(&inst, &config);
-    int32_t res = json_to_config_conv(&inst, config_string);
-    if (res)
-    {
-        BMPAPI->logger.info("Failed to parse config");
-    }
-    else
-    {
-        if (BMPAPI->app.set_config(&config) == BMP_OK)
-        {
-            matrix_init();
-            BMPAPI->logger.info("Update config");
-            BMPAPI->app.save_file(0);
-        }
-        else
-        {
-            BMPAPI->logger.info("Invalid config");
-        }
-    }
-}
-
-void parse_and_save_keymap(void)
-{
-    uint16_t keymap[512];
-    json_keymap_convert_inst_t inst;
-    json_to_keymap_init(&inst, keymap, sizeof(keymap)/sizeof(keymap[0]));
-    inst.locale = BMPAPI->app.get_config()->keymap.locale;
-    if (json_to_keymap_conv(&inst, keymap_string) == 0)
-    {
-        xprintf("Update keymap. length:%d\r\n", inst.keymap_idx);
-        BMPAPI->app.set_keymap(keymap, inst.keymap_idx);
-        BMPAPI->app.save_file(1);
-    }
-    else
-    {
-        BMPAPI->logger.info("Invalid keymap");
-    }
-}
-
-void parse_and_save_qmk_config(void)
-{
-    json_to_tapping_term_config_conv(qmk_config_string,
-        &bmp_qmk_config,
-        BMPAPI->app.get_config()->keymap.locale);
-    int res = save_tapping_term_file();
-    if (res == 0)
-    {
-        xprintf("Update tapping term\r\n");
-    }
-    else
-    {
-        xprintf("Failed to update tapping term\r\n");
-    }
-}
-
-typedef struct
-{
-  const char* key;
-  char* string_dst;
-  uint32_t dst_len;
-  void (*parse_and_save)(void);
-} file_string_parser_t;
-
-file_string_parser_t file_string_parser[]
-  = {{.key = "\"config\"", .string_dst = config_string,
-    .dst_len = sizeof(config_string), parse_and_save_config},
-    {.key = "\"layers\"", .string_dst = keymap_string,
-    .dst_len = sizeof(keymap_string), parse_and_save_keymap},
-    {.key = "\"tapping_term\"", .string_dst = qmk_config_string,
-    .dst_len = sizeof(qmk_config_string), parse_and_save_qmk_config }
-    };
-
-bmp_error_t msc_write_callback(const uint8_t* dat, uint32_t len)
-{
-  static uint8_t write_mode = 0;
-  static uint16_t write_idx = 0;
-  static char* dst = NULL;
-  static uint32_t dst_len = 0;
-  int32_t json_close;
-  static file_string_parser_t *parser = NULL;
-
-  if (write_mode == 0)
-  {
-    for (int i=0; i<sizeof(file_string_parser)/sizeof(file_string_parser[0]); i++)
-    {
-      if (strnstr((const char*)dat, file_string_parser[i].key, len) != NULL)
-      {
-        write_mode = i + 1;
-        parser = &file_string_parser[i];
-        dst = parser->string_dst;
-        dst_len = parser->dst_len;
-        memcpy(dst, dat, len);
-        write_idx = len;
-        xprintf("Match key: %s\r\n", parser->key);
-      }
-    }
-  }
-  else
-  {
-    if (write_idx + len > dst_len)
-    {
-      write_idx = 0;
-      write_mode = 0;
-      return BMP_INVALID_PARAM;
-    }
-    memcpy(dst + write_idx, dat, len);
-    write_idx += len;
-  }
-
-  if (write_mode > 0)
-  {
-    json_close = is_json_closed((const char*)dst, write_idx);
-    if (json_close == 0)
-    {
-      parser->parse_and_save();
-      parser = NULL;
-      write_idx = 0;
-      write_mode = 0;
-      BMPAPI->logger.info("Received json");
-    }
-    else if (json_close == -1)
-    {
-      write_idx = 0;
-      write_mode = 0;
-      BMPAPI->logger.info("Invalid json");
-    }
-  }
-  return BMP_OK;
-}
-
-bmp_error_t webnus_write_callback(const uint8_t* dat, uint32_t len)
-{
-  if (strnstr((const char*)dat, "show keymap", len) != NULL)
-  {
-    BMPAPI->web_config.set_send_buffer((uint8_t*)keymap_string,
-      strlen(keymap_string) + 1); // send keymap string whit null character
-  }
-  else if (strnstr((const char*)dat, "show config", len) != NULL)
-  {
-    BMPAPI->web_config.set_send_buffer((uint8_t*)config_string,
-      strlen(config_string) + 1); // send keymap string whit null character
-  }
-  else if (strnstr((const char*)dat, "show tapping term", len) != NULL)
-  {
-    // TODO implement
-    // BMPAPI->web_config.set_send_buffer((uint8_t*)config_string,
-    //   strlen(config_string) + 1); // send keymap string whit null character
-  }
-  else
-  {
-    msc_write_callback(dat, len);
-  }
-  return BMP_OK;
-}
-
-static inline void update_config_string(bmp_api_config_t const * config,
-    char * str, uint32_t len)
-{
-  config_to_json_conv(config, str, len);
-  BMPAPI->usb.create_file("CONFIG  JSN", (uint8_t*)str, strlen(str));
-}
-
-static inline void update_keymap_string(bmp_api_config_t const * config,
-    char * str, uint32_t len,
-    bmp_api_keymap_info_t const * const keymap_info)
-{
-  keymap_json_convert_inst_t keymap_conv_inst;
-  keymap_to_json_init(&keymap_conv_inst, keymap_info->array, keymap_info->len);
-  keymap_conv_inst.locale = config->keymap.locale;
-  keymap_conv_inst.use_ascii = config->keymap.use_ascii;
-  strcpy(str, "{\"layers\":\r\n");
-  keymap_to_json_conv_layout(&keymap_conv_inst, str + 12,
-      len-12, config->matrix.layout);
-  strcat(str, "}");
-  BMPAPI->usb.create_file("KEYMAP  JSN", (uint8_t*)str, strlen(str));
-}
-
-static inline void update_tapping_term_string(bmp_api_config_t const * config,
-    char * str, uint32_t len)
-{
-  tapping_term_config_to_json_conv(&bmp_qmk_config, str, len,
-     config->keymap.locale,
-     config->keymap.use_ascii
-     );
-  BMPAPI->usb.create_file("TAPTERM JSN", (uint8_t*)str, strlen(str));
-}
-
-static inline void create_info_file()
-{
-  static char info[] =
-                        "API version: " STR(API_VERSION) "\n"
-                        "Config version: " STR(CONFIG_VERSION) "\n"
-                        "Build from " STR(GIT_HASH) STR(GIT_HAS_DIFF)"\n"
-                        "Build Target: " STR(TARGET);
-  BMPAPI->usb.create_file("VERSION TXT", (uint8_t*)info, strlen(info));
-}
-
-static inline void create_index_html()
-{
-static char index_html[] = "<meta http-equiv=\"refresh\" content=\"0;URL=\'https://github.com/sekigon-gonnoc/BLE-Micro-Pro/tree/master/AboutDefaultFirmware\'\"/>";
-  BMPAPI->usb.create_file("INDEX   HTM", (uint8_t*)index_html, strlen(index_html));
-}
+bool is_usb_connected() { return is_usb_connected_; }
+bool is_ble_connected() { return is_ble_connected_; }
 
 bmp_error_t bmp_state_change_cb(bmp_api_event_t event)
 {
-  const bmp_api_config_t * config = BMPAPI->app.get_config();
-  bmp_api_keymap_info_t keymap_info;
   switch (event)
   {
     case USB_CONNECTED:
-      BMPAPI->app.get_keymap_info(&keymap_info);
-      update_keymap_string(config, keymap_string, sizeof(keymap_string), &keymap_info);
-      update_config_string(config, config_string, sizeof(config_string));
-      update_tapping_term_string(config, qmk_config_string, sizeof(qmk_config_string));
-      create_info_file();
-      create_index_html();
+        is_usb_connected_ = true;
+        if (!is_ble_connected()) {
+            select_usb();
+        }
+        update_config_files();
+        break;
+
+    case USB_DISCONNECTED:
+        is_usb_connected_ = false;
+        if (is_ble_connected()) {
+            select_ble();
+        }
+        break;
+
+    case BLE_ADVERTISING_START:
+      bmp_indicator_set(INDICATOR_ADVERTISING, 0);
       break;
+
+    case BLE_ADVERTISING_STOP:
+      bmp_indicator_set(INDICATOR_TURN_OFF, 0);
+
+      if (!is_usb_connected()) {
+          sleep_enter_counter = 1;
+      }
+      break;
+
+    case BLE_CONNECTED:
+        is_ble_connected_ = true;
+        if (!is_usb_connected()) {
+            select_ble();
+        }
+        bmp_indicator_set(INDICATOR_CONNECTED, 0);
+        break;
+
+    case BLE_DISCONNECTED:
+        is_ble_connected_ = false;
+        // Disable below code because BLE could be disconnected unintentionally
+        // if (is_usb_connected()) {
+        //     select_usb();
+        // }
+        break;
+
     default:
       break;
   }
   return BMP_OK;
 }
+
+void bmp_hid_raw_receive_cb(const uint8_t * data, uint8_t len) {
+    // xprintf("<hidraw>receive %d bytes", len);
+    static uint8_t via_data[32];
+    if (len > sizeof(via_data) + 1) {
+        xprintf("<hidraw>Too large packet");
+        return;
+    }
+
+    memcpy(via_data, data, len - 1);
+
+    bmp_via_receive_cb(via_data, len - 1);
+}
+
+static bool checkKeyIsPressedOnStartup(bmp_api_config_t const * const config, uint8_t row, uint8_t col)
+{
+  int8_t low_side_pin, high_side_pin;
+  if (config->matrix.diode_direction == MATRIX_COL2ROW
+    || config->matrix.diode_direction == MATRIX_COL2ROW2COL
+    || config->matrix.diode_direction == MATRIX_COL2ROW_LPME) {
+    high_side_pin = col;
+    low_side_pin = row;
+  }
+  else if (config->matrix.diode_direction == MATRIX_ROW2COL
+    || config->matrix.diode_direction == MATRIX_ROW2COL2ROW
+    || config->matrix.diode_direction == MATRIX_ROW2COL_LPME) {
+    high_side_pin = row;
+    low_side_pin = col;
+  }
+  else {
+    // return default value
+    return false;
+  }
+
+  setPinInput(high_side_pin);
+  setPinOd(low_side_pin);
+  writePinLow(low_side_pin);
+
+  uint8_t pin_state = readPin(high_side_pin);
+
+  writePinLow(low_side_pin);
+
+  return pin_state == 0;
+}
+
+__attribute__((weak)) bool checkSafemodeFlag(bmp_api_config_t const * const config)
+{
+    return checkKeyIsPressedOnStartup(config, config->matrix.row_pins[0],
+            config->matrix.col_pins[0]);
+}
+
+#if defined(ALLOW_MSC_ROW_PIN) && defined(ALLOW_MSC_COL_PIN)
+static inline bool checkMscDisableFlag(bmp_api_config_t const * const config)
+{
+  if (checkKeyIsPressedOnStartup(config,
+    ALLOW_MSC_ROW_PIN, ALLOW_MSC_COL_PIN) == 0) {
+    // enable MSC
+    return false;
+  } else {
+    // disable MSC
+    return true;
+  }
+}
+#endif
+
+__attribute__((weak)) bool bmp_config_overwrite(
+    bmp_api_config_t const* const config_on_storage,
+    bmp_api_config_t* const       keyboard_config) {
+    return false;
+}
+
+static bool has_ble = true;
+static bool has_usb = true;
+static bool is_safe_mode_ = false;
+
+bool is_safe_mode() { return is_safe_mode_; }
 
 void bmp_init()
 {
@@ -508,8 +445,8 @@ void bmp_init()
       .device_info = {PRODUCT_ID, VENDOR_ID,
         STR(PRODUCT), STR(MANUFACTURER), STR(DESCRIPTION)},
       .matrix = {
-          .rows = MATRIX_ROWS,
-          .cols = MATRIX_COLS,
+          .rows = MATRIX_ROWS_DEFAULT,
+          .cols = MATRIX_COLS_DEFAULT,
           .device_rows = THIS_DEVICE_ROWS,
           .device_cols = THIS_DEVICE_COLS,
           .debounce = 1,
@@ -522,15 +459,60 @@ void bmp_init()
       .param_peripheral = {60, 30, 7},
       .param_central = {60, 30, 7},
       .led = {.pin = RGB_DI_PIN, .num = RGBLED_NUM_DEFAULT},
-      .keymap = {.locale = KEYMAP_PRIOR_LOCALE, .use_ascii = KEYMAP_ASCII}
+      .keymap = {.locale = KEYMAP_PRIOR_LOCALE, .use_ascii = KEYMAP_ASCII},
+#ifdef CONFIG_RESERVED
+      .reserved = CONFIG_RESERVED
+#endif
   };
 
-  BMPAPI->app.init(&default_config);
+  is_safe_mode_ = (BMPAPI->app.init(&default_config) > 0);
+
   const bmp_api_config_t * config = BMPAPI->app.get_config();
+
+
+  if (checkSafemodeFlag(config) || BMP_FORCE_SAFE_MODE)
+  {
+    // start in safe mode
+    BMPAPI->app.set_config(&default_config);
+    config = &default_config;
+    is_safe_mode_ = true;
+  }
+
+
+  bmp_api_config_t keyboard_config = default_config;
+
+  if (bmp_config_overwrite(config, &keyboard_config)) {
+    BMPAPI->app.set_config(&keyboard_config);
+    config = &keyboard_config;
+  }
+
   BMPAPI->usb.set_msc_write_cb(msc_write_callback);
   BMPAPI->app.set_state_change_cb(bmp_state_change_cb);
+  BMPAPI->usb.set_raw_receive_cb(bmp_hid_raw_receive_cb);
 
-  BMPAPI->usb.init(config, DISABLE_MSC);
+  uint16_t vcc_percent = BMPAPI->app.get_vcc_percent();
+  int32_t battery_level = 1;
+
+  if (vcc_percent > 70) {
+    battery_level = 3;
+  }
+  else if (vcc_percent > 30) {
+    battery_level = 2;
+  }
+
+  bmp_indicator_set(INDICATOR_BATTERY, battery_level);
+
+
+  if (!is_safe_mode_) {
+#if defined(ALLOW_MSC_ROW_PIN) && defined(ALLOW_MSC_COL_PIN)
+    BMPAPI->usb.init(config, checkMscDisableFlag(config));
+#else
+    BMPAPI->usb.init(config, DISABLE_MSC);
+#endif
+  } else {
+      BMPAPI->usb.init(config, DISABLE_MSC);
+  }
+
   BMPAPI->ble.init(config);
 
   BMPAPI->logger.info("usb init");
@@ -540,7 +522,7 @@ void bmp_init()
   BMPAPI->app.get_keymap_info(&keymap_info);
   if (keymap_info.len == 0)
   {
-    BMPAPI->app.set_keymap((uint16_t*)keymaps, keymaps_len()); // load default keymap
+    BMPAPI->app.set_keymap((uint16_t*)keymaps, keymaps_len(), keymap_info.layout_name); // load default keymap
     BMPAPI->app.get_keymap_info(&keymap_info);
   }
 
@@ -549,15 +531,16 @@ void bmp_init()
     BMPAPI->ble.set_nus_rcv_cb(nus_rcv_callback);
   }
 
+  load_ex_keycode_file(); // load exkc before tapping_term
   load_tapping_term_file();
   load_eeprom_emulation_file();
+  load_encoder_config_file();
 
   if (config->mode == WEBNUS_CONFIG)
   {
-    update_keymap_string(config, keymap_string, sizeof(keymap_string), &keymap_info);
-    update_config_string(config, config_string, sizeof(config_string));
-    update_tapping_term_string(config, qmk_config_string, sizeof(qmk_config_string));
+    update_config_files();
     BMPAPI->web_config.set_rcv_callback(webnus_write_callback);
+    has_ble = false;
   }
   else if ((config->mode == SINGLE || config->mode == SPLIT_MASTER) &&
     config->startup == 1)
@@ -565,189 +548,143 @@ void bmp_init()
     BMPAPI->ble.advertise(255);
   }
 
-
   BMPAPI->usb.enable();
   BMPAPI->logger.info("usb enable");
-}
-
-int load_eeprom_emulation_file()
-{
-  uint8_t *eeprom_buffer;
-  uint32_t eeprom_buffer_length;
-  eeprom_get_buffer_addr(&eeprom_buffer, &eeprom_buffer_length);
-  if (eeprom_buffer == NULL)
-  {
-    return 1;
-  }
-
-  uint8_t *eeprom_file;
-  uint32_t eeprom_file_length;
-  BMPAPI->app.get_file(QMK_EE_RECORD, &eeprom_file, &eeprom_file_length);
-  if (eeprom_file == NULL)
-  {
-    return 1;
-  }
-
-  uint32_t copy_length;
-  copy_length = (eeprom_buffer_length > eeprom_file_length) ?
-                eeprom_file_length : eeprom_buffer_length;
-  memcpy(eeprom_buffer, eeprom_file, copy_length);
-
-  return 0;
-}
-
-int save_eeprom_emulation_file()
-{
-  uint8_t *eeprom_buffer;
-  uint32_t eeprom_buffer_length;
-  eeprom_get_buffer_addr(&eeprom_buffer, &eeprom_buffer_length);
-  if (eeprom_buffer == NULL)
-  {
-    return 1;
-  }
-
-  uint8_t *eeprom_file;
-  uint32_t eeprom_file_length;
-  BMPAPI->app.get_file(QMK_EE_RECORD, &eeprom_file, &eeprom_file_length);
-  if (eeprom_file == NULL)
-  {
-    BMPAPI->app.save_file(QMK_EE_RECORD); // create eeprom file
-    BMPAPI->app.get_file(QMK_EE_RECORD, &eeprom_file, &eeprom_file_length);
-    if (eeprom_file == NULL) return 1;
-  }
-
-  uint32_t copy_length;
-  copy_length = (eeprom_buffer_length > eeprom_file_length) ?
-                eeprom_file_length : eeprom_buffer_length;
-  memcpy(eeprom_file, eeprom_buffer, copy_length);
-
-  return BMPAPI->app.save_file(QMK_EE_RECORD);
-}
-
-int load_tapping_term_file()
-{
-  bmp_qmk_config_t *p_qmk_config;
-  uint32_t qmk_config_file_len;
-  BMPAPI->app.get_file(QMK_RECORD, (uint8_t**)&p_qmk_config, &qmk_config_file_len);
-  if (p_qmk_config == NULL)
-  {
-    bmp_qmk_config.tapping_term[0].qkc = KC_NO;
-    bmp_qmk_config.tapping_term[0].tapping_term = TAPPING_TERM;
-    return 1;
-  }
-  memcpy(&bmp_qmk_config, p_qmk_config, sizeof(bmp_qmk_config));
-
-  return 0;
-}
-
-int save_tapping_term_file()
-{
-  bmp_qmk_config_t *p_qmk_config;
-  uint32_t qmk_config_file_len;
-  BMPAPI->app.get_file(QMK_RECORD, (uint8_t**)&p_qmk_config, &qmk_config_file_len);
-  if (p_qmk_config == NULL)
-  {
-    BMPAPI->app.save_file(QMK_RECORD);
-    BMPAPI->app.get_file(QMK_RECORD, (uint8_t**)&p_qmk_config, &qmk_config_file_len);
-    if (p_qmk_config == NULL) return 1;
-  }
-
-  memcpy(p_qmk_config, &bmp_qmk_config, sizeof(bmp_qmk_config));
-
-  return BMPAPI->app.save_file(QMK_RECORD);
-}
-
-uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key)
-{
-  return BMPAPI->app.keymap_key_to_keycode(layer, (bmp_api_keypos_t*)&key);
-}
-
-uint16_t get_tapping_term(uint16_t keycode) {
-  for (int i=0;
-     i<sizeof(bmp_qmk_config.tapping_term)/sizeof(bmp_qmk_config.tapping_term[0]);
-     i++)
-  {
-    if (bmp_qmk_config.tapping_term[i].qkc == keycode)
-    {
-      return bmp_qmk_config.tapping_term[i].tapping_term;
-    }
-  }
-
-  // get default tapping term
-  for (int i=0;
-     i<sizeof(bmp_qmk_config.tapping_term)/sizeof(bmp_qmk_config.tapping_term[0]);
-     i++)
-  {
-    if (bmp_qmk_config.tapping_term[i].qkc == KC_NO)
-    {
-      return bmp_qmk_config.tapping_term[i].tapping_term;
-    }
-  }
-  return TAPPING_TERM;
 }
 
 static bool usb_enabled = true;
 static bool ble_enabled = true;
 
-bool get_ble_enabled() { return ble_enabled; }
+bool get_ble_enabled() { return ble_enabled & has_ble; }
 void set_ble_enabled(bool enabled) { ble_enabled = enabled; }
-bool get_usb_enabled() { return usb_enabled; }
+bool get_usb_enabled() { return usb_enabled & has_usb; }
 void set_usb_enabled(bool enabled) { usb_enabled = enabled; }
+void select_ble(void) {
+    ble_enabled = true;
+    usb_enabled = false;
+}
+void select_usb(void) {
+    ble_enabled = false;
+    usb_enabled = true;
+}
 
+extern bool via_keymap_update_flag;
 
-bool process_record_user_bmp(uint16_t keycode, keyrecord_t *record)
-{
-  char str[16];
-  if (record->event.pressed) {
+bool process_record_user_bmp(uint16_t keycode, keyrecord_t* record) {
+    char str[16];
+
     switch (keycode) {
-      case BLE_DIS:
-        set_ble_enabled(false);
-        return false;
-      case BLE_EN:
-        set_ble_enabled(true);
-        return false;
-      case USB_DIS:
-        set_usb_enabled(false);
-        return false;
-      case USB_EN:
-        set_usb_enabled(true);
-        return false;
-      case ADV_ID0...ADV_ID7:
-        BMPAPI->ble.advertise(keycode - ADV_ID0);
-        return false;
-      case AD_WO_L:
-        BMPAPI->ble.advertise(255);
-        return false;
-      case DEL_ID0...DEL_ID7:
-        BMPAPI->ble.delete_bond(keycode - DEL_ID0);
-        return false;
-      case DELBNDS:
-        BMPAPI->ble.delete_bond(255);
-        return false;
-      case ENT_DFU:
-        BMPAPI->bootloader_jump();
-        return false;
-      case ENT_WEB:
-        BMPAPI->web_config.enter();
-        return false;
-      case BATT_LV:
-        snprintf(str, sizeof(str), "%4dmV", BMPAPI->app.get_vcc_mv());
-        send_string(str);
-        return false;
-    }
-  }
-  else if (!record->event.pressed) {
-    switch  (keycode) {
-    case ENT_SLP:
-    sleep_enter_counter = 10;
-    return false;
-    }
-  }
+        case KC_INS: {
+            static uint32_t insert_pressed_time;
+            if (record->event.pressed) {
+                insert_pressed_time = timer_read32();
+            } else {
+                if (via_keymap_update_flag && insert_pressed_time > 0 &&
+                    timer_elapsed32(insert_pressed_time) > 3000) {
+                    if (save_keymap() == 0) {
+                        via_keymap_update_flag = false;
+                    }
+                }
+                insert_pressed_time = 0;
+            }
+        }
+            return true;
+            break;
+        case xEISU:
+            if (record->event.pressed) {
+                if (keymap_config.swap_lalt_lgui == false) {
+                    register_code(KC_LANG2);
+                } else {
+                    SEND_STRING(SS_LALT("`"));
+                }
+            } else {
+                unregister_code(KC_LANG2);
+            }
+            return false;
+            break;
 
-  return true;
+        case xKANA:
+            if (record->event.pressed) {
+                if (keymap_config.swap_lalt_lgui == false) {
+                    register_code(KC_LANG1);
+                } else {
+                    SEND_STRING(SS_LALT("`"));
+                }
+            } else {
+                unregister_code(KC_LANG1);
+            }
+            return false;
+            break;
+
+        default:
+            break;
+    }
+
+    if (record->event.pressed) {
+        switch (keycode) {
+            case BLE_DIS:
+                set_ble_enabled(false);
+                return false;
+            case BLE_EN:
+                set_ble_enabled(true);
+                return false;
+            case USB_DIS:
+                set_usb_enabled(false);
+                return false;
+            case USB_EN:
+                set_usb_enabled(true);
+                return false;
+            case SEL_BLE:
+                select_ble();
+                return false;
+            case SEL_USB:
+                select_usb();
+                return false;
+            case ADV_ID0 ... ADV_ID7:
+                BMPAPI->ble.advertise(keycode - ADV_ID0);
+                return false;
+            case AD_WO_L:
+                BMPAPI->ble.advertise(255);
+                return false;
+            case DEL_ID0 ... DEL_ID7:
+                BMPAPI->ble.delete_bond(keycode - DEL_ID0);
+                return false;
+            case DELBNDS:
+                BMPAPI->ble.delete_bond(255);
+                return false;
+            case ENT_DFU:
+                BMPAPI->bootloader_jump();
+                return false;
+            case ENT_WEB:
+                BMPAPI->web_config.enter();
+                return false;
+            case BATT_LV:
+                snprintf(str, sizeof(str), "%4dmV", BMPAPI->app.get_vcc_mv());
+                send_string(str);
+                return false;
+            case SAVE_EE:
+                save_eeprom_emulation_file();
+                return false;
+            case DEL_EE:
+                BMPAPI->app.delete_file(QMK_EE_RECORD);
+                return false;
+        }
+    } else if (!record->event.pressed) {
+        switch (keycode) {
+            case ENT_SLP:
+                sleep_enter_counter = 10;
+                return false;
+        }
+    }
+
+    return true;
 }
 
-__attribute__((weak))uint32_t keymaps_len()
-{
-  return 0;
+__attribute__((weak)) uint32_t keymaps_len() { return 0; }
+
+__attribute__((weak)) void bmp_enter_sleep(void) {
+    bmp_before_sleep();
+    BMPAPI->app.enter_sleep_mode();
 }
+
+__attribute__((weak)) void bmp_before_sleep() {}

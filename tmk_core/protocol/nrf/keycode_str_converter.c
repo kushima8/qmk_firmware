@@ -10,12 +10,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "keycode_str_converter.h"
 #include "action_code.h"
 #include "keycode.h"
 #include "quantum_keycodes.h"
-#include "keycode_str_converter.h"
 #include "keymap_jp.h"
-#include "bmp.h"
+#include "bmp_custom_keycode.h"
 
 const key_string_map_t regular_keys = {
   .start_kc = KC_NO,
@@ -165,8 +166,8 @@ const key_string_map_t regular_keys = {
     "INT7\0"
     "INT8\0"
     "INT9\0"
-    "HAEN\0" //"LANG1\0"
-    "HANJ\0" //"LANG2\0"
+    "LANG1\0"
+    "LANG2\0"
     "LANG3\0"
     "LANG4\0"
     "LANG5\0"
@@ -279,6 +280,25 @@ const key_string_map_t rgb_keys = {
     "M_G\0"
 };
 
+const key_string_map_t sp_cad_sft_keys1 = {
+  .start_kc = KC_LSPO,
+  .end_kc = KC_SFTENT,
+  .key_strings =
+    "LSPO\0"
+    "RSPC\0"
+    "SFTENT\0"
+};
+
+const key_string_map_t sp_cad_sft_keys2 = {
+  .start_kc = KC_LCPO,
+  .end_kc = KC_RAPC,
+  .key_strings =
+    "LCPO\0"
+    "RCPC\0"
+    "LAPO\0"
+    "RAPC\0"
+};
+
 const key_string_map_t magic_keys = {
   .start_kc = RESET,
   .end_kc = MAGIC_TOGGLE_NKRO,
@@ -306,6 +326,13 @@ const key_string_map_t magic_keys = {
     "TOGGLE_NKRO\0"
 };
 
+const key_string_map_t gesc_key = {
+  .start_kc = KC_GESC,
+  .end_kc = KC_GESC,
+  .key_strings =
+    "GESC\0"
+};
+
 const key_string_map_t shifted_keys1 = {
   .start_kc = KC_EXLM,
   .end_kc = KC_RPRN,
@@ -319,7 +346,7 @@ const key_string_map_t shifted_keys2 = {
   .end_kc = KC_QUES,
   .key_strings =
       "UNDS\0" "PLUS\0" "LCBR\0" "RCBR\0" "PIPE\0"
-      "\0" "COLN\0" "DQT\0" "TILD\0" "LT\0" "RT\0" "QUES\0"
+      "\0" "COLN\0" "DQUO\0" "TILD\0" "LT\0" "GT\0" "QUES\0"
 };
 
 const key_string_map_t jp_keys1 = {
@@ -353,7 +380,7 @@ const key_string_map_t jp_ascii1 = {
     ";\0"
     ":\0"
     "\0" // "ZHTG\0"
-    ",\0"
+    "\\,\0"
     ".\0"
     "/\0"
 };
@@ -391,7 +418,7 @@ const key_string_map_t jp_keys3 = {
   .end_kc = JP_QUES,
   .key_strings =
     "EXLM\0"
-    "DQT\0"
+    "DQUO\0"
     "HASH\0"
     "DLR\0"
     "PERC\0"
@@ -475,7 +502,7 @@ const key_string_map_t ascii_keys2 = {
   .end_kc = KC_SLSH,
   .key_strings =
     "-\0=\0[\0]\0"
-    "\\\\\0\0;\0'\0`\0,\0.\0/\0"
+    "\\\\\0\0;\0'\0`\0\\,\0.\0/\0"
 };
 
 const key_string_map_t ascii_keys3 = {
@@ -495,12 +522,14 @@ const key_string_map_t ascii_keys4 = {
 
 const key_string_map_t custom_keys_bmp = {
   .start_kc = SAFE_RANGE,
-  .end_kc = BATT_LV,
+  .end_kc = xKANA,
   .key_strings=
     "BLE_DIS\0"
     "BLE_EN\0"
     "USB_DIS\0"
     "USB_EN\0"
+    "SEL_BLE\0"
+    "SEL_USB\0"
     "ADV_ID0\0"
     "ADV_ID1\0"
     "ADV_ID2\0"
@@ -523,8 +552,11 @@ const key_string_map_t custom_keys_bmp = {
     "ENT_WEB\0"
     "ENT_SLP\0"
     "BATT_LV\0"
+    "SAVE_EE\0"
+    "DEL_EE\0"
+    "xEISU\0"
+    "xKANA\0"
 };
-extern const key_string_map_t custom_keys_user;
 
 typedef enum
 {
@@ -535,7 +567,10 @@ typedef enum
   MAP_SYS_CONSUMER,
   MAP_MOUSE,
   MAP_RGB,
+  MAP_SCS1,
+  MAP_SCS2,
   MAP_MAGIC,
+  MAP_GESC,
 } KEY_STRING_MAP_IDX;
 
 const key_string_map_t* key_string_maps[] = {
@@ -546,7 +581,10 @@ const key_string_map_t* key_string_maps[] = {
   [MAP_SYS_CONSUMER] = &system_and_consumers,
   [MAP_MOUSE] = &mouse_keys,
   [MAP_RGB] = &rgb_keys,
+  [MAP_SCS1] = &sp_cad_sft_keys1,
+  [MAP_SCS2] = &sp_cad_sft_keys2,
   [MAP_MAGIC] = &magic_keys,
+  [MAP_GESC] = &gesc_key,
 };
 
 const key_string_map_t* key_ascii_maps[] = {
@@ -573,9 +611,11 @@ const key_string_map_t* key_jp_maps_ascii[] = {
   &jp_ascii4,
 };
 
-const key_string_map_t* key_custom_maps[] = {
-  &custom_keys_bmp,
-  &custom_keys_user,
+extern const key_string_map_t custom_keys_user;
+const key_string_map_t* key_custom_maps[] =
+{
+    &custom_keys_bmp,
+    &custom_keys_user,
 };
 
 #define ARRAY_LEN(x) sizeof(x)/sizeof(x[0])
@@ -730,6 +770,41 @@ uint8_t modbit2prefix(uint8_t mod, char* str, uint8_t len) {
   return found;
 }
 
+static const char* osm_mods[] = {"MOD_LCTL", "MOD_LSFT", "MOD_LALT", "MOD_LGUI",
+                                 "MOD_RCTL", "MOD_RSFT", "MOD_RALT", "MOD_RGUI",
+                                 "MOD_MEH",  "MOD_HYPR"};
+static const uint8_t osm_mods_kc[] = {MOD_LCTL, MOD_LSFT, MOD_LALT, MOD_LGUI,
+                                      MOD_RCTL, MOD_RSFT, MOD_RALT, MOD_RGUI,
+                                      MOD_MEH,  MOD_HYPR};
+
+void get_osm_mod_string(uint8_t kc, char* dst) {
+  switch (kc) {
+    case MOD_MEH:
+      strcpy(dst, "MOD_MEH");
+      return;
+    case MOD_HYPR:
+      strcpy(dst, "MOD_HYPR");
+      return;
+    default:
+      break;
+  }
+
+  bool need_pipe = false;
+  for (int idx = 0; idx < 4; idx++) {
+    if (kc & (1 << idx)) {
+      if (need_pipe) {
+        dst[0] = '|';
+        dst++;
+      }
+      // copy RMODs if flag is set
+      strcpy(dst, osm_mods[kc & 0x10 ? idx + 4 : idx]);
+      dst += 8;  // all mods string len is 8
+
+      need_pipe = true;
+    }
+  }
+}
+
 #define case_proc_qkc(code, locale, use_ascii, ...) \
 {                                                                   \
     keycode_str = get_keycode_string_locale(code, locale, use_ascii);\
@@ -746,13 +821,13 @@ const char *keycode_prefix[] =
   [LOCALE_JP] = "JP_",
 };
 
-uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint8_t len,
+uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint32_t len,
   KEYMAP_LOCALE locale, bool use_ascii)
 {
   uint8_t kc = qk & 0xFF;
   uint8_t copied_len = 0;
   const char* keycode_str=NULL;
-  char mod_str[20];
+  char mod_str[64];
   const char* kc_prefix = keycode_prefix[LOCALE_US];
 
   switch(locale) {
@@ -773,6 +848,9 @@ uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint8_t len,
 
   switch(qk) {
   case QK_BASIC...QK_BASIC_MAX:
+  case KC_LSPO...KC_SFTENT:
+  case KC_LCPO...KC_RAPC:
+  case KC_GESC:
   case_proc_qkc(qk, locale, use_ascii, "%s%s", kc_prefix, keycode_str);
   break;
 
@@ -811,7 +889,11 @@ uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint8_t len,
     }
     else
     {
-      modbit2prefix((qk >> 8) & 0x1F, mod_str, sizeof(mod_str));
+      uint8_t found = modbit2prefix((qk >> 8) & 0x1F, mod_str, sizeof(mod_str));
+      if (!found) {
+        copied_len = snprintf(str, len, "ANY(%d)", qk);
+        break;
+      }
     }
     case_proc_qkc(kc, locale, use_ascii, "%s(%s%s)", mod_str, kc_prefix, keycode_str);
     break;
@@ -826,9 +908,17 @@ uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint8_t len,
   copied_len = snprintf(str, len, "OSL(%d)", qk & 0xFF);        \
   break;
 
+  case QK_ONE_SHOT_MOD...QK_ONE_SHOT_MOD_MAX:
+  get_osm_mod_string(qk & 0xFF, mod_str);
+  copied_len = snprintf(str, len, "OSM(%s)", mod_str);        \
+  break;
+
   case QK_MOD_TAP...QK_MOD_TAP_MAX:
-  modbit2prefix((qk >> 8) & 0x1F, mod_str, sizeof(mod_str));
-  case_proc_qkc(kc, locale, use_ascii, "%s_T(%s%s)", mod_str, kc_prefix, keycode_str);
+  if (modbit2prefix((qk >> 8) & 0x1F, mod_str, sizeof(mod_str))) {
+    case_proc_qkc(kc, locale, use_ascii, "%s_T(%s%s)", mod_str, kc_prefix, keycode_str);
+  } else {
+    copied_len = snprintf(str, len, "ANY(%d)", qk);
+  }
   break;
 
   case RGB_TOG...RGB_MODE_RGBTEST:
@@ -852,7 +942,7 @@ uint8_t quantum_keycode2str_locale(uint16_t qk, char* str, uint8_t len,
 }
 
 // default setting
-uint8_t quantum_keycode2str(uint16_t qk, char* str, uint8_t len) {
+uint8_t quantum_keycode2str(uint16_t qk, char* str, uint32_t len) {
   return quantum_keycode2str_locale(qk, str, len, LOCALE_US, false);
 }
 
@@ -862,7 +952,7 @@ typedef enum
  RGB, MAGIC, ANY,
  LCTL, LSFT, LALT, LGUI, RCTL, RSFT, RALT, RGUI,
  LCA, MEH, ALL, C_S,
- HYPR, LCAG, RCAG, SGUI,
+ HYPR, LCAG, RCAG, SGUI, OSM, EX,
 } QK_PREFIX_STRING;
 #define PREFIX_PAIR(prefix) [prefix]= #prefix
 
@@ -943,41 +1033,6 @@ uint16_t convert_kc(const char* str, uint8_t len, uint8_t key_string_map)
     0);
   if (kc != KC_NO) return kc;
 
-  // char ascii = 0;
-  // bool in_escape = false;
-  // for (int i=0; i<len; i++)
-  // {
-  //   if (!in_escape && str[i] == '\\')
-  //   {
-  //     in_escape = true;
-  //     continue;
-  //   }
-  //
-  //   if (i == len-1)
-  //   {
-  //     ascii = str[i];
-  //   }
-  //   else
-  //   {
-  //     return KC_NO;
-  //   }
-  // }
-  //
-  // // convert based on keycode-ascii code maps
-  // for (int i = 0; i < ARRAY_LEN(key_ascii_maps); i++)
-  // {
-  //   kc_string = key_ascii_maps[i]->key_strings;
-  //   for (int str_idx = 0;
-  //       str_idx < (key_ascii_maps[i]->end_kc - key_ascii_maps[i]->start_kc + 1);
-  //       str_idx++)
-  //   {
-  //     if (kc_string[str_idx] == ascii)
-  //     {
-  //       return key_ascii_maps[i]->start_kc + str_idx;
-  //     }
-  //   }
-  // }
-
   return KC_NO;
 }
 
@@ -994,6 +1049,9 @@ uint16_t convert_jp(const char* str, uint8_t len, uint8_t key_string_map)
 
   kc = convert_kc_helper(str, len, key_jp_maps_ascii, ARRAY_LEN(key_jp_maps_ascii),
     0);
+  if (kc != KC_NO) return kc;
+
+  kc = convert_kc(str, len, 0);
   if (kc != KC_NO) return kc;
 
   return KC_NO;
@@ -1035,6 +1093,8 @@ uint16_t convert_layer_key(const char* str, uint8_t len, QK_PREFIX_STRING prefix
     return TO(layer);
   case DF:
     return DF(layer);
+  case TT:
+    return TT(layer);
   case TG:
     return TG(layer);
   case OSL:
@@ -1110,6 +1170,179 @@ uint16_t convert_kc_with_mods(const char *str, uint8_t len, QK_PREFIX_STRING pre
   return KC_NO;
 }
 
+int32_t find_in_str_array(const char* str, const char* const* array,
+                          uint8_t array_len)
+{
+  for (uint8_t idx = 0; idx < array_len; idx++)
+  {
+    if (strcmp(str, array[idx]) == 0)
+    {
+      return idx;
+    }
+  }
+
+  return -1;
+}
+
+uint16_t convert_kc_osm(const char *str, uint8_t len, KEYMAP_LOCALE locale)
+{
+  char mod_str[32];
+  uint8_t mod_bit = 0;
+
+
+  strncpy(mod_str, str, len - 1);
+  // skip )
+  mod_str[len - 1] = '\0';
+
+  // dprintf("%s->%s\n", str, mod_str);
+
+  char * mod_tok = strtok(mod_str, "|");
+  while (mod_tok != NULL)
+  {
+    // dprintf("tok:%s\n", mod_tok);
+    int mod_idx = find_in_str_array(mod_tok, osm_mods, ARRAY_LEN(osm_mods));
+    if (mod_idx >= 0)
+    {
+        mod_bit |= osm_mods_kc[mod_idx];
+    }
+
+    mod_tok = strtok(NULL, "|");
+  }
+
+  return OSM(mod_bit);
+}
+
+uint16_t get_kc_strlen(const char* str, uint16_t len)
+{
+    int idx;
+    int pcnt = 0;
+    for (idx=0; idx<len; idx++)
+    {
+        if (str[idx] == '\\')
+        {
+            idx++;
+            continue;
+        }
+        else if (str[idx] == '(')
+        {
+            pcnt++;
+        }
+        else if (str[idx] == ')')
+        {
+            pcnt--;
+            if (pcnt == 0)
+            {
+                return idx + 1;
+            }
+            else if (pcnt == -1)
+            {
+                return idx;
+            }
+        }
+        else if (str[idx] == ',' && pcnt == 0)
+        {
+            return idx;
+        }
+    }
+
+    return len;
+}
+
+uint16_t get_inner_element(const char** pp_str, uint16_t len)
+{
+    const char *str = *pp_str;
+    int idx;
+    int paren_open;
+
+    // find first (
+    for (idx=0; idx<len; idx++)
+    {
+        if (str[idx] == '(')
+        {
+            break;
+        }
+    }
+
+    if (idx == len) return len;
+    paren_open = idx + 1;
+
+    // find last )
+    for (idx=len-1; idx > paren_open; idx--)
+    {
+        if (str[idx] == ')')
+        {
+            break;
+        }
+    }
+    if (idx == paren_open) return len;
+
+    *pp_str = &str[paren_open];
+    return idx - paren_open;
+}
+
+uint16_t get_element_array(const char* str, uint16_t len,
+    const char **pp_element, uint16_t* element_len, uint16_t buf_len)
+{
+    int idx;
+    int paren_open;
+    const char *element_start = str;
+    uint16_t element_num = 0;
+
+    // find first (
+    for (idx=0; idx<len; idx++)
+    {
+        if (str[idx] == '\\')
+        {
+            // skip next charactar
+            idx++;
+            continue;
+        }
+        else if (str[idx] == ',')
+        {
+            pp_element[element_num] = element_start;
+            element_len[element_num] = &str[idx] - element_start;
+            element_start = str + idx + 1;
+
+            element_num++;
+            if (element_num >= buf_len)
+            {
+                break;
+            }
+        }
+        else if (str[idx] == '(')
+        {
+            paren_open = idx;
+            for (idx=paren_open; idx < len; idx++)
+            {
+                if (str[idx] == ')')
+                {
+                    break;
+                }
+            }
+            if (idx == len)
+            {
+                idx = paren_open;
+            }
+        }
+        else if (str[idx] == ' ' && element_start == &str[idx])
+        {
+            // skip white space on start
+            element_start++;
+        }
+    }
+
+    if (element_num < buf_len)
+    {
+        pp_element[element_num] = element_start;
+        element_len[element_num] = &str[idx] - element_start;
+        element_start = str + idx + 1;
+
+        element_num++;
+    }
+
+    return element_num;
+}
+
 uint16_t str2quantum_keycode_locale(const char* str, uint32_t len,
     KEYMAP_LOCALE locale)
 {
@@ -1143,6 +1376,8 @@ uint16_t str2quantum_keycode_locale(const char* str, uint32_t len,
       PREFIX_PAIR(LCAG),
       PREFIX_PAIR(RCAG),
       PREFIX_PAIR(SGUI),
+      PREFIX_PAIR(OSM),
+      PREFIX_PAIR(EX),
   };
 
   int prefix_idx=0;
@@ -1175,10 +1410,7 @@ uint16_t str2quantum_keycode_locale(const char* str, uint32_t len,
   case LT:
 	  return convert_lt(str + prefix_len, len-prefix_len, locale);
     break;
-  case MO...DF:
-	  return convert_layer_key(str + prefix_len, len-prefix_len, prefix_idx);
-    break;
-  case OSL:
+  case MO...OSL:
 	  return convert_layer_key(str + prefix_len, len-prefix_len, prefix_idx);
     break;
   case RGB:
@@ -1200,6 +1432,10 @@ uint16_t str2quantum_keycode_locale(const char* str, uint32_t len,
 	  return convert_kc_with_mods(str + prefix_len, len-prefix_len, prefix_idx, locale);
   case HYPR...SGUI:
 	  return convert_kc_with_mods(str + prefix_len, len-prefix_len, prefix_idx, locale);
+  case OSM:
+	  return convert_kc_osm(str + prefix_len, len-prefix_len, locale);
+  case EX:
+      return EXKC_START;
   default:
 	  return conv(str, len, 0);
     break;

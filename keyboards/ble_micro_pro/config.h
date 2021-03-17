@@ -29,9 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PRODUCT         ble_micro_pro
 #define DESCRIPTION     A development board for wireless split keyboards
 
+#define BMP_BOOTPIN_AS_RESET
+
 #define TAPPING_TERM_PER_KEY
 #define PERMISSIVE_HOLD
 #define PREVENT_STUCK_MODIFIERS
+#define IGNORE_MOD_TAP_INTERRUPT
 #define TAPPING_TERM 200
 
 /* key matrix size */
@@ -41,6 +44,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define THIS_DEVICE_COLS 19
 #define IS_LEFT_HAND  true
 #define BMP_DEFAULT_MODE SINGLE
+
+/*
+ * Enable mass storage when the switch connected following pins is pushed on boot.
+ * No warranty
+*/
+// #define ALLOW_MSC_ROW_PIN 7
+// #define ALLOW_MSC_COL_PIN 20
 
 /*
  * Keyboard Matrix Assignments
@@ -93,6 +103,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Debounce reduces chatter (unintended double-presses) - set 0 if debouncing is not needed */
 #define DEBOUNCE 1
+
+#define DEBUG_ACTION
 
 /* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
 #define LOCKING_SUPPORT_ENABLE
