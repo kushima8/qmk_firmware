@@ -28,10 +28,12 @@ enum layer_number {
 };
 
 enum custom_keycodes {
-    RT_ENT = SAFE_RANGE, // Hold=>RAISE, Tap=>Enter
+    S_LAYER = SAFE_RANGE, // Swich layer
+    RT_ENT,  // Hold=>RAISE, Tap=>Enter
+    RT_0,    // Hold=>RAISE, Tap=>KC_0
     LT_MHEN, // Hold=>LOWER, Dance=>RAISE, Tap=>Mukenkan
     LT_HENK, // Hold=>LOWER, Dance=>RAISE, Tap=>Henkan
-    ESC_BS   // Hold=>ESC, Tap=>BS
+    ESC_BS   // Hold=>ESC,   Tap=>BS
 };
 
 #define FIRST  TO(_FIRST)
@@ -56,7 +58,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         KC_LSFT,KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,                             KC_N   ,KC_M   ,KC_COMM,KC_DOT ,KC_SLSH,ST_MINS,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_LCTL,                        LT_MHEN,KC_SPC ,CONFIG ,     SECOND ,RT_ENT ,LT_HENK                                ,KC_RCTL
+        KC_LCTL,                        LT_MHEN,KC_SPC ,TENKEY ,     SECOND ,RT_ENT ,LT_HENK                                ,KC_RCTL
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
     [_SECOND] = LAYOUT( // TODO: Oekaki for Lefty
@@ -67,36 +69,36 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             KC_Z   ,KC_X   ,KC_C   ,KC_V   ,KC_B   ,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,                        _______,_______,_______,     _______,KC_LCTL,KC_LALT                                ,RCTL_T(KC_ENT)
+        _______,                        _______,_______,_______,     FIRST  ,KC_LCTL,KC_LALT                                ,RCTL_T(KC_ENT)
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
     [_TENKEY] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        GT_ESC ,_______,KC_UP  ,_______,_______,_______,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
+        _______,_______,KC_UP  ,_______,_______,_______,                             KC_7   ,KC_8   ,KC_9   ,KC_MINS,KC_SLSH,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        AT_TAB ,KC_LEFT,KC_DOWN,KC_RGHT,_______,_______,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
+        _______,KC_LEFT,KC_DOWN,KC_RGHT,_______,_______,                             KC_4   ,KC_5   ,KC_6   ,KC_PPLS,KC_PAST,KC_TAB ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             KC_1   ,KC_2   ,KC_3   ,KC_DOT ,KC_COMM,KC_ENT ,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,                        LOWER  ,KC_SPC ,_______,     FIRST  ,KC_0   ,_______                                ,_______
+        _______,                        _______,_______,FIRST  ,     _______,RT_0   ,_______                                ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
     [_CONFIG] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        FIRST  ,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,_______,
+        _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,                             _______,_______,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,                             _______,_______,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,                        _______,_______,FIRST  ,     _______,_______,_______                                ,_______
+        _______,                        _______,_______,FIRST  ,     FIRST  ,_______,_______                                ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
     [_LOWER] = LAYOUT( // ESC and RALT are for lefty. KC_SLASH is for input a date.
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
         GT_ZKHK,JP_1   ,JP_2   ,JP_3   ,JP_4   ,JP_5   ,                             JP_6   ,JP_7   ,JP_8   ,JP_9   ,JP_0   ,ESC_BS  ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        KC_TAB ,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5 ,                             KC_LEFT ,KC_DOWN,KC_UP  ,KC_RGHT,KC_DEL ,RALT_T(KC_INS),
+        KC_TAB ,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5 ,                              KC_LEFT,KC_DOWN,KC_UP  ,KC_RGHT,KC_DEL ,RALT_T(KC_INS),
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             KC_PSCR,KC_APP ,KC_HOME,KC_END ,KC_SLSH,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
@@ -116,13 +118,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_ADJUST] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        _______,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,                             KC_F6  ,KC_F   ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,
+        S_LAYER,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,                             KC_F6  ,KC_F7  ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,KC_VOLU,KC_VOLD,KC_MUTE,RGB_TOG,_______,                             KC_MS_L,KC_MS_D,KC_MS_U,KC_MS_R,_______,KC_F12 ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
-        _______,KC_BTN1,KC_BTN2,_______,_______,FIRST  ,                             TENKEY ,SECOND ,_______,_______,_______,LSFT_T(KC_PWR),
+        _______,KC_BTN1,KC_BTN2,_______,_______,_______,                             _______,_______,_______,_______,_______,LSFT_T(KC_PWR),
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,                        _______,_______,KC_MUTE,     _______,_______,_______                                ,_______
+        _______,                        _______,_______,CONFIG ,     CONFIG ,_______,_______                                ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------'
     ),
 };
@@ -229,10 +231,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             tapped_key = KC_ENT;
             hold_layer = _RAISE;
             break;
+        case RT_0:
+            tapped_key = KC_0;
+            hold_layer = _RAISE;
+            break;
         case ESC_BS:
             tapped_key = KC_BSPC;
             long_tapped_key = KC_ESC;
             break;
+        case S_LAYER:
+            if (! record->event.pressed) {
+                // nop
+            } else if (layer_state_is(_TENKEY)) {
+                layer_off(_TENKEY);
+                layer_off(_SECOND);
+                layer_on(_FIRST);
+            } else if (layer_state_is(_SECOND)) {
+                layer_off(_SECOND);
+                layer_on(_TENKEY);
+            } else {
+                layer_on(_SECOND);
+            }
+            return false;
         default:
             return true;
     }
@@ -343,43 +363,26 @@ void oled_task_user(void) {
 /* Rotary encoder settings */
 void encoder_update_user(uint8_t index, bool clockwise) {
     last_pressed = 0; // reset tap flag.
-    if (index == 0) {
-        // Left rotary
-        switch (get_highest_layer(layer_state)) {
-            case _FIRST:
-                tap_code(clockwise ? KC_WH_D : KC_WH_U);
-                break;
-            case _LOWER:
-                if (!is_alt_pressed) {
-                    register_code(KC_LALT); // unregister in process_record_user().
-                    is_alt_pressed = true;
-                }
-                tap_code16(clockwise ? KC_TAB : S(KC_TAB));
-                break;
-            case _ADJUST:
-                tap_code(clockwise ? KC_VOLU : KC_VOLD);
-                break;
-            default:
-                break;
-        }
-    } else if (index == 1) {
-        // Right rotary
-        switch (get_highest_layer(layer_state)) {
-            case _FIRST:
-                tap_code(clockwise ? KC_WH_U : KC_WH_D);
-                break;
-            case _SECOND: // TODO: Oekaki for Lefty
-                tap_code(clockwise ? KC_DEL: KC_END);
-                break;
-            case _LOWER:
-                tap_code(clockwise ? KC_PGUP : KC_PGDN);
-                break;
-            case _RAISE:
-                tap_code16(clockwise ? A(KC_PGUP) : A(KC_PGDN));
-                break;
-            default:
-                break;
-        }
+    clockwise = clockwise ^ (index == 1);
+    switch (get_highest_layer(layer_state)) {
+        case _LOWER:
+            tap_code(clockwise ? KC_PGUP : KC_PGDN);
+            break;
+        // case _LOWER: Alt-tab
+        //     if (!is_alt_pressed) {
+        //         register_code(KC_LALT); // unregister in process_record_user().
+        //         is_alt_pressed = true;
+        //     }
+        //     tap_code16(clockwise ? KC_TAB : S(KC_TAB));
+        //     break;
+        case _RAISE:
+            tap_code16(clockwise ? A(KC_PGUP) : A(KC_PGDN));
+            break;
+        case _ADJUST:
+            tap_code16(clockwise ? C(KC_PGUP) : C(KC_PGDN));
+            break;
+        default:
+            tap_code(clockwise ? KC_WH_D : KC_WH_U);
     }
 }
 
