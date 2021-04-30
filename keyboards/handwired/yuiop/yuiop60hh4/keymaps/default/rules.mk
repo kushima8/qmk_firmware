@@ -1,1 +1,1 @@
-# Nothing to do specially
+SRC += custom.c
