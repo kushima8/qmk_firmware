@@ -39,14 +39,14 @@ enum custom_keycodes {
 #define RAISE   MO(_RAISE)
 #define TENKEY  TG(_TENKEY)
 #define CONFIG  TO(_CONFIG)
-#define GT_ESC  LGUI_T(KC_ESC)  // Hold=>KC_GUI, Tap=>KC_ESC
+#define SH_ESC  SH_T(KC_ESC)    // Hold=>Swap hand, Tap=>KC_ESC
 #define GT_ZKHK LGUI_T(JP_ZKHK) // Hold=>KC_GUI, Tap=>JP_ZKHK
 #define AT_TAB  LALT_T(KC_TAB)  // Hold=>KC_ALT, Tap=>KC_TAB
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------.
-        GT_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                     KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
+        SH_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                     KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         AT_TAB ,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                     KC_H   ,KC_J   ,KC_K   ,KC_L   ,JP_SCLN,SH_JPQT,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
@@ -101,9 +101,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_ADJUST] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------.
-        KC_LGUI,_______,_______,_______,_______,_______,                     _______,_______,_______,_______,_______,_______,
+        KC_LGUI,_______,_______,_______,_______,_______,                     _______,_______,_______,_______,_______,AT_TAB ,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
-        _______,KC_VOLU,KC_VOLD,KC_MUTE,RGB_TOG,_______,                     KC_MS_L,KC_MS_D,KC_MS_U,KC_MS_R,_______,AT_TAB ,
+        SH_TG  ,KC_VOLU,KC_VOLD,KC_MUTE,RGB_TOG,_______,                     KC_MS_L,KC_MS_D,KC_MS_U,KC_MS_R,_______,SH_TG  ,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         _______,KC_BTN1,KC_BTN2,_______,_______,_______,                     _______,_______,_______,_______,_______,LSFT_T(KC_PWR),
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------|
@@ -131,9 +131,8 @@ uint32_t layer_state_set_user(uint32_t state) {
 
 static char tap_count[] = "00000";
 static uint16_t last_time = 0;
-static uint16_t last_pressed;
-static bool is_alt_pressed;
-static bool is_lower_pressed;
+static uint16_t last_pressed = 0;
+static uint16_t lower_keycode = 0;
 
 bool tap_when_shift(uint16_t keycode) {
     uint8_t shift = keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT));
@@ -183,59 +182,47 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     // tap-hold params
     uint16_t tapped_key = 0;
-    uint16_t long_tapped_key = 0;
     enum layer_number hold_layer = 0;
-    // others
-    action_t action;
 
     switch (keycode) {
         case KC_TAB:
             // LOWER-Tab => Alt-Tab
-            if (record->event.pressed && is_lower_pressed && !is_alt_pressed) {
+            if (record->event.pressed && lower_keycode == LOWER) {
+                lower_keycode = KC_LALT;
                 register_code(KC_LALT);
-                is_alt_pressed = true;
             }
             return true;
         case LOWER:
         case LT_MHEN:
         case LT_HENK:
         case LT_P0:
-            // dance=> RAISE, hold=> LOWER
-            if (dance) {
-                layer_on(_RAISE);
-                return false;
-            }
-            is_lower_pressed = record->event.pressed;
-            if (is_lower_pressed) {
-                layer_on(_LOWER);
-                return false;
-            }
-            // Keyup
-            layer_off(_LOWER);
-            layer_off(_RAISE);
-            // Close the task switcher opened with Alt-Tab.
-            if (is_alt_pressed) {
+            // dance => RAISE, hold => LOWER
+            if (record->event.pressed) {
+                lower_keycode = dance ? RAISE : LOWER;
+                dance = false;
+            } else if (lower_keycode == KC_LALT) {
+                // Close the task switcher with LOWER-Tab.
                 unregister_code(KC_LALT);
-                is_alt_pressed = false;
-            }
-            if (long_tapped || last_pressed != keycode) {
+                layer_off(_LOWER);
+                lower_keycode = 0;
                 return false;
             }
-            // tap LOWER
+            hold_layer = lower_keycode == RAISE ? _RAISE : _LOWER;
             switch(keycode) {
-                case LT_MHEN: tap_code(JP_MHEN); break;
-                case LT_HENK: tap_code(JP_HENK); break;
-                case LT_P0:   tap_code(KC_P0); break;
+                case LT_MHEN: tapped_key = JP_MHEN; break;
+                case LT_HENK: tapped_key = JP_HENK; break;
+                case LT_P0:   tapped_key = KC_P0;   break;
+                default:      tapped_key = LOWER;   break;
             }
-            return false;
+            break;
         case RT_ENT:
-            tapped_key = KC_ENT;
             hold_layer = _RAISE;
+            tapped_key = KC_ENT;
             break;
         case SH_JPQT:
-            action.kind.id = ACT_SWAP_HANDS;
-            action.swap.code = OP_SH_ON_OFF;
-            process_action(record, action);
+            // hold => Swap hand
+            swap_hands = !swap_hands;
+            // tap => JP_QUOT
             if (!record->event.pressed && !long_tapped && last_pressed == keycode) {
                 if (tap_when_shift(JP_DQUO)) {
                     tap_code16(JP_QUOT);
@@ -248,19 +235,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     // Tap-hold
     if (tapped_key) {
-        if (record->event.pressed) {
-            if (dance) {
-                register_code(tapped_key);
-                last_pressed = 0; // skip tap_code when unpressed
-            } else {
-                layer_on(hold_layer);
-            }
-        } else if (long_tapped_key) {
-            unregister_code(tapped_key);
-            tap_code(long_tapped ? long_tapped_key : tapped_key);
+        if (dance) {
+            register_code(tapped_key);
+            last_pressed = 0; // skip tap_code when unpressed
+        } else if (record->event.pressed) {
+            layer_on(hold_layer);
         } else {
-            layer_off(hold_layer);
             unregister_code(tapped_key);
+            layer_off(hold_layer);
             if (!long_tapped && last_pressed == keycode) {
                 tap_code(tapped_key);
             }
@@ -286,7 +268,6 @@ static void render_logo(void) {
 static void print_status_narrow(void) {
 
     // Print current layer
-    oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _DEFAULT:
@@ -310,6 +291,10 @@ static void print_status_narrow(void) {
         default:
             oled_write_ln_P(PSTR("Err"), false);
     }
+
+    // Print swap hands
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("SWAP"), swap_hands);
 
     // Print lock
     led_t led_usb_state = host_keyboard_led_state();
