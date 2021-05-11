@@ -130,7 +130,7 @@ uint32_t layer_state_set_user(uint32_t state) {
 }
 
 static char tap_count[] = "00000";
-void countup_taps() {
+void countup_taps(void) {
     for (int i = 4; i >= 0; i --) {
         if (tap_count[i] >= '9') {
             tap_count[i] = '0';
@@ -144,7 +144,79 @@ void countup_taps() {
 static uint16_t last_time = 0;
 static uint16_t last_pressed = 0;
 static uint16_t lower_keycode = 0;
-static uint8_t g_single_hold_mod = 0;
+static uint8_t single_hold_mod = 0;
+
+enum tap_state {
+    KEYUP = 0,
+    SINGLE_HOLD,
+    DOUBLE_HOLD,
+    SINGLE_TAP,
+    LONG_TAP
+};
+
+bool quick_MT(enum tap_state state, uint16_t mod_key, uint16_t key) {
+    switch(state) {
+        case SINGLE_HOLD:
+            single_hold_mod = MOD_BIT(mod_key);
+            return false;
+        case DOUBLE_HOLD:
+            register_code16(key);
+            last_pressed = 0;
+            return false;
+        default: break;
+    }
+    single_hold_mod = 0;
+    unregister_mods(MOD_BIT(mod_key));
+    switch(state) {
+        case SINGLE_TAP: tap_code16(key); break;
+        case LONG_TAP: tap_code16(mod_key); break;
+        default: unregister_code16(key);
+    }
+    return false;
+}
+
+bool quick_LT(enum tap_state state, enum layer_number layer, uint16_t key) {
+    switch(state) {
+        case SINGLE_HOLD:
+            layer_on(layer);
+            return false;
+        case DOUBLE_HOLD:
+            register_code16(key);
+            last_pressed = 0;
+            return false;
+        default: break;
+    }
+    layer_off(layer);
+    switch(state) {
+        case SINGLE_TAP: tap_code16(key); break;
+        default: unregister_code16(key);
+    }
+    return false;
+}
+
+bool custom_lower(enum tap_state state, uint16_t key) {
+    switch(state) {
+        case SINGLE_HOLD:
+            lower_keycode = LOWER;
+            break;
+        case DOUBLE_HOLD:
+            lower_keycode = RAISE;
+            state = SINGLE_HOLD;
+            break;
+        default: break;
+    }
+    enum layer_number layer = 0;
+    switch(lower_keycode) {
+        case RAISE: layer = _RAISE; break;
+        case LOWER: layer = _LOWER; break;
+        case KC_LALT: // Close the task switcher with LOWER-Tab.
+            unregister_code(KC_LALT);
+            layer_off(_LOWER);
+            lower_keycode = 0;
+            return false;
+    }
+    return quick_LT(state, layer, key);
+}
 
 bool tap_when_shift(uint16_t keycode) {
     uint8_t shift = keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT));
@@ -159,21 +231,17 @@ bool tap_when_shift(uint16_t keycode) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    bool single_hold = false;
-    bool double_hold = false;
-    bool single_tap = false;
-    bool long_tap = false;
+    enum tap_state state = KEYUP;
     bool in_tapping_term = (record->event.time - last_time) <= TAPPING_TERM;
     if (record->event.pressed) {
         countup_taps();
         // Single hold mod
-        if (g_single_hold_mod && keycode != last_pressed) {
-            register_mods(g_single_hold_mod);
-            g_single_hold_mod = 0;
+        if (single_hold_mod && keycode != last_pressed) {
+            register_mods(single_hold_mod);
+            single_hold_mod = 0;
         }
         // Hold state
-        double_hold = keycode == last_pressed && in_tapping_term;
-        single_hold = !double_hold;
+        state = (keycode == last_pressed && in_tapping_term) ? DOUBLE_HOLD : SINGLE_HOLD;
         last_pressed = keycode;
         last_time = record->event.time;
         // Replace Shift-Symbols like ANSI for JIS.
@@ -191,15 +259,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case JP_SCLN: return tap_when_shift(JP_COLN);
         }
     } else if (keycode == last_pressed){
-        single_tap = in_tapping_term;
-        long_tap = !single_tap;
+        state = in_tapping_term ? SINGLE_TAP : LONG_TAP;
     }
-
-    // tap-hold params
-    uint16_t single_tap_key = 0;
-    uint16_t long_tap_key = 0;
-    uint8_t single_hold_mod = 0;
-    enum layer_number single_hold_layer = 0;
 
     switch (keycode) {
         case KC_TAB:
@@ -209,55 +270,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 register_code(KC_LALT);
             }
             return true;
-        case RT_ENT:
-            single_hold_layer = _RAISE;
-            single_tap_key = KC_ENT;
-            break;
-        case LT_MHEN:
-        case LT_HENK:
-        case LT_P0: // double-hold => RAISE, hold => LOWER
-            if (single_hold) {
-                lower_keycode = LOWER;
-            } else if (double_hold) {
-                lower_keycode = RAISE;
-                single_hold= true;
-                double_hold = false;
-            }
-            switch(lower_keycode) {
-                case RAISE: single_hold_layer = _RAISE; break;
-                case LOWER: single_hold_layer = _LOWER; break;
-                case KC_LALT:
-                    // Close the task switcher with LOWER-Tab.
-                    unregister_code(KC_LALT);
-                    layer_off(_LOWER);
-                    lower_keycode = 0;
-                    return false;
-            }
-            switch(keycode) {
-                case LT_MHEN: single_tap_key = JP_MHEN; break;
-                case LT_HENK: single_tap_key = JP_HENK; break;
-                case LT_P0:   single_tap_key = KC_P0;   break;
-            }
-            break;
-        case AT_ESC: // hold => KC_LALT, tap => KC_ESC
-            single_tap_key  = KC_ESC;
-            long_tap_key    = KC_LALT;
-            single_hold_mod = MOD_LALT;
-            break;
-        case GT_ZKHK: // hold => KC_LGUI, tap => JP_ZKHK
-            single_tap_key  = JP_ZKHK;
-            long_tap_key    = KC_LGUI;
-            single_hold_mod = MOD_LGUI;
-            break;
-        case SH_TAB: // hold => Swap hand, tap => KC_TAB
+        case RT_ENT:  return quick_LT(state, _RAISE, KC_ENT);
+        case LT_MHEN: return custom_lower(state, JP_MHEN);
+        case LT_HENK: return custom_lower(state, JP_HENK);
+        case LT_P0:   return custom_lower(state, KC_P0);
+        case AT_ESC:  return quick_MT(state, KC_LALT, KC_ESC);
+        case GT_ZKHK: return quick_MT(state, KC_LGUI, JP_ZKHK);
+        case SH_TAB:
             swap_hands = !swap_hands;
-            if (single_tap) {
+            if (state == SINGLE_TAP) {
                 tap_code(KC_TAB);
             }
             return false;
-        case SH_JPQT: // hold => Swap hand, tap => JP_QUOT
+        case SH_JPQT:
             swap_hands = !swap_hands;
-            if (single_tap) {
+            if (state == SINGLE_TAP) {
                 if (tap_when_shift(JP_DQUO)) {
                     tap_code16(JP_QUOT);
                 }
@@ -266,42 +293,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         default:
             return true;
     }
-    // Single hold mod
-    if (single_hold_mod) {
-        if (single_hold) {
-            // register mod when another key is pressed, becouse LGUI_T() is slowly.
-            g_single_hold_mod = single_hold_mod;
-            return false;
-        } else {
-            unregister_mods(single_hold_mod);
-            g_single_hold_mod = 0;
-        }
-    }
-    // double-hold, single-hold-layer, single-tap, long-tap
-    if (single_tap_key) {
-        if (single_hold) {
-            if (single_hold_layer) {
-                layer_on(single_hold_layer);
-            }
-            return false;
-        }
-        if (double_hold) {
-            register_code16(single_tap_key);
-            last_pressed = 0; // skip tap_code when unpressed
-            return false;
-        }
-        unregister_code(single_tap_key);
-        if (single_hold_layer) {
-            layer_off(single_hold_layer);
-        }
-        if (single_tap) {
-            tap_code16(single_tap_key);
-        } else if (long_tap && long_tap_key) {
-            tap_code16(long_tap_key);
-        }
-        return false;
-    }
-
     return true;
 }
 
