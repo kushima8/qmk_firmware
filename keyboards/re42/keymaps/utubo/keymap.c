@@ -27,11 +27,12 @@ enum layer_number {
 };
 
 enum custom_keycodes {
-    RT_ENT = SAFE_RANGE,  // Hold=>RAISE, Tap=>KC_ENT
-    LT_MHEN, // Hold=>LOWER, Dance-Hold=>RAISE, Tap=>Mukenkan
-    LT_HENK, // Hold=>LOWER, Dance-Hold=>RAISE, Tap=>Henkan
-    LT_P0,   // Hold=>LOWER, Dance-Hold=>RAISE, Tap=>KC_P0
-    AGT_ESC, // Hold=>KC_ALT, Dance-Hold=>KC_LGUI, Tap=>KC_ESC
+    RT_ENT = SAFE_RANGE,  // hold=>RAISE, tap=>KC_ENT
+    LT_MHEN, // hold=>LOWER,   double-hold=>RAISE, tap=>Mukenkan
+    LT_HENK, // hold=>LOWER,   double-hold=>RAISE, tap=>Henkan
+    LT_P0,   // hold=>LOWER,   double-hold=>RAISE, tap=>KC_P0
+    AT_ESC , // hold=>KC_ALT,  tap=>KC_ESC
+    GT_ZKHK, // hold=>KC_LGUI, tap=>JP_ZKHK
     SH_JPQT, // SH_T(JP_QUOT)
     SH_TAB,  // SH_T(KC_TAB)
 };
@@ -41,12 +42,11 @@ enum custom_keycodes {
 #define RAISE   MO(_RAISE)
 #define TENKEY  TG(_TENKEY)
 #define CONFIG  TO(_CONFIG)
-#define GT_ZKHK LGUI_T(JP_ZKHK) // Hold=>KC_LGUI, Tap=>JP_ZKHK
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------.
-        AGT_ESC,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                     KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
+        AT_ESC ,KC_Q   ,KC_W   ,KC_E   ,KC_R   ,KC_T   ,                     KC_Y   ,KC_U   ,KC_I   ,KC_O   ,KC_P   ,KC_BSPC,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         SH_TAB ,KC_A   ,KC_S   ,KC_D   ,KC_F   ,KC_G   ,                     KC_H   ,KC_J   ,KC_K   ,KC_L   ,JP_SCLN,SH_JPQT,
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
@@ -130,10 +130,21 @@ uint32_t layer_state_set_user(uint32_t state) {
 }
 
 static char tap_count[] = "00000";
+void countup_taps() {
+    for (int i = 4; i >= 0; i --) {
+        if (tap_count[i] >= '9') {
+            tap_count[i] = '0';
+        } else {
+            tap_count[i] = tap_count[i] + 1;
+            break;
+        }
+    }
+}
+
 static uint16_t last_time = 0;
 static uint16_t last_pressed = 0;
 static uint16_t lower_keycode = 0;
-static uint16_t agt_esc_keycode = 0;
+static uint8_t g_single_hold_mod = 0;
 
 bool tap_when_shift(uint16_t keycode) {
     uint8_t shift = keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT));
@@ -148,26 +159,23 @@ bool tap_when_shift(uint16_t keycode) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    bool dance = false;
-    bool long_tapped = false;
-    bool tapped = false;
+    bool single_hold = false;
+    bool double_hold = false;
+    bool single_tap = false;
+    bool long_tap = false;
+    bool in_tapping_term = (record->event.time - last_time) <= TAPPING_TERM;
     if (record->event.pressed) {
-        dance = (last_pressed == keycode && record->event.time - last_time <= TAPPING_TERM);
+        countup_taps();
+        // Single hold mod
+        if (g_single_hold_mod && keycode != last_pressed) {
+            register_mods(g_single_hold_mod);
+            g_single_hold_mod = 0;
+        }
+        // Hold state
+        double_hold = keycode == last_pressed && in_tapping_term;
+        single_hold = !double_hold;
         last_pressed = keycode;
         last_time = record->event.time;
-        // Count up taps.
-        for (int i = 4; i >= 0; i --) {
-            if (tap_count[i] >= '9') {
-                tap_count[i] = '0';
-            } else {
-                tap_count[i] = tap_count[i] + 1;
-                break;
-            }
-        }
-        // AGT-ESC: hold=>LALT, dance-hold=>LGUI
-        if (keycode != AGT_ESC && agt_esc_keycode) {
-            register_mods(MOD_BIT(agt_esc_keycode));
-        }
         // Replace Shift-Symbols like ANSI for JIS.
         switch (keycode) {
             case JP_2:    return tap_when_shift(JP_AT);
@@ -182,14 +190,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             case JP_QUOT: return tap_when_shift(JP_DQUO);
             case JP_SCLN: return tap_when_shift(JP_COLN);
         }
-    } else if (last_pressed == keycode){
-        long_tapped = record->event.time - last_time > TAPPING_TERM;
-        tapped = !long_tapped;
+    } else if (keycode == last_pressed){
+        single_tap = in_tapping_term;
+        long_tap = !single_tap;
     }
 
     // tap-hold params
-    uint16_t tapped_key = 0;
-    enum layer_number hold_layer = 0;
+    uint16_t single_tap_key = 0;
+    uint16_t long_tap_key = 0;
+    uint8_t single_hold_mod = 0;
+    enum layer_number single_hold_layer = 0;
 
     switch (keycode) {
         case KC_TAB:
@@ -200,19 +210,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return true;
         case RT_ENT:
-            hold_layer = _RAISE;
-            tapped_key = KC_ENT;
+            single_hold_layer = _RAISE;
+            single_tap_key = KC_ENT;
             break;
         case LT_MHEN:
         case LT_HENK:
-        case LT_P0: // dance-hold => RAISE, hold => LOWER
-            if (record->event.pressed) {
-                lower_keycode = dance ? RAISE : LOWER;
-                dance = false;
+        case LT_P0: // double-hold => RAISE, hold => LOWER
+            if (single_hold) {
+                lower_keycode = LOWER;
+            } else if (double_hold) {
+                lower_keycode = RAISE;
+                single_hold= true;
+                double_hold = false;
             }
             switch(lower_keycode) {
-                case RAISE: hold_layer = _RAISE; break;
-                case LOWER: hold_layer = _LOWER; break;
+                case RAISE: single_hold_layer = _RAISE; break;
+                case LOWER: single_hold_layer = _LOWER; break;
                 case KC_LALT:
                     // Close the task switcher with LOWER-Tab.
                     unregister_code(KC_LALT);
@@ -221,55 +234,70 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     return false;
             }
             switch(keycode) {
-                case LT_MHEN: tapped_key = JP_MHEN; break;
-                case LT_HENK: tapped_key = JP_HENK; break;
-                case LT_P0:   tapped_key = KC_P0;   break;
+                case LT_MHEN: single_tap_key = JP_MHEN; break;
+                case LT_HENK: single_tap_key = JP_HENK; break;
+                case LT_P0:   single_tap_key = KC_P0;   break;
             }
+            break;
+        case AT_ESC: // hold => KC_LALT, tap => KC_ESC
+            single_tap_key  = KC_ESC;
+            long_tap_key    = KC_LALT;
+            single_hold_mod = MOD_LALT;
+            break;
+        case GT_ZKHK: // hold => KC_LGUI, tap => JP_ZKHK
+            single_tap_key  = JP_ZKHK;
+            long_tap_key    = KC_LGUI;
+            single_hold_mod = MOD_LGUI;
             break;
         case SH_TAB: // hold => Swap hand, tap => KC_TAB
             swap_hands = !swap_hands;
-            if (tapped) {
+            if (single_tap) {
                 tap_code(KC_TAB);
             }
             return false;
         case SH_JPQT: // hold => Swap hand, tap => JP_QUOT
             swap_hands = !swap_hands;
-            if (tapped) {
+            if (single_tap) {
                 if (tap_when_shift(JP_DQUO)) {
                     tap_code16(JP_QUOT);
                 }
             }
             return false;
-        case AGT_ESC: // dance-hold => KC_LGUI,hold => KC_LALT, tap => KC_ESC
-            if (record->event.pressed) {
-                agt_esc_keycode = dance ? KC_LGUI : KC_LALT;
-                return false;
-            }
-            unregister_mods(MOD_BIT(agt_esc_keycode));
-            if (long_tapped){
-                tap_code(agt_esc_keycode);
-            } else if (tapped) {
-                tap_code16(KC_ESC);
-            }
-            agt_esc_keycode = 0;
-            return false;
         default:
             return true;
     }
-
-    // Tap-hold
-    if (tapped_key) {
-        if (dance) {
-            register_code(tapped_key);
-            last_pressed = 0; // skip tap_code when unpressed
-        } else if (record->event.pressed) {
-            layer_on(hold_layer);
+    // Single hold mod
+    if (single_hold_mod) {
+        if (single_hold) {
+            // register mod when another key is pressed, becouse LGUI_T() is slowly.
+            g_single_hold_mod = single_hold_mod;
+            return false;
         } else {
-            unregister_code(tapped_key);
-            layer_off(hold_layer);
-            if (tapped) {
-                tap_code(tapped_key);
+            unregister_mods(single_hold_mod);
+            g_single_hold_mod = 0;
+        }
+    }
+    // double-hold, single-hold-layer, single-tap, long-tap
+    if (single_tap_key) {
+        if (single_hold) {
+            if (single_hold_layer) {
+                layer_on(single_hold_layer);
             }
+            return false;
+        }
+        if (double_hold) {
+            register_code16(single_tap_key);
+            last_pressed = 0; // skip tap_code when unpressed
+            return false;
+        }
+        unregister_code(single_tap_key);
+        if (single_hold_layer) {
+            layer_off(single_hold_layer);
+        }
+        if (single_tap) {
+            tap_code16(single_tap_key);
+        } else if (long_tap && long_tap_key) {
+            tap_code16(long_tap_key);
         }
         return false;
     }
