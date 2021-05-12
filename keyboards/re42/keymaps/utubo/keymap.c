@@ -165,25 +165,25 @@ void process_tap_state(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
-static uint8_t single_hold_mod = 0;
+static uint8_t quick_MT_mod = 0;
 void process_quick_MT(void) {
-    if (single_hold_mod && tap_state == SINGLE_HOLD) {
-        register_mods(single_hold_mod);
-        single_hold_mod = 0;
+    if (quick_MT_mod && tap_state == SINGLE_HOLD) {
+        register_mods(quick_MT_mod);
+        quick_MT_mod = 0;
     }
 }
 bool quick_MT(uint16_t mod_key, uint16_t key) {
     switch(tap_state) {
         case SINGLE_HOLD:
             // register a mod when hold another key
-            single_hold_mod = MOD_BIT(mod_key);
+            quick_MT_mod = MOD_BIT(mod_key);
             return false;
         case DOUBLE_HOLD:
             register_code16(key);
             return false;
         default: break;
     }
-    single_hold_mod = 0;
+    quick_MT_mod = 0;
     unregister_mods(MOD_BIT(mod_key));
     switch(tap_state) {
         case SINGLE_TAP: tap_code16(key); break;
@@ -218,17 +218,16 @@ static bool custom_lower(uint16_t key) {
             break;
         default: break;
     }
-    enum layer_number layer = 0;
     switch(lower_keycode) {
-        case RAISE: layer = _RAISE; break;
-        case LOWER: layer = _LOWER; break;
+        case LOWER: return quick_LT(_LOWER, key);
+        case RAISE: return quick_LT(_RAISE, key);
         case KC_LALT: // Close the task switcher with LOWER-Tab.
             unregister_code(KC_LALT);
             layer_off(_LOWER);
             lower_keycode = 0;
             return false;
     }
-    return quick_LT(layer, key);
+    return false;
 }
 
 static bool process_jp_symbols(uint16_t keycode, bool pressed) {
