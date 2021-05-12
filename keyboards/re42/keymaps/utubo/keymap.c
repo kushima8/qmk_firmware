@@ -107,10 +107,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         _______,KC_BTN1,KC_BTN2,_______,_______,_______,                     _______,_______,_______,_______,_______,LSFT_T(KC_PWR),
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------|
-        TENKEY ,                        _______,_______,CONFIG ,     CONFIG ,_______,_______                        ,TENKEY
+        TENKEY ,                        _______,_______,_______,     _______,_______,_______                        ,TENKEY
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------'
     ),
 };
+
+uint32_t layer_state_set_user(uint32_t state) {
+    return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
+}
 
 const keypos_t hand_swap_config[MATRIX_ROWS][MATRIX_COLS] = {
     // Left
@@ -124,10 +128,6 @@ const keypos_t hand_swap_config[MATRIX_ROWS][MATRIX_COLS] = {
     {{1, 2}, {2, 2}, {3, 2}, {4, 2}, {5, 2}, {0, 2}},
     {{5, 3}, {4, 3}, {3, 3}, {2, 3}, {1, 3}, {0, 3}},
 };
-
-uint32_t layer_state_set_user(uint32_t state) {
-    return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
-}
 
 char tap_count[] = "00000";
 void countup_taps(void) {
@@ -181,7 +181,7 @@ bool quick_MT(uint16_t mod_key, uint16_t keycode) {
         unregister_mods(MOD_BIT(mod_key));
     }
     switch (tap_state) {
-        // register a mod when hold another key.
+        // register mod_key when another key is pressed in process_quick_MT.
         case SINGLE_HOLD: quick_MT_mod = MOD_BIT(mod_key); break;
         case DOUBLE_HOLD: register_code16(keycode); break;
         case SINGLE_TAP:  tap_code16(keycode); break;
@@ -219,7 +219,7 @@ static bool custom_lower(uint16_t keycode) {
     switch (lower_keycode) {
         case LOWER: return quick_LT(_LOWER, keycode);
         case RAISE: return quick_LT(_RAISE, keycode);
-        case KC_LALT: // Close the task switcher with LOWER-Tab.
+        case KC_LALT: // Close the task-switcher that is opened with LOWER-Tab.
             unregister_code(KC_LALT);
             layer_off(_LOWER);
             lower_keycode = 0;
