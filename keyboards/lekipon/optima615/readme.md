@@ -1,19 +1,17 @@
-# *ASTRA 515*
+# *OPTIMA 615
 
-<img src="https://raw.githubusercontent.com/Lekipon/ASTRA515/master/doc/img/astra515_01.JPG" alt="ASTRA515" style="zoom: 67%;" />
 
-<img src="https://raw.githubusercontent.com/Lekipon/ASTRA515/master/doc/img/astra515_02.JPG" alt="ASTRA515_2" style="zoom: 67%;" />
 
 ------
 
-## *<u>**A Symmetrical 5x15 Ortholinear Keyboard**</u>*
+## *<u>**A 6x15 Ortholinear Keyboard**</u>*
 
 * Keyboard Maintainer: [Lekipon](https://github.com/Lekipon)
 
 * Make example for this keyboard (after setting up your build environment):
 
     ```
-    make lekipon/astra515:default
+    make lekipon/optima615:default
     ```
     
     
@@ -22,5 +20,5 @@ See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_to
 
 
 
-**※Buildguide is now under construction (2020/11/15).**
+**※Buildguide is now under construction (2021/05/15).**
 
