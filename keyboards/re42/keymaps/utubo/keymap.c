@@ -152,7 +152,7 @@ enum {
 static struct {
     uint16_t keycode;
     uint16_t time;
-} last_pressed = { 0,  0 };
+} last_pressed = {0, 0};
 
 void process_tap_state(uint16_t keycode, keyrecord_t *record) {
     bool in_tapping_term = (record->event.time - last_pressed.time) <= TAPPING_TERM;
@@ -264,7 +264,7 @@ static void tap_code16jp(uint16_t keycode) {
     }
 }
 
-static bool sh_t(uint16_t keycode) {
+static bool sh_t16(uint16_t keycode) {
     swap_hands = !swap_hands;
     if (tap_state == SINGLE_TAP) {
         //tap_code16(keycode);
@@ -294,8 +294,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case RT_ENT:  return quick_LT(_RAISE, KC_ENT);
         case AT_ESC:  return quick_MT(KC_LALT, KC_ESC);
         case GT_ZKHK: return quick_MT(KC_LGUI, JP_ZKHK);
-        case SH_TAB:  return sh_t(KC_TAB);
-        case SH_JPQT: return sh_t(JP_QUOT);
+        case SH_TAB:  return sh_t16(KC_TAB);
+        case SH_JPQT: return sh_t16(JP_QUOT);
     }
 
     return process_jp_symbols(keycode, record->event.pressed);
