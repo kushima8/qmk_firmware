@@ -82,7 +82,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #ifdef RGBLIGHT_ENABLE
 void keyboard_post_init_user(void) {
     rgblight_enable_noeeprom();
-    rgblight_mode(RGBLIGHT_MODE_RAINBOW_SWIRL);
+    //rgblight_mode(RGBLIGHT_MODE_RAINBOW_SWIRL);
+    rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 }
 #endif
 
