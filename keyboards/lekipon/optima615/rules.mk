@@ -48,3 +48,5 @@ OLED_DRIVER_ENABLE = yes
 
 CUSTOM_MATRIX = yes
 SRC += matrix.c
+
+LTO_ENABLE = yes
