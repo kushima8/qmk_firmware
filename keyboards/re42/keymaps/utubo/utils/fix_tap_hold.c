@@ -24,7 +24,7 @@ static struct {
     uint16_t time;
 } last_pressed = {0, 0};
 
-void process_tap_state(uint16_t keycode, keyrecord_t *record) {
+static void process_tap_state(uint16_t keycode, keyrecord_t *record) {
     bool in_tapping_term = (record->event.time - last_pressed.time) <= TAPPING_TERM;
     bool is_same_keycode = keycode == last_pressed.keycode;
     if (record->event.pressed) {
@@ -39,7 +39,7 @@ void process_tap_state(uint16_t keycode, keyrecord_t *record) {
 }
 
 static uint8_t quick_MT_mod = 0;
-void process_quick_MT(void) {
+static void process_quick_MT(void) {
     if (quick_MT_mod && tap_state == SINGLE_HOLD) {
         register_mods(quick_MT_mod);
         quick_MT_mod = 0;
@@ -87,5 +87,10 @@ bool sh_t16(uint16_t keycode) {
         #endif
     }
     return false;
+}
+
+void process_fix_tap_hold(uint16_t keycode, keyrecord_t *record) {
+    process_tap_state(keycode, record);
+    process_quick_MT();
 }
 
