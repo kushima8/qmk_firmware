@@ -1,4 +1,4 @@
-/* Copyright 2020 utubo
+/* Copyright 2021 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,21 @@
  */
 #pragma once
 
-/*
- * SHIFT+JP_XXXをANSI配列のように対応させます。(対応させた場合、ホールドは適用されません)
- * 以下のように実行してください。
- *     bool process_record_user(uint16_t keycode, keyrecord_t *record) {
- *         return bool process_jp_symbols(keycode, record);
- *     }
- */
-bool process_jp_symbols(uint16_t keycode, keyrecord_t *record);
+#include QMK_KEYBOARD_H
 
-/* tap_code16を上記に対応させたものです。 */
-void tap_code16jp(uint16_t keycode);
+typedef enum {
+    KEYUP = 0,
+    SINGLE_TAP,
+    LONG_TAP,
+    SINGLE_HOLD,
+    DOUBLE_HOLD
+} tap_state_t;
+
+extern tap_state_t tap_state;
+
+void process_tap_state(uint16_t keycode, keyrecord_t *record);
+void process_quick_MT(void);
+bool quick_MT(uint16_t mod_key, uint16_t keycode);
+bool quick_LT(uint8_t layer, uint16_t keycode);
+bool sh_t16(uint16_t keycode);
 

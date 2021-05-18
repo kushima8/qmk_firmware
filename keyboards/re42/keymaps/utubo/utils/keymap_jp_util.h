@@ -1,5 +1,4 @@
-/* Copyright 2020 kushima8
- * Copyright 2020 utubo
+/* Copyright 2020 utubo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +15,16 @@
  */
 #pragma once
 
-#define MASTER_RIGHT
+/*
+ * SHIFT+JP_XXXをANSI配列のように対応させます。(対応させた場合、ホールドは適用されません)
+ * 以下のように実行してください。
+ *     bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+ *         return bool process_jp_symbols(keycode, record);
+ *     }
+ */
+bool process_jp_symbols(uint16_t keycode, keyrecord_t *record);
 
-#define TAPPING_TERM 200
-#define PERMISSIVE_HOLD
-#define TAPPING_FORCE_HOLD
-
-#define RGBLIGHT_SLEEP = yes
+/* tap_code16を上記に対応させたものです。 */
+#define TAP_CODE16JP
+void tap_code16jp(uint16_t keycode);
 
