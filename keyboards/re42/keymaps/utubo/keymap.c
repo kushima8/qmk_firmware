@@ -16,7 +16,8 @@
  */
 #include QMK_KEYBOARD_H
 #include "keymap_jp.h"
-#include "keymap_jp_util.h"
+#include "utils/keymap_jp_util.h"
+#include "utils/fix_tap_hold.h"
 
 enum layer_number {
     _DEFAULT= 0,
@@ -142,69 +143,6 @@ void countup_taps(void) {
     }
 }
 
-enum {
-    KEYUP = 0,
-    SINGLE_TAP,
-    LONG_TAP,
-    SINGLE_HOLD,
-    DOUBLE_HOLD
-} tap_state;
-
-static struct {
-    uint16_t keycode;
-    uint16_t time;
-} last_pressed = {0, 0};
-
-void process_tap_state(uint16_t keycode, keyrecord_t *record) {
-    bool in_tapping_term = (record->event.time - last_pressed.time) <= TAPPING_TERM;
-    bool is_same_keycode = keycode == last_pressed.keycode;
-    if (record->event.pressed) {
-        last_pressed.keycode = keycode;
-        last_pressed.time = record->event.time;
-        tap_state = (is_same_keycode && in_tapping_term) ? DOUBLE_HOLD : SINGLE_HOLD;
-    } else if (is_same_keycode && tap_state != DOUBLE_HOLD){
-        tap_state = in_tapping_term ? SINGLE_TAP : LONG_TAP;
-    } else {
-        tap_state = KEYUP;
-    }
-}
-
-static uint8_t quick_MT_mod = 0;
-void process_quick_MT(void) {
-    if (quick_MT_mod && tap_state == SINGLE_HOLD) {
-        register_mods(quick_MT_mod);
-        quick_MT_mod = 0;
-    }
-}
-bool quick_MT(uint16_t mod_key, uint16_t keycode) {
-    if (tap_state != SINGLE_HOLD) {
-        quick_MT_mod = 0;
-        unregister_mods(MOD_BIT(mod_key));
-    }
-    switch (tap_state) {
-        // register mod_key when another key is pressed in process_quick_MT.
-        case SINGLE_HOLD: quick_MT_mod = MOD_BIT(mod_key); break;
-        case DOUBLE_HOLD: register_code16(keycode); break;
-        case SINGLE_TAP:  tap_code16(keycode); break;
-        case LONG_TAP:    tap_code16(mod_key); break;
-        default: unregister_code16(keycode);
-    }
-    return false;
-}
-
-bool quick_LT(enum layer_number layer, uint16_t keycode) {
-    if (tap_state != SINGLE_HOLD) {
-        layer_off(layer);
-    }
-    switch (tap_state) {
-        case SINGLE_HOLD: layer_on(layer); break;
-        case DOUBLE_HOLD: register_code16(keycode); break;
-        case SINGLE_TAP:  tap_code16(keycode); break;
-        default: unregister_code16(keycode); break;
-    }
-    return false;
-}
-
 static uint16_t lower_keycode = 0;
 static bool custom_lower(uint16_t keycode) {
     switch (tap_state) {
@@ -225,15 +163,6 @@ static bool custom_lower(uint16_t keycode) {
             layer_off(_LOWER);
             lower_keycode = 0;
             return false;
-    }
-    return false;
-}
-
-static bool sh_t16(uint16_t keycode) {
-    swap_hands = !swap_hands;
-    if (tap_state == SINGLE_TAP) {
-        //tap_code16(keycode);
-        tap_code16jp(keycode);
     }
     return false;
 }
