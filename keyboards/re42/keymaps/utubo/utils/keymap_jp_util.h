@@ -25,6 +25,5 @@
 bool process_jp_symbols(uint16_t keycode, keyrecord_t *record);
 
 /* tap_code16を上記に対応させたものです。 */
-#define TAP_CODE16JP
 void tap_code16jp(uint16_t keycode);
 

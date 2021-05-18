@@ -168,8 +168,7 @@ static bool custom_lower(uint16_t keycode) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    process_tap_state(keycode, record);
-    process_quick_MT();
+    process_fix_tap_hold(keycode, record);
 
     if (record->event.pressed) {
         countup_taps();
@@ -212,26 +211,13 @@ static void print_status_narrow(void) {
     // Print current layer
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
-        case _DEFAULT:
-            oled_write_ln_P(PSTR("Dflt"), false);
-            break;
-        case _LOWER:
-            oled_write_ln_P(PSTR("Low"), false);
-            break;
-        case _RAISE:
-            oled_write_ln_P(PSTR("Rai"), false);
-            break;
-        case _ADJUST:
-            oled_write_ln_P(PSTR("Adj"), false);
-            break;
-        case _TENKEY:
-            oled_write_P(PSTR("10Key"), false);
-            break;
-        case _CONFIG:
-            oled_write_ln_P(PSTR("Conf"), false);
-            break;
-        default:
-            oled_write_ln_P(PSTR("Err"), false);
+        case _DEFAULT: oled_write_P(PSTR("Dflt "), false); break;
+        case _LOWER:   oled_write_P(PSTR("Low  "), false); break;
+        case _RAISE:   oled_write_P(PSTR("Rai  "), false); break;
+        case _ADJUST:  oled_write_P(PSTR("Adj  "), false); break;
+        case _TENKEY:  oled_write_P(PSTR("10Key"), false); break;
+        case _CONFIG:  oled_write_P(PSTR("Conf "), false); break;
+        default:       oled_write_P(PSTR("Error"), false);
     }
 
     // Print swap hands

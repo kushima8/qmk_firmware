@@ -27,8 +27,7 @@ typedef enum {
 
 extern tap_state_t tap_state;
 
-void process_tap_state(uint16_t keycode, keyrecord_t *record);
-void process_quick_MT(void);
+void process_fix_tap_hold(uint16_t keycode, keyrecord_t *record);
 bool quick_MT(uint16_t mod_key, uint16_t keycode);
 bool quick_LT(uint8_t layer, uint16_t keycode);
 bool sh_t16(uint16_t keycode);
