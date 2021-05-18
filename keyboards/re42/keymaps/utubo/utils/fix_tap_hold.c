@@ -16,6 +16,7 @@
  */
 #include QMK_KEYBOARD_H
 #include "fix_tap_hold.h"
+#include "keymap_jp_util.h"
 
 tap_state_t tap_state;
 
@@ -80,11 +81,8 @@ bool sh_t16(uint16_t keycode) {
     swap_hands = !swap_hands;
     #endif
     if (tap_state == SINGLE_TAP) {
-        #ifdef TAP_CODE16JP
         tap_code16jp(keycode);
-        #else
-        tap_code16(keycode);
-        #endif
+        //tap_code16(keycode);
     }
     return false;
 }

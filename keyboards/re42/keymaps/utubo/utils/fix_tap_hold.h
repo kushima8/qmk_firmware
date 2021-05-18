@@ -15,8 +15,6 @@
  */
 #pragma once
 
-#include QMK_KEYBOARD_H
-
 typedef enum {
     KEYUP = 0,
     SINGLE_TAP,
