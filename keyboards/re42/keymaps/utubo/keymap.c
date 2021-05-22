@@ -263,9 +263,9 @@ void oled_task_user(void) {
 void encoder_update_user(uint8_t index, bool clockwise) {
     clockwise = clockwise ^ (index == 1);
     switch (get_highest_layer(layer_state)) {
-        case _LOWER:  tap_code(clockwise ? KC_PGUP : KC_PGDN); break;
-        case _RAISE:  tap_code16(clockwise ? A(KC_PGUP) : A(KC_PGDN)); break;
-        case _ADJUST: tap_code16(clockwise ? C(KC_PGUP) : C(KC_PGDN)); break;
+        case _LOWER:  tap_code(clockwise ? KC_PGDN : KC_PGUP); break;
+        case _RAISE:  tap_code16(clockwise ? A(KC_PGDN) : A(KC_PGUP)); break;
+        case _ADJUST: tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP)); break;
         default: tap_code(clockwise ? KC_WH_D : KC_WH_U);
     }
 }
