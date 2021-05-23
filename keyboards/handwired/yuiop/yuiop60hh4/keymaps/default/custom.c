@@ -15,8 +15,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
+#if 0
 void keyboard_post_init_user(void) {
   rgblight_enable_noeeprom();
   rgblight_mode_noeeprom(RGBLIGHT_MODE_BREATHING);
   rgblight_sethsv_noeeprom(0xcc, 0x00, 0xa0);
 }
+#endif

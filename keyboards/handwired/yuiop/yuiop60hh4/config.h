@@ -39,13 +39,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBOUNCE 5
 
 // RGB LED settings
-#define RGB_DI_PIN B3
-#define RGBLED_NUM 5
-#define RGBLIGHT_ANIMATIONS
-#define RGBLIGHT_LIMIT_VAL 200
-#define RGBLIGHT_HUE_STEP 17
-#define RGBLIGHT_SAT_STEP 17
-#define RGBLIGHT_VAL_STEP 20
+#ifdef RGBLIGHT_ENABLE
+#  define RGB_DI_PIN B3
+#  define RGBLED_NUM 5
+#  define RGBLIGHT_ANIMATIONS
+#  define RGBLIGHT_LIMIT_VAL 200
+#  define RGBLIGHT_HUE_STEP 17
+#  define RGBLIGHT_SAT_STEP 17
+#  define RGBLIGHT_VAL_STEP 20
+#endif
 
 // RGB matrix settings
 #ifdef RGB_MATRIX_ENABLE
