@@ -39,8 +39,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEBOUNCE 5
 
 // RGB LED settings
+#define RGB_DI_PIN B3
 #ifdef RGBLIGHT_ENABLE
-#  define RGB_DI_PIN B3
 #  define RGBLED_NUM 5
 #  define RGBLIGHT_ANIMATIONS
 #  define RGBLIGHT_LIMIT_VAL 200
