@@ -35,3 +35,5 @@ DEFAULT_FOLDER = keyball/rev1
 
 SRC += spi_master.c
 SRC += pmw/pmw.c
+
+LTO_ENABLE = yes
