@@ -2,8 +2,13 @@
 
 set -eu
 
-make -j8 crkbd/rev1/common:kaoriya
-make -j8 crkbd/rev1/legacy:kaoriya
-make -j8 dztech/dz60rgb/v2:kaoriya
-make -j8 re64:kaoriya
-make -j8 uzu42:kaoriya
+for km in \
+  crkbd/rev1/common:kaoriya \
+  crkbd/rev1/legacy:kaoriya \
+  dztech/dz60rgb/v2:kaoriya \
+  re64:kaoriya \
+  uzu42:kaoriya \
+; do
+  make $km:clean
+  make -j8 $km
+done

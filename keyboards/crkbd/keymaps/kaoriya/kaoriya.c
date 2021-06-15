@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KEYMAP_VERSION 11
 
 #include <stdio.h>
+#include <string.h>
 
 char kaoriya_verinfo[22] = {};
 
