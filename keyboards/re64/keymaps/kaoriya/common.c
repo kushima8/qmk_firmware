@@ -102,7 +102,7 @@ void oled_task_user(void) {
 #ifdef ENCODER_ENABLE
 
 /* Rotary encoder settings */
-void encoder_update_user(uint8_t index, bool clockwise) {
+bool encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
         // Left rotary
         switch (get_highest_layer(layer_state)) {
@@ -132,6 +132,7 @@ void encoder_update_user(uint8_t index, bool clockwise) {
                 break;
         }
     }
+    return false;
 }
 
 #endif
