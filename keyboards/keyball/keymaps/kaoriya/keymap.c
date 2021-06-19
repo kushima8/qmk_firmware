@@ -21,8 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pointing_device.h"
 #include "../optical_sensor/optical_sensor.h"
 
-extern keymap_config_t keymap_config;
-
 bool isScrollMode;
 
 enum keymap_layers {
@@ -56,12 +54,14 @@ enum custom_keycodes {
 #define KC_S_EN LSFT_T(KC_LANG2)
 
 // original
-#define KC_A_JA LT(_BALL, KC_LANG1)   // cmd or adjust 
+#define KC_A_JA LT(_BALL, KC_LANG1)   // cmd or adjust
 #define KC_AL_CP MT(MOD_LALT, KC_CAPS)  // alt or caps lock
 #define KC_G_BS MT(MOD_LGUI, KC_BSPC)   // command or back space
 #define KC_G_DEL MT(MOD_LGUI, KC_DEL)   // command or delete
 #define KC_A_BS LT(_BALL, KC_BSPC)    // adjust or back space
 #define KC_A_DEL LT(_BALL, KC_DEL)    // adjust or delete
+
+#define KC_BALL MO(_BALL)
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -70,11 +70,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----+-----+-----+-----+-----+-----.           ,-----+-----+-----+-----+-----+-----.
        Q  ,  W  ,  E  ,  R  ,  T  ,LBRC             ,  Y  ,  U  ,  I  ,  O  ,  P  , ESC ,
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-       A  ,  S  ,  D  ,  F  ,  G  ,RBRC             ,  H  ,  J  ,  K  ,  L  , MINS, SCLN,
+       A  ,  S  ,  D  ,  F  ,  G  ,RBRC             ,MBTN3,MBTN1,MBTN2,  L  , MINS, SCLN,
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-       Z  ,  X  ,  C  ,  V  ,  B  ,MBTN2            ,  N  ,  M  , COMM, DOT , SLSH, BSLS,
+       Z  ,  X  ,  C  ,  V  ,  B  ,MBTN2            ,  N  ,BALL , COMM, DOT , SLSH, BSLS,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-      LCTL,AL_CP,    G_BS,L_SPC,S_EN ,A_JA       ,MBTN1,R_ENT,G_DEL,    EXLM, TAB , PSCR
+      LCTL,AL_CP,    G_BS,L_SPC,S_EN ,A_JA       ,MBTN1,R_ENT,G_DEL,    EXLM, TAB , BALL
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -86,7 +86,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
      SLSH ,  1  ,  2  ,  3  , EQL ,MBTN3            ,     ,     ,DOWN ,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,  0  ,    ENT ,A_DEL, SPC ,           ,MBTN3,     ,     ,       ,     ,     
+          ,  0  ,    ENT ,A_DEL, SPC ,           ,MBTN3,     ,     ,       ,     ,
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -98,7 +98,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
       GRV , DQT ,QUOT ,CIRC ,TILD ,MBTN3            ,     ,     , PGDN,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,PERC ,        ,     ,     ,           ,MBTN2, A_BS,     ,       ,     ,     
+          ,PERC ,        ,     ,     ,           ,MBTN2, A_BS,     ,       ,     ,
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -130,7 +130,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN1;
       }
       pointing_device_set_report(currentReport);
-      pointing_device_send();
       return false;
     case KC_MBTN2:
       currentReport = pointing_device_get_report();
@@ -141,7 +140,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN2;
       }
       pointing_device_set_report(currentReport);
-      pointing_device_send();
       return false;
     case KC_MBTN3:
       currentReport = pointing_device_get_report();
@@ -152,12 +150,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN3;
       }
       pointing_device_set_report(currentReport);
-      pointing_device_send();
       return false;
   }
   return true;
 }
-	
+
 /*#ifndef MOUSEKEY_ENABLE
     if (IS_MOUSEKEY_BUTTON(keycode)) {
         report_mouse_t currentReport = pointing_device_get_report();
@@ -192,43 +189,42 @@ void keyboard_post_init_user() {
 #endif
 }
 
+#define OPTSENSOR_ACCUMULATION_MAXROUND 10
+#define OPTSENSOR_SCROLL_DIVIDER        10
+
 void pointing_device_task(void) {
     if (!is_keyboard_master())
         return;
-    static int  cnt;
-    static int16_t avg_x, avg_y;
 
-    report_mouse_t mouse_rep = pointing_device_get_report();
-	report_optical_sensor_t sensor_report = optical_sensor_get_report();
+    static int16_t round = 0;
+    static int16_t cum_x = 0, cum_y = 0;
 
-	int16_t raw_x = - sensor_report.x;
-	int16_t raw_y = - sensor_report.y;
-	
-	if (cnt++ % 10 == 0) {
-		avg_x = avg_x / 10;
-		avg_y = avg_y / 10;
-//		if(avg_x*avg_x >= 225) avg_x*=2;
-//		if(avg_y*avg_y >= 225) avg_y*=2;
-		int8_t clamped_x = CLAMP_HID(avg_x);
-		int8_t clamped_y = CLAMP_HID(avg_y);
-		
-		if (isScrollMode) {
-			mouse_rep.h = -clamped_x/10;
-			mouse_rep.v = -clamped_y/10;
-		} else {
-			mouse_rep.x = -clamped_x;
-			mouse_rep.y = clamped_y;
-		}
-	}else{
-		avg_x += raw_x;
-		avg_y += raw_y;
-	}
-    	
+    report_optical_sensor_t sensor_report = optical_sensor_get_report();
+    cum_x += sensor_report.x;
+    cum_y -= sensor_report.y;
+    round++;
 
-	if (mouse_rep.x!=0 || mouse_rep.y!=0 || mouse_rep.v!=0 || mouse_rep.h!=0) {
-		pointing_device_set_report(mouse_rep);
-                pointing_device_send();
+    if (round >= OPTSENSOR_ACCUMULATION_MAXROUND) {
+        int8_t dx = CLAMP_HID(cum_x / round);
+        int8_t dy = CLAMP_HID(cum_y / round);
+        if (dx != 0 || dy != 0) {
+            report_mouse_t rep = pointing_device_get_report();
+            if (isScrollMode) {
+                rep.h = dx / OPTSENSOR_SCROLL_DIVIDER;
+                rep.v = -dy / OPTSENSOR_SCROLL_DIVIDER;
+            } else {
+                rep.x = dx;
+                rep.y = dy;
+            }
+            pointing_device_set_report(rep);
+        }
+        // clear cumulative variables.
+        cum_x = 0;
+        cum_y = 0;
+        round = 0;
     }
+
+    pointing_device_send();
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
