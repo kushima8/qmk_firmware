@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #include "pointing_device.h"
-#include "../optical_sensor/optical_sensor.h"
-
-bool isScrollMode;
+#include "trackball.h"
 
 enum keymap_layers {
   _QWERTY,
@@ -182,10 +180,10 @@ void keyboard_post_init_user() {
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
     case _BALL:
-        isScrollMode = true;
+        trackball_set_scroll_mode(true);
         break;
     default:
-        isScrollMode = false;
+        trackball_set_scroll_mode(false);
         break;
     }
   return state;
