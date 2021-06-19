@@ -23,20 +23,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define PMW_3360
 
+//#define USE_MATRIX_I2C
+
 /* Select hand configuration */
 
-#define MASTER_LEFT
-//#define MASTER_RIGHT
+//#define MASTER_LEFT
+#define MASTER_RIGHT
 
 #define SOFT_SERIAL_PIN D2
 
 #ifdef RGBLIGHT_ENABLE
-    //#define RGBLIGHT_ANIMATIONS
-    #define RGBLIGHT_EFFECT_RGB_TEST
-    #define RGBLIGHT_LIMIT_VAL 200
-    #define RGBLIGHT_HUE_STEP 20
+    #undef RGBLED_NUM
+    #define RGBLED_NUM      14
+    #define RGBLED_SPLIT    { 7, 7 }
+
+    #define RGBLIGHT_LIMIT_VAL 120
+    #define RGBLIGHT_HUE_STEP 10
     #define RGBLIGHT_SAT_STEP 17
     #define RGBLIGHT_VAL_STEP 17
+
+    #define RGBLIGHT_EFFECT_RGB_TEST
 #endif
 
 #define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"
