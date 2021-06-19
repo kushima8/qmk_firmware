@@ -4,6 +4,7 @@ This is the c configuration file for the keymap
 Copyright 2012 Jun Wako <wakojun@gmail.com>
 Copyright 2015 Jack Humbert
 Copyright 2021 @Yowkees
+Copyright 2021 MURAOKA Taro
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,12 +32,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SOFT_SERIAL_PIN D2
 
 #ifdef RGBLIGHT_ENABLE
-    //#define RGBLIGHT_ANIMATIONS
-    #define RGBLIGHT_EFFECT_RGB_TEST
-    #define RGBLIGHT_LIMIT_VAL 200
-    #define RGBLIGHT_HUE_STEP 20
+    #undef RGBLED_NUM
+    #define RGBLED_NUM      14
+    #define RGBLED_SPLIT    { 7, 7 }
+
+    #define RGBLIGHT_LIMIT_VAL 120
+    #define RGBLIGHT_HUE_STEP 10
     #define RGBLIGHT_SAT_STEP 17
     #define RGBLIGHT_VAL_STEP 17
+
+    #define RGBLIGHT_EFFECT_RGB_TEST
 #endif
 
 #define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"

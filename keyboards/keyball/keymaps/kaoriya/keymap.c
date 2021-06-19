@@ -85,7 +85,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
      SLSH ,  1  ,  2  ,  3  , EQL ,MBTN3            ,     ,     ,DOWN ,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,  0  ,    ENT ,     , SPC ,            ,MBTN3, A_BS,     ,       ,     ,     
+          ,  0  ,    ENT ,A_DEL, SPC ,           ,MBTN3,     ,     ,       ,     ,     
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -97,7 +97,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
       GRV , DQT ,QUOT ,CIRC ,TILD ,MBTN3            ,     ,     , PGDN,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,PERC ,        ,A_DEL,     ,            ,MBTN2,    ,     ,       ,     ,     
+          ,PERC ,        ,     ,     ,           ,MBTN2, A_BS,     ,       ,     ,     
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -221,12 +221,9 @@ void pointing_device_task(void) {
 	}
     	
 
-//	if (mouse_rep.x!=0 || mouse_rep.y!=0 || mouse_rep.v!=0 || mouse_rep.h!=0) {
-//		pointing_device_set_report(mouse_rep);
-//    }
-
-	pointing_device_set_report(mouse_rep);
-    pointing_device_send();
+	if (mouse_rep.x!=0 || mouse_rep.y!=0 || mouse_rep.v!=0 || mouse_rep.h!=0) {
+		pointing_device_set_report(mouse_rep);
+    }
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
