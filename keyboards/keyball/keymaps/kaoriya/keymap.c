@@ -129,6 +129,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN1;
       }
       pointing_device_set_report(currentReport);
+      pointing_device_send();
       return false;
     case KC_MBTN2:
       currentReport = pointing_device_get_report();
@@ -139,6 +140,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN2;
       }
       pointing_device_set_report(currentReport);
+      pointing_device_send();
       return false;
     case KC_MBTN3:
       currentReport = pointing_device_get_report();
@@ -149,6 +151,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         currentReport.buttons &= ~MOUSE_BTN3;
       }
       pointing_device_set_report(currentReport);
+      pointing_device_send();
       return false;
   }
   return true;
@@ -192,7 +195,7 @@ void pointing_device_task(void) {
     if (!is_keyboard_master())
         return;
     static int  cnt;
-	static int16_t avg_x, avg_y;
+    static int16_t avg_x, avg_y;
 
     report_mouse_t mouse_rep = pointing_device_get_report();
 	report_optical_sensor_t sensor_report = optical_sensor_get_report();
@@ -223,6 +226,7 @@ void pointing_device_task(void) {
 
 	if (mouse_rep.x!=0 || mouse_rep.y!=0 || mouse_rep.v!=0 || mouse_rep.h!=0) {
 		pointing_device_set_report(mouse_rep);
+                pointing_device_send();
     }
 }
 
