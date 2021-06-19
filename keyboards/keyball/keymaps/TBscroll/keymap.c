@@ -1,26 +1,12 @@
-/*
-Copyright 2021 @Yowkees
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include QMK_KEYBOARD_H
 
+#include "paw3204.h"
 #include "pointing_device.h"
 #include "../optical_sensor/optical_sensor.h"
 
 extern keymap_config_t keymap_config;
+
+//extern uint8_t is_master;
 
 bool isScrollMode;
 
@@ -28,16 +14,21 @@ enum keymap_layers {
   _QWERTY,
   _LOWER,
   _RAISE,
-  _BALL,
+  _ADJUST,
 };
 
+// Each layer gets a name for readability, which is then used in the keymap matrix below.
+// The underscores don't mean anything - you can have a layer called STUFF or any other name.
+// Layer names don't all need to be of the same length, obviously, and you can also skip them
+// entirely and just use numbers.
 enum custom_keycodes {
   QWERTY = SAFE_RANGE,
   LOWER,
   RAISE,
   KC_MBTN1,
   KC_MBTN2,
-  KC_MBTN3
+  KC_MBTN3,
+  KC_SCRL
 };
 
 // common
@@ -53,15 +44,50 @@ enum custom_keycodes {
 
 // shift_t
 #define KC_S_EN LSFT_T(KC_LANG2)
+#define KC_S_JA LSFT_T(KC_LANG1)
 
 // original
-#define KC_A_JA LT(_BALL, KC_LANG1)   // cmd or adjust 
+#define KC_A_JA LT(_ADJUST, KC_LANG1)   // cmd or adjust 
 #define KC_AL_CP MT(MOD_LALT, KC_CAPS)  // alt or caps lock
 #define KC_G_BS MT(MOD_LGUI, KC_BSPC)   // command or back space
 #define KC_G_DEL MT(MOD_LGUI, KC_DEL)   // command or delete
-#define KC_A_BS LT(_BALL, KC_BSPC)    // adjust or back space
-#define KC_A_DEL LT(_BALL, KC_DEL)    // adjust or delete
+#define KC_A_BS LT(_ADJUST, KC_BSPC)    // adjust or back space
+#define KC_A_DEL LT(_ADJUST, KC_DEL)    // adjust or delete
 
+// cmd_t
+#define KC_G_F LCMD_T(KC_F)
+#define KC_G_J RCMD_T(KC_J)
+
+// ctl_t
+#define KC_C_G LCTL_T(KC_G)
+#define KC_C_H RCTL_T(KC_H)
+
+// alt_t
+#define KC_A_D ALT_T(KC_D)
+#define KC_A_K ALT_T(KC_K)
+
+// cmd+shift_t
+#define KC_GS_S SCMD_T(KC_S)
+#define KC_GS_L SCMD_T(KC_L)
+
+//
+#define KC_MISS C(KC_UP)
+
+#define TAPPING_LAYER_TERM 230
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+  switch (keycode) {
+    case KC_GS_S:
+      return TAPPING_LAYER_TERM;
+    case KC_GS_L:
+      return TAPPING_LAYER_TERM;
+    case KC_A_D:
+      return TAPPING_LAYER_TERM;
+    case KC_A_K:
+      return TAPPING_LAYER_TERM;
+    default:
+      return TAPPING_TERM;
+  }
+}
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -85,7 +111,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
      SLSH ,  1  ,  2  ,  3  , EQL ,MBTN3            ,     ,     ,DOWN ,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,  0  ,    ENT ,A_DEL, SPC ,           ,MBTN3,     ,     ,       ,     ,     
+          ,  0  ,    ENT ,     , SPC ,            ,MBTN3, A_BS,     ,       ,     ,     
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
@@ -97,11 +123,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
       GRV , DQT ,QUOT ,CIRC ,TILD ,MBTN3            ,     ,     , PGDN,     ,     ,     ,
   //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,PERC ,        ,     ,     ,           ,MBTN2, A_BS,     ,       ,     ,     
+          ,PERC ,        ,A_DEL,     ,            ,MBTN2,    ,     ,       ,     ,     
   //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
   ),
 
-  [_BALL] = LAYOUT( \
+  [_ADJUST] = LAYOUT( \
   //,-----------------------------------------------------.          ,-----------------------------------------------------.
         RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,            XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
   //|--------+--------+--------+--------+--------+--------|          |--------+--------+--------+--------+--------+--------|
@@ -114,7 +140,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 
 };
-
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   report_mouse_t currentReport = {};
@@ -150,33 +175,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       pointing_device_set_report(currentReport);
       return false;
+    case KC_SCRL:
+      if (record->event.pressed) {
+        isScrollMode = true;
+        dprint("scroll ON\n");
+      }
+      else {
+        isScrollMode = false;
+        dprint("scroll OFF\n");
+      }
+      return false;
   }
   return true;
 }
-	
-/*#ifndef MOUSEKEY_ENABLE
-    if (IS_MOUSEKEY_BUTTON(keycode)) {
-        report_mouse_t currentReport = pointing_device_get_report();
-        if (record->event.pressed) {
-            currentReport.buttons |= 1 << (keycode - KC_MS_BTN1);
-        } else {
-            currentReport.buttons &= ~(1 << (keycode - KC_MS_BTN1));
-        }
-        pointing_device_set_report(currentReport);
-        pointing_device_send();
-    }
-#endif
-    return true;
-}*/
-
-
 
 #define CLAMP_HID(value) value < -127 ? -127 : value > 127 ? 127 : value
 
-void pointing_device_init(void) {
+void matrix_init_user(void) {
 	if (is_keyboard_master()){
+		init_paw3204();
 		optical_sensor_init();
 	}
+//    setPinInputHigh(D3);
 }
 
 void keyboard_post_init_user() {
@@ -184,47 +204,88 @@ void keyboard_post_init_user() {
     debug_mouse = true;
 }
 
-void pointing_device_task(void) {
+void matrix_scan_user(void) {
     if (!is_keyboard_master())
         return;
     static int  cnt;
-	static int16_t avg_x, avg_y;
+    static bool paw_ready;
+//    static int  tb_layer;
 
     report_mouse_t mouse_rep = pointing_device_get_report();
 	report_optical_sensor_t sensor_report = optical_sensor_get_report();
 
-	int16_t raw_x = - sensor_report.x;
-	int16_t raw_y = - sensor_report.y;
-	
-	if (cnt++ % 10 == 0) {
-		avg_x = avg_x / 10;
-		avg_y = avg_y / 10;
-//		if(avg_x*avg_x >= 225) avg_x*=2;
-//		if(avg_y*avg_y >= 225) avg_y*=2;
-		int8_t clamped_x = CLAMP_HID(avg_x);
-		int8_t clamped_y = CLAMP_HID(avg_y);
-		
-		if (isScrollMode) {
-			mouse_rep.h = -clamped_x/10;
-			mouse_rep.v = -clamped_y/10;
-		} else {
-			mouse_rep.x = -clamped_x;
-			mouse_rep.y = clamped_y;
-		}
-	}else{
-		avg_x += raw_x;
-		avg_y += raw_y;
-	}
-    	
+    if (cnt++ % 50 == 0) {
+        uint8_t pid = read_pid_paw3204();
+        if (pid == 0x30) {
+            dprint("paw3204 OK\n");
+            paw_ready = true;
+        } else {
+            dprintf("paw3204 NG:%d\n", pid);
+            paw_ready = false;
+        }
 
-	if (mouse_rep.x!=0 || mouse_rep.y!=0 || mouse_rep.v!=0 || mouse_rep.h!=0) {
-		pointing_device_set_report(mouse_rep);
+/*        if (readPin(D3) == 1) {
+            if (tb_layer == 0) {
+                dprint("tb layer on\n");
+                layer_on(_TB);
+                tb_layer = 1;
+            }
+        } else {
+            if (tb_layer == 1) {
+                layer_off(_TB);
+                dprint("tb layer off\n");
+                tb_layer = 0;
+            }
+        }*/
+    }
+
+    if (paw_ready) {
+        uint8_t stat;
+        int8_t x, y;
+        int8_t r_x, r_y;
+        int8_t degree = 45;
+
+		int16_t raw_x = - sensor_report.x;
+		int16_t raw_y = - sensor_report.y;
+    	if(raw_x*raw_x >= 225) raw_x*=2;
+		if(raw_y*raw_y >= 225) raw_y*=2;
+    	if(raw_x>0) raw_x = raw_x / 8 + 1;
+    	if(raw_y>0) raw_y = raw_y / 8 + 1;
+    	if(raw_x<0) raw_x = raw_x / 8 - 1;
+    	if(raw_y<0) raw_y = raw_y / 8 - 1;
+		int8_t clamped_x = CLAMP_HID(raw_x);
+		int8_t clamped_y = CLAMP_HID(raw_y);
+    	
+    	mouse_rep.x = -clamped_x;
+        mouse_rep.y = clamped_y;
+
+//        if (isScrollMode) {
+            if (cnt % 5 == 0) {
+            	read_paw3204(&stat, &x, &y);
+                r_x =  x * cos(degree) + y * sin(degree);
+                r_y = -x * sin(degree) + y * cos(degree);
+                mouse_rep.v = -r_y/10;
+                mouse_rep.h = r_x/10;
+            }else{
+            	mouse_rep.v = 0;
+                mouse_rep.h = 0;
+            }
+/*        } else {
+            mouse_rep.x = r_x;
+            mouse_rep.y = r_y;
+        }*/
+
+        if (stat & 0x80 || mouse_rep.x!=0 || mouse_rep.y!=0) {
+			pointing_device_set_report(mouse_rep);
+        	if(mouse_rep.x!=0 || mouse_rep.y!=0) dprintf("stat:%3d x:%4d y:%4d\n", stat, mouse_rep.x, mouse_rep.y);
+        }
     }
 }
 
+/*
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
-    case _BALL:
+    case _LOWER:
         isScrollMode = true;
         break;
     default:
@@ -233,45 +294,4 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     }
   return state;
 }
-
-
-#ifdef OLED_DRIVER_ENABLE
-
-void render_layer_state(void) {
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            oled_write_ln_P(PSTR("Layer: Default"), false);
-            break;
-        case _RAISE:
-            oled_write_ln_P(PSTR("Layer: Raise"), false);
-            break;
-        case _LOWER:
-            oled_write_ln_P(PSTR("Layer: Lower"), false);
-            break;
-        case _BALL:
-            oled_write_ln_P(PSTR("Layer: Adjust"), false);
-            break;
-        default:
-            oled_write_ln_P(PSTR("Layer: Undefined"), false);
-    }
-}
-
-void render_logo(void) {
-    static const char PROGMEM logo[] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0};
-    oled_write_P(logo, false);
-}
-
-void oled_task_user(void) {
-    if (is_keyboard_master()) {
-        render_layer_state();
-    } else {
-        render_logo();
-    }
-}
-
-oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-    if (!is_keyboard_master()) return OLED_ROTATION_180;
-    return rotation;
-}
-
-#endif
+*/
