@@ -76,19 +76,25 @@ __attribute__((weak)) void pointing_device_task(void) {
             trackball_process_delta_user(dx, dy);
         }
         // clear accumulation variables.
-        accum_x = 0;
-        accum_y = 0;
+        accum_x %= accum_count;
+        accum_y %= accum_count;
         accum_count = 0;
     }
 
     pointing_device_send();
 }
 
+static int8_t scroll_accum_x = 0, scroll_accum_y = 0;
+
 __attribute__((weak)) void trackball_process_delta_user(int8_t dx, int8_t dy) {
     report_mouse_t r = pointing_device_get_report();
     if (is_scroll_mode) {
-        r.h = dx / TRACKBALL_SCROLL_DIVIDER;
-        r.v = -dy / TRACKBALL_SCROLL_DIVIDER;
+        scroll_accum_x += dx;
+        scroll_accum_y -= dy;
+        r.h = scroll_accum_x / TRACKBALL_SCROLL_DIVIDER;
+        r.v = scroll_accum_y / TRACKBALL_SCROLL_DIVIDER;
+        scroll_accum_x %= TRACKBALL_SCROLL_DIVIDER;
+        scroll_accum_y %= TRACKBALL_SCROLL_DIVIDER;
     } else {
         r.x = dx;
         r.y = dy;
@@ -102,6 +108,11 @@ bool trackball_get_scroll_mode(void) {
 
 void trackball_set_scroll_mode(bool mode) {
     is_scroll_mode = mode;
+    // reset scroll accumulators when scroll mode is disabled.
+    if (!mode) {
+        scroll_accum_x = 0;
+        scroll_accum_y = 0;
+    }
 }
 
 #endif // TRACKBALL_DRIVER_DISABLE
