@@ -19,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #include "pointing_device.h"
-#include "../optical_sensor/optical_sensor.h"
-
-bool isScrollMode;
+#include "trackball.h"
 
 enum keymap_layers {
   _QWERTY,
@@ -170,16 +168,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }*/
 
-
-
-#define CLAMP_HID(value) value < -127 ? -127 : value > 127 ? 127 : value
-
-void pointing_device_init(void) {
-	if (is_keyboard_master()){
-		optical_sensor_init();
-	}
-}
-
 void keyboard_post_init_user() {
     debug_enable = true;
     debug_mouse = true;
@@ -189,51 +177,13 @@ void keyboard_post_init_user() {
 #endif
 }
 
-#define OPTSENSOR_ACCUMULATION_MAXROUND 10
-#define OPTSENSOR_SCROLL_DIVIDER        10
-
-void pointing_device_task(void) {
-    if (!is_keyboard_master())
-        return;
-
-    static int16_t round = 0;
-    static int16_t cum_x = 0, cum_y = 0;
-
-    report_optical_sensor_t sensor_report = optical_sensor_get_report();
-    cum_x += sensor_report.x;
-    cum_y -= sensor_report.y;
-    round++;
-
-    if (round >= OPTSENSOR_ACCUMULATION_MAXROUND) {
-        int8_t dx = CLAMP_HID(cum_x / round);
-        int8_t dy = CLAMP_HID(cum_y / round);
-        if (dx != 0 || dy != 0) {
-            report_mouse_t rep = pointing_device_get_report();
-            if (isScrollMode) {
-                rep.h = dx / OPTSENSOR_SCROLL_DIVIDER;
-                rep.v = -dy / OPTSENSOR_SCROLL_DIVIDER;
-            } else {
-                rep.x = dx;
-                rep.y = dy;
-            }
-            pointing_device_set_report(rep);
-        }
-        // clear cumulative variables.
-        cum_x = 0;
-        cum_y = 0;
-        round = 0;
-    }
-
-    pointing_device_send();
-}
-
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
     case _BALL:
-        isScrollMode = true;
+        trackball_set_scroll_mode(true);
         break;
     default:
-        isScrollMode = false;
+        trackball_set_scroll_mode(false);
         break;
     }
   return state;
