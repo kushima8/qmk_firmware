@@ -20,8 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #if defined(OLED_DRIVER_ENABLE) && !defined(OLEDKIT_DISABLE)
 
+// oledkit_render_info_user renders keyboard's internal state information to
+// primary board. A keymap can override this by defining a function with same
+// signature.
+//
+// It render a logo as default.
 void oledkit_render_info_user(void);
 
+// oledkit_render_logo_user renders a logo of keyboard to secondary board.
+// A keymap can override this by defining a function with same signature.
 void oledkit_render_logo_user(void);
 
 #endif // OLED_DRIVER_ENABLE
