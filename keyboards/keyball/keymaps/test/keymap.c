@@ -22,154 +22,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "trackball.h"
 #include "oledkit.h"
 
-enum keymap_layers {
-  _QWERTY,
-  _LOWER,
-  _RAISE,
-  _BALL,
-};
-
-enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
-  LOWER,
-  RAISE,
-  KC_MBTN1,
-  KC_MBTN2,
-  KC_MBTN3
-};
-
-// common
-#define KC_ KC_TRNS
-#define KC_XXXX KC_NO
-#define KC_RST RESET
-#define KC_VD KC__VOLDOWN
-#define KC_VU KC__VOLUP
-
-// layer
-#define KC_L_SPC LT(_LOWER, KC_SPC)
-#define KC_R_ENT LT(_RAISE, KC_ENT)
-
-// shift_t
-#define KC_S_EN LSFT_T(KC_LANG2)
-
-// original
-#define KC_A_JA LT(_BALL, KC_LANG1)   // cmd or adjust 
-#define KC_AL_CP MT(MOD_LALT, KC_CAPS)  // alt or caps lock
-#define KC_G_BS MT(MOD_LGUI, KC_BSPC)   // command or back space
-#define KC_G_DEL MT(MOD_LGUI, KC_DEL)   // command or delete
-#define KC_A_BS LT(_BALL, KC_BSPC)    // adjust or back space
-#define KC_A_DEL LT(_BALL, KC_DEL)    // adjust or delete
-
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-
-  [_QWERTY] = LAYOUT_kc( \
-  //,-----+-----+-----+-----+-----+-----.           ,-----+-----+-----+-----+-----+-----.
-       Q  ,  W  ,  E  ,  R  ,  T  ,LBRC             ,  Y  ,  U  ,  I  ,  O  ,  P  , ESC ,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-       A  ,  S  ,  D  ,  F  ,  G  ,RBRC             ,  H  ,  J  ,  K  ,  L  , MINS, SCLN,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-       Z  ,  X  ,  C  ,  V  ,  B  ,MBTN2            ,  N  ,  M  , COMM, DOT , SLSH, BSLS,
-  //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-      LCTL,AL_CP,    G_BS,L_SPC,S_EN ,A_JA       ,MBTN1,R_ENT,G_DEL,    EXLM, TAB , PSCR
-  //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
+  [0] = LAYOUT_right_ball(
+  //,-----------------------------------------------------.                    ,-----------------------------------------------------.
+         KC_Q,    KC_W,    KC_E,    KC_R,    KC_T, KC_LBRC,                         KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_ESC,
+  //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+         KC_A,    KC_S,    KC_D,    KC_F,    KC_G, KC_RBRC,                         KC_H,    KC_J,    KC_K,    KC_L, KC_MINS, KC_SCLN,
+  //|--------+--------+--------+--------+--------+--------'                    |--------+--------+--------+--------+--------+--------|
+         KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                                  KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_BSLS,
+  //|--------+--------+--------+--------+--------+-------+--------.            `--------+--------+--------+--------+--------+--------|
+      KC_LCTL, KC_LALT,    KC_BSPC,     KC_SPC,   KC_LGUI,  KC_ESC,                 KC_ENT,  KC_DEL,        KC_EXLM,  KC_TAB, KC_RSFT
+  //`--------+--------'  `--------'  `--------' `--------+--------'              `--------+--------'      `--------+--------+--------'
   ),
-
-  [_RAISE] = LAYOUT_kc( \
-  //,-----+-----+-----+-----+-----+-----.           ,-----+-----+-----+-----+-----+-----.
-     BSLS ,  7  ,  8  ,  9  ,PLUS ,LPRN             , F6  , F7  , F8  , F9  , F10 , F11 ,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-     ASTR ,  4  ,  5  ,  6  , DOT ,RPRN             ,     ,LEFT , UP  ,RGHT ,     , F12 ,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-     SLSH ,  1  ,  2  ,  3  , EQL ,MBTN3            ,     ,     ,DOWN ,     ,     ,     ,
-  //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,  0  ,    ENT ,A_DEL, SPC ,           ,MBTN3,     ,     ,       ,     ,
-  //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
-  ),
-
-  [_LOWER] = LAYOUT_kc( \
-  //,-----+-----+-----+-----+-----+-----.           ,-----+-----+-----+-----+-----+-----.
-      F1  , F2  , F3  , F4  , F5  ,LPRN             , F6  , F7  , F8  , F9  , F10 , F11 ,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-     HASH ,EXLM ,AMPR ,PIPE , AT  ,RPRN             ,     ,MBTN1, PGUP,MBTN2,MBTN3, F12 ,
-  //|-----+-----+-----+-----+-----+-----|           |-----+-----+-----+-----+-----+-----|
-      GRV , DQT ,QUOT ,CIRC ,TILD ,MBTN3            ,     ,     , PGDN,     ,     ,     ,
-  //|-----+-----+-----+-----+-----+-----|           \-----+-----+-----+-----+-----+-----'
-          ,PERC ,        ,     ,     ,           ,MBTN2, A_BS,     ,       ,     ,
-  //`-----+-----+  +-----+-----+-----+----'       `----+-----+-----+  +-----+-----+-----'
-  ),
-
-  [_BALL] = LAYOUT( \
-  //,-----------------------------------------------------.          ,-----------------------------------------------------.
-        RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,            XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-  //|--------+--------+--------+--------+--------+--------|          |--------+--------+--------+--------+--------+--------|
-      RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, XXXXXXX, XXXXXXX,            XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-  //|--------+--------+--------+--------+--------+--------|          |--------+--------+--------+--------+--------+--------|
-      RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, XXXXXXX, XXXXXXX,            XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-  //|--------+--------+--------+--------+--------+--------+          +--------+--------+--------+--------+--------+--------|
-      XXXXXXX, XXXXXXX,     XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   XXXXXXX, XXXXXXX, XXXXXXX,      XXXXXXX, XXXXXXX, XXXXXXX
-  //|--------+--------+    +-------+--------+--------+--------|  |-------+--------+--------+    +--------+--------+--------|
-  ),
-
 };
 
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  report_mouse_t currentReport = {};
-
-  switch (keycode) {
-    case KC_MBTN1:
-      currentReport = pointing_device_get_report();
-      if (record->event.pressed) {
-        currentReport.buttons |= MOUSE_BTN1;
-      }
-      else {
-        currentReport.buttons &= ~MOUSE_BTN1;
-      }
-      pointing_device_set_report(currentReport);
-      return false;
-    case KC_MBTN2:
-      currentReport = pointing_device_get_report();
-      if (record->event.pressed) {
-        currentReport.buttons |= MOUSE_BTN2;
-      }
-      else {
-        currentReport.buttons &= ~MOUSE_BTN2;
-      }
-      pointing_device_set_report(currentReport);
-      return false;
-    case KC_MBTN3:
-      currentReport = pointing_device_get_report();
-      if (record->event.pressed) {
-        currentReport.buttons |= MOUSE_BTN3;
-      }
-      else {
-        currentReport.buttons &= ~MOUSE_BTN3;
-      }
-      pointing_device_set_report(currentReport);
-      return false;
-  }
-  return true;
-}
-
-/*#ifndef MOUSEKEY_ENABLE
-    if (IS_MOUSEKEY_BUTTON(keycode)) {
-        report_mouse_t currentReport = pointing_device_get_report();
-        if (record->event.pressed) {
-            currentReport.buttons |= 1 << (keycode - KC_MS_BTN1);
-        } else {
-            currentReport.buttons &= ~(1 << (keycode - KC_MS_BTN1));
-        }
-        pointing_device_set_report(currentReport);
-        pointing_device_send();
-    }
-#endif
-    return true;
-}*/
-
 void keyboard_post_init_user() {
-    debug_enable = true;
-    debug_mouse = true;
 #ifdef RGBLIGHT_ENABLE
     // Force RGB lights to show test animation without writing toi EEPROM.
     rgblight_enable_noeeprom();
@@ -177,19 +46,7 @@ void keyboard_post_init_user() {
 #endif
 }
 
-layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
-    case _BALL:
-        trackball_set_scroll_mode(true);
-        break;
-    default:
-        trackball_set_scroll_mode(false);
-        break;
-    }
-  return state;
-}
-
-
+#if 0
 #ifdef OLED_DRIVER_ENABLE
 
 void oledkit_render_info_user(void) {
@@ -215,4 +72,5 @@ void oledkit_render_info_user(void) {
     oled_write_ln_P(n, false);
 }
 
+#endif
 #endif
