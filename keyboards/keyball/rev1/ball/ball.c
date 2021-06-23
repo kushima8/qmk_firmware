@@ -20,11 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111111,
     0b0111111,
-    0b0011111,
+    0b0111111,
     0b0011111,
 
     0b0111111,
     0b0111111,
-    0b0011111,
+    0b0111111,
     0b0011111,
 };
