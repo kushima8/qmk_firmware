@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
+// TODO: modify matrix_mask by secondary board type (has ball or no balls)
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111111,
     0b0111111,
