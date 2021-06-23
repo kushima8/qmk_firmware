@@ -38,17 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    error "TRACKBALL_SCROLL_DIVIDER should be larger than zero"
 #endif
 
-__attribute__((weak)) bool trackball_has(void) {
-    // FIXME: support for secondary.
-    return is_keyboard_master();
-}
-
-__attribute__((weak)) void pointing_device_init(void) {
-    if (trackball_has()){
-        optical_sensor_init();
-    }
-}
-
+static bool is_primary = false;
 static bool is_scroll_mode = false;
 
 static int16_t accum_count = 0;
@@ -57,6 +47,18 @@ static int16_t accum_y = 0;
 
 static int8_t delta_x = 0;
 static int8_t delta_y = 0;
+
+__attribute__((weak)) bool trackball_has(void) {
+    // FIXME: support for secondary.
+    return is_keyboard_master();
+}
+
+__attribute__((weak)) void pointing_device_init(void) {
+    if (trackball_has()){
+        optical_sensor_init();
+        is_primary = is_keyboard_master();
+    }
+}
 
 // clip2int8 clips an integer fit into int8_t.
 static inline int8_t clip2int8(int16_t v) {
@@ -91,7 +93,7 @@ __attribute__((weak)) void pointing_device_task(void) {
 
     if (accum_count >= TRACKBALL_SAMPLE_COUNT) {
         // divice to calculate mean value and clip it to fit into int8_t.
-        int16_t div = is_scroll_mode ? TRACKBALL_SAMPLE_COUNT * TRACKBALL_SCROLL_DIVIDER : TRACKBALL_SAMPLE_COUNT;
+        int16_t div = (is_scroll_mode || !is_primary) ? TRACKBALL_SAMPLE_COUNT * TRACKBALL_SCROLL_DIVIDER : TRACKBALL_SAMPLE_COUNT;
         delta_x = clip2int8(accum_x / div);
         delta_y = clip2int8(accum_y / div);
         // clear accumulators with considering surplus.
@@ -99,7 +101,7 @@ __attribute__((weak)) void pointing_device_task(void) {
         accum_y %= div;
         accum_count = 0;
         // process delta.
-        if (is_keyboard_master() && (delta_x != 0 || delta_y != 0)) {
+        if (is_primary && (delta_x != 0 || delta_y != 0)) {
             trackball_process_user(delta_x, delta_y);
         }
     } else {

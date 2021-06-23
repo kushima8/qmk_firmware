@@ -26,6 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MANUFACTURER Yowkees
 #define PRODUCT Keyball
 
+// rev.1 uses PMW3360 as optical sensor
+#define PMW_3360
+
 /* key matrix size */
 #define MATRIX_ROWS 8
 #define MATRIX_COLS 6
@@ -81,4 +84,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // KEYBALL46_TRACKBALL is defined for custom split transport. it will be used
 // by rev1/ball and rev1/noball firmware.
-//#define KEYBALL46_TRACKBALL
+#define KEYBALL46_TRACKBALL
