@@ -1,5 +1,6 @@
 /*
 Copyright 2021 @Yowkees
+Copyright 2021 MURAOKA Taro (aka KoRoN, @kaoriya)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,3 +30,8 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111111,
     0b0011111,
 };
+
+bool trackball_has(void) {
+    // rev1/ball has a trackball always.
+    return true;
+}
