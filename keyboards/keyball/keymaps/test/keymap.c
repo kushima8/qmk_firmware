@@ -18,12 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
+#include <stdio.h>
+
 #include "pointing_device.h"
 #include "trackball.h"
 #include "oledkit.h"
 
-
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+
+  // Test keymap for double balls configuration.
+  [0] = LAYOUT_double_balls(
+   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
+        KC_TAB,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                         KC_Y,    KC_U,    KC_I,    KC_O,    KC_P, KC_MINS,
+   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+       KC_LCTL,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                         KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_QUOT,
+   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+       KC_LSFT,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
+   //|--------+--------+--------+--------+--------+--------'                    `--------+--------+--------+--------+--------+--------|
+        KC_ESC,  KC_GRV, KC_LALT,        KC_BSPC,  KC_SPC,                           KC_ENT,  KC_DEL,        KC_LBRC, KC_RBRC, KC_BSLS 
+   //`--------+--------+--------'      `--------+--------'                        `--------+--------'      `--------+--------+--------'
+  ),
+
+#if 0
   [0] = LAYOUT_right_ball(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
          KC_Q,    KC_W,    KC_E,    KC_R,    KC_T, KC_LBRC,                         KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_ESC,
@@ -35,8 +51,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       KC_LCTL, KC_LALT,    KC_BSPC,     KC_SPC,   KC_LGUI,  KC_ESC,                 KC_ENT,  KC_DEL,        KC_EXLM,  KC_TAB, KC_RSFT
   //`--------+--------'  `--------'  `--------' `--------+--------'              `--------+--------'      `--------+--------+--------'
   ),
-};
+#endif
 
+};
 
 void keyboard_post_init_user() {
 #ifdef RGBLIGHT_ENABLE
@@ -46,31 +63,43 @@ void keyboard_post_init_user() {
 #endif
 }
 
-#if 0
+static int8_t ball1_x = 0, ball1_y = 0;
+static int8_t ball2_x = 0, ball2_y = 0;
+
+void trackball_process_user(int8_t dx, int8_t dy) {
+    ball1_x = dx;
+    ball1_y = dy;
+    // apply events to pointer always on primary trackball.
+    report_mouse_t r = pointing_device_get_report();
+    r.x = dx;
+    r.y = dy;
+    pointing_device_set_report(r);
+}
+
+void trackball_process_secondary_user(int8_t dx, int8_t dy) {
+    ball2_x = dx;
+    ball2_y = dy;
+    // aplly events to scroll always on secondary trackball.
+    report_mouse_t r = pointing_device_get_report();
+    r.h = dx;
+    r.v = -dy;
+    pointing_device_set_report(r);
+}
+
 #ifdef OLED_DRIVER_ENABLE
 
 void oledkit_render_info_user(void) {
-    const char *n;
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            n = PSTR("Default");
-            break;
-        case _RAISE:
-            n = PSTR("Raise");
-            break;
-        case _LOWER:
-            n = PSTR("Lower");
-            break;
-        case _BALL:
-            n = PSTR("Adjust");
-            break;
-        default:
-            n = PSTR("Undefined");
-            break;
-    }
-    oled_write_P(PSTR("Layer: "), false);
-    oled_write_ln_P(n, false);
+    static char buf[11] = {0};
+
+    // primary trackball's status
+    oled_write_P(PSTR("B1: "), false);
+    snprintf(buf, sizeof(buf), "%d, %d", ball1_x, ball1_y);
+    oled_write_ln(buf, false);
+
+    // secondary trackball's status
+    oled_write_P(PSTR("B2: "), false);
+    snprintf(buf, sizeof(buf), "%d, %d", ball2_x, ball2_y);
+    oled_write_ln(buf, false);
 }
 
-#endif
 #endif

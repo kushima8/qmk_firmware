@@ -1,6 +1,4 @@
 /*
-This is the c configuration file for the keymap
-
 Copyright 2021 @Yowkees
 Copyright 2021 MURAOKA Taro (aka KoRoN, @kaoriya)
 
@@ -18,19 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include QMK_KEYBOARD_H
 
-/* Select hand configuration */
-//#define MASTER_LEFT
-#define MASTER_RIGHT
+// TODO: modify matrix_mask by secondary board type (has ball or no balls)
+matrix_row_t matrix_mask[MATRIX_ROWS] = {
+    0b0111111,
+    0b0111111,
+    0b0111111,
+    0b0011111,
 
-#ifdef RGBLIGHT_ENABLE
-    #define RGBLIGHT_LIMIT_VAL 120
-    #define RGBLIGHT_HUE_STEP 10
-    #define RGBLIGHT_SAT_STEP 17
-    #define RGBLIGHT_VAL_STEP 17
+    0b0111111,
+    0b0111111,
+    0b0111111,
+    0b0011111,
+};
 
-    #define RGBLIGHT_EFFECT_RGB_TEST
-#endif
-
-#define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"
+bool trackball_has(void) {
+    // rev1/ball has a trackball always.
+    return true;
+}
