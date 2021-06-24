@@ -16,10 +16,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include QMK_KEYBOARD_H
 
-// Detect handiness configuration by matrix. When this intersection is shorted,
-// it is considered left for Keyball46.
-#define SPLIT_HAND_MATRIX_GRID F7, B5
-// To ignore SPLIT_HAND_MATRIX_GRID as matrix.
-#define MATRIX_MASKED
+#include "pointing_device.h"
+#include "trackball.h"
+
+// TODO: modify matrix_mask by secondary board type (has ball or no balls)
+matrix_row_t matrix_mask[MATRIX_ROWS] = {
+    0b0111111,
+    0b0111111,
+    0b0011111,
+    0b0111111,
+
+    0b0111111,
+    0b0111111,
+    0b0011111,
+    0b0111111,
+};
+
+bool trackball_has(void) {
+    // rev1/ball has a trackball always.
+    return false;
+}
+
+void trackball_process_secondary_kb(int8_t dx, int8_t dy) {
+    trackball_process_user(dx, dy);
+    pointing_device_send();
+}

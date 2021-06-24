@@ -132,6 +132,10 @@ __attribute__((weak)) void trackball_process_secondary_user(int8_t dx, int8_t dy
     pointing_device_set_report(r);
 }
 
+__attribute__((weak)) void trackball_process_secondary_kb(int8_t dx, int8_t dy) {
+    trackball_process_user(dx, dy);
+}
+
 bool trackball_get_scroll_mode(void) {
     return is_scroll_mode;
 }
