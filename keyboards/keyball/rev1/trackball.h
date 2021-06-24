@@ -39,6 +39,11 @@ void trackball_process_user(int8_t dx, int8_t dy);
 // trackball by defining this function.
 void trackball_process_secondary_user(int8_t dx, int8_t dy);
 
+// trackball_process_secondary_kb will be callbacked when a trackball on
+// other side detects some rotation. Internal use only, user must not override
+// this.
+void trackball_process_secondary_kb(int8_t dx, int8_t dy);
+
 // trackball_get_scroll_mode returns current scroll ode of trackball.
 bool trackball_get_scroll_mode(void);
 

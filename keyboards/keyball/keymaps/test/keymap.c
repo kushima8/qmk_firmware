@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
+#if 0
   // Test keymap for double balls configuration.
   [0] = LAYOUT_double_balls(
    //,-----------------------------------------------------.                    ,-----------------------------------------------------.
@@ -38,8 +39,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,  KC_GRV, KC_LALT,        KC_BSPC,  KC_SPC,                           KC_ENT,  KC_DEL,        KC_LBRC, KC_RBRC, KC_BSLS 
    //`--------+--------+--------'      `--------+--------'                        `--------+--------'      `--------+--------+--------'
   ),
+#endif
 
-#if 0
+#if 1
   [0] = LAYOUT_right_ball(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
          KC_Q,    KC_W,    KC_E,    KC_R,    KC_T, KC_LBRC,                         KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_ESC,

@@ -26,9 +26,9 @@ SPLIT_KEYBOARD = yes
 
 # To support trackball.
 POINTING_DEVICE_ENABLE = yes
+SRC += trackball.c
 SRC += spi_master.c
 SRC += pmw/pmw.c
-SRC += trackball.c
 
 # To support OLED
 OLED_DRIVER_ENABLE = no     # Please Enable this in each keymaps.

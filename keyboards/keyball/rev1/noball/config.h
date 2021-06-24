@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Detect handiness configuration by matrix. When this intersection is shorted,
 // it is considered left for Keyball46.
-#define SPLIT_HAND_MATRIX_GRID F7, B5
+#define SPLIT_HAND_MATRIX_GRID F6, B5
 // To ignore SPLIT_HAND_MATRIX_GRID as matrix.
 #define MATRIX_MASKED
+
+//#define OPTICAL_SENSOR_DISABLE

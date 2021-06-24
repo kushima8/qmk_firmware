@@ -388,7 +388,7 @@ bool transport_master(matrix_row_t master_matrix[], matrix_row_t slave_matrix[])
 
 #    ifdef KEYBALL46_TRACKBALL
     if (serial_s2m_buffer.trackball_delta[0] != 0 || serial_s2m_buffer.trackball_delta[1] != 0) {
-        trackball_process_secondary_user(serial_s2m_buffer.trackball_delta[0], serial_s2m_buffer.trackball_delta[1]);
+        trackball_process_secondary_kb(serial_s2m_buffer.trackball_delta[0], serial_s2m_buffer.trackball_delta[1]);
     }
 #    endif
 
