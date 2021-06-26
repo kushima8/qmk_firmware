@@ -38,8 +38,3 @@ bool trackball_has(void) {
     // rev1/ball has a trackball always.
     return false;
 }
-
-void trackball_process_secondary_kb(int8_t dx, int8_t dy) {
-    trackball_process_user(dx, dy);
-    pointing_device_send();
-}
