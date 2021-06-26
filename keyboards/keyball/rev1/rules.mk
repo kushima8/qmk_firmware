@@ -33,3 +33,6 @@ SRC += pmw/pmw.c
 # To support OLED
 OLED_DRIVER_ENABLE = no     # Please Enable this in each keymaps.
 SRC += oledkit.c
+
+# Link Time Optimization required for size.
+LTO_ENABLE = yes
