@@ -55,6 +55,8 @@ void trackball_init(void) {
     }
 }
 
+__attribute__((weak)) void trackball_secondary_availablity(bool available) {}
+
 __attribute__((weak)) bool trackball_has(void) {
     // FIXME: support for secondary.
     return is_keyboard_master();
