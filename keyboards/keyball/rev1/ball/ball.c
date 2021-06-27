@@ -35,3 +35,14 @@ bool trackball_has(void) {
     // rev1/ball has a trackball always.
     return true;
 }
+
+void trackball_secondary_availablity(bool available) {
+    int base = is_keyboard_left() ? 4 : 0;
+    if (available) {
+        matrix_mask[base + 2] = 0b0111111;
+        matrix_mask[base + 3] = 0b0011111;
+    } else {
+        matrix_mask[base + 2] = 0b0011111;
+        matrix_mask[base + 3] = 0b0111111;
+    }
+}

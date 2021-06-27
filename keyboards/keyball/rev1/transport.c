@@ -388,6 +388,7 @@ bool transport_master(matrix_row_t master_matrix[], matrix_row_t slave_matrix[])
 #    endif
 
 #    ifdef KEYBALL46_TRACKBALL
+    trackball_secondary_availablity(serial_s2m_buffer.trackball_has);
     // apply trackball's sensor delta on primary board.
     trackball_delta_t *tb0p = NULL, tb0 = {0};
     if (trackball_fetch_sensor(&tb0)) {
