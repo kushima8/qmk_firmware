@@ -25,39 +25,17 @@
 
 ### `void keyball_process_trackball_user()` オーバーライド可能な関数
 
-トラックボールの移動量方法を独自に定義できます。トラックボールの移動量をOLEDに
-表示したい時などに`keyball_process_trackball_default` と合わせて利用できます。
+トラックボールの移動方法を独自に定義できます。トラックボールの移動量をOLEDに表
+示したい時などに `keyball_process_trackball_default` と合わせて利用できます。
 
-例: `keymaps/test/keymap.c` から抜粋
+例:
 
 ```c
-#ifdef OLED_DRIVER_ENABLE
-
-static trackball_delta_t ball1, ball2;
-
 void keyball_process_trackball_user(
         const trackball_delta_t *primary,
         const trackball_delta_t *secondary) {
-    ball1 = *primary;
-    ball2 = *secondary;
-    keyball_process_trackball_default(primary, secondary);
+    // FIXME: modify or apply deltas for your purpose.
 }
-
-void oledkit_render_info_user(void) {
-    static char buf[22] = {0};
-
-    // primary trackball's status
-    oled_write_P(PSTR("Ball#1: "), false);
-    snprintf(buf, sizeof(buf), "%d, %d", ball1.x, ball1.y);
-    oled_write_ln(buf, false);
-
-    // secondary trackball's status
-    oled_write_P(PSTR("Ball#2: "), false);
-    snprintf(buf, sizeof(buf), "%d, %d", ball2.x, ball2.y);
-    oled_write_ln(buf, false);
-}
-
-#endif
 ```
 
 ## トラックボールドライバ

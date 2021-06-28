@@ -99,3 +99,7 @@ void keyball_process_trackball_user(
 // keyball_adjust_trackball_handness adjusts role of trackball on secondary
 // board.
 void keyball_adjust_trackball_handness(void);
+
+// keyball_oled_render_ballinfo render ball information to OLED.
+// It uses just 21 columns to show the info.
+void keyball_oled_render_ballinfo(void);

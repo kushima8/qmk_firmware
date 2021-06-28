@@ -65,28 +65,8 @@ void keyboard_post_init_user() {
 
 #ifdef OLED_DRIVER_ENABLE
 
-static trackball_delta_t ball1, ball2;
-
-void keyball_process_trackball_user(
-        const trackball_delta_t *primary,
-        const trackball_delta_t *secondary) {
-    ball1 = *primary;
-    ball2 = *secondary;
-    keyball_process_trackball_default(primary, secondary);
-}
-
 void oledkit_render_info_user(void) {
-    static char buf[22] = {0};
-
-    // primary trackball's status
-    oled_write_P(PSTR("Ball#1: "), false);
-    snprintf(buf, sizeof(buf), "%d, %d", ball1.x, ball1.y);
-    oled_write_ln(buf, false);
-
-    // secondary trackball's status
-    oled_write_P(PSTR("Ball#2: "), false);
-    snprintf(buf, sizeof(buf), "%d, %d", ball2.x, ball2.y);
-    oled_write_ln(buf, false);
+    keyball_oled_render_ballinfo();
 }
 
 #endif
