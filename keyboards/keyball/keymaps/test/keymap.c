@@ -50,6 +50,7 @@ void keyboard_post_init_user() {
 
 void oledkit_render_info_user(void) {
     keyball_oled_render_ballinfo();
+    keyball_oled_render_keyinfo();
 }
 
 #endif

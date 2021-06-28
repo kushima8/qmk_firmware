@@ -56,6 +56,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return process_record_user(keycode, record);
 }
 
+#ifdef OLED_DRIVER_ENABLE
+
 static const char * format_4d(int8_t d) {
     static char buf[5] = {0}; // max width (4) + NUL (1)
     char lead = ' ';
@@ -87,6 +89,8 @@ static char to_1x(uint8_t x) {
     x &= 0x0f;
     return x < 10 ? x + '0' : x + 'a' - 10;
 }
+
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Keyball API
