@@ -49,38 +49,36 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return process_record_user(keycode, record);
 }
 
-const char digits[] = "0123456789abcdef";
-
-static char format_buf[5]; // max width (4) + NUL (1)
-
-static const char * format_d(int16_t d, int w) {
-    format_buf[w] = '\0';
-    --w;
-    bool minus = d < 0;
-    if (minus) {
+static const char * format_4d(int8_t d) {
+    static char buf[5] = {0}; // max width (4) + NUL (1)
+    char lead = ' ';
+    if (d < 0) {
         d = -d;
+        lead = '-';
     }
-    do {
-        format_buf[w] = (d % 10) + '0';
+    buf[3] = (d % 10) + '0';
+    d /= 10;
+    if (d == 0) {
+        buf[2] = lead;
+        lead = ' ';
+    } else {
+        buf[2] = (d % 10) + '0';
         d /= 10;
-        w--;
-    } while(d != 0 && w >= 0);
-    if (minus && w >= 0) {
-        format_buf[w] = '-';
-        w--;
     }
-    while (w >= 0) {
-        format_buf[w] = ' ';
-        w--;
+    if (d == 0) {
+        buf[1] = lead;
+        lead = ' ';
+    } else {
+        buf[1] = (d % 10) + '0';
+        d /= 10;
     }
-    return format_buf;
+    buf[0] = lead;
+    return buf;
 }
 
-static const char * format_02x(uint8_t x) {
-    format_buf[0] = digits[(x >> 4) & 0x0f];
-    format_buf[1] = digits[x & 0x0f];
-    format_buf[2] = '\0';
-    return format_buf;
+static char to_1x(uint8_t x) {
+    x &= 0x0f;
+    return x < 10 ? x + '0' : x + 'a' - 10;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -146,10 +144,10 @@ void keyball_oled_render_ballinfo(void) {
     //     Ball: -12  34   0   0
     //
     oled_write_P(PSTR("Ball:"), false);
-    oled_write(format_d(ball1.x, 4), false);
-    oled_write(format_d(ball1.y, 4), false);
-    oled_write(format_d(ball2.x, 4), false);
-    oled_write(format_d(ball2.y, 4), false);
+    oled_write(format_4d(ball1.x), false);
+    oled_write(format_4d(ball1.y), false);
+    oled_write(format_4d(ball2.x), false);
+    oled_write(format_4d(ball2.y), false);
 #endif
 }
 
@@ -164,31 +162,32 @@ const char PROGMEM code_to_name[] = {
 
 void keyball_oled_render_keyinfo(void) {
 #ifdef OLED_DRIVER_ENABLE
-    // Format: `Key:   R{row}  C{col} K{key code}  '{key name}`
+    // Format: `Key:   R{row}  C{col} K{kc}  '{name}`
+    //
+    // Where `kc` is lower 8 bit of keycode.
+    // Where `name` is readable label for `kc`, valid between 4 and 56.
     //
     // It is aligned to fit with output of keyball_oled_render_ballinfo().
     // For example:
     //
     //     Ball:   0   0   0   0
-    //     Key:   R3  C2 K57  'B
+    //     Key:   R2  C3 K06  'c
     //
     char name = '\0';
-    uint16_t keycode = last_keycode;
-    if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) ||
-        (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
-        keycode &= 0xFF;
-    }
+    uint8_t keycode = last_keycode;
     if (keycode >= 4 && keycode < 53) {
         name = pgm_read_byte(code_to_name + keycode - 4);
     }
 
     oled_write_P(PSTR("Key:   R"), false);
-    oled_write(format_d(last_row, 1), false);
+    oled_write_char(to_1x(last_row), false);
     oled_write_P(PSTR("  C"), false);
-    oled_write(format_d(last_col, 1), false);
+    oled_write_char(to_1x(last_col), false);
     if (keycode) {
         oled_write_P(PSTR(" K"), false);
-        oled_write(format_02x((uint8_t)keycode), false);
+        oled_write_char(to_1x(keycode >> 4), false);
+        oled_write_char(to_1x(keycode), false);
+        //oled_write(format_02x((uint8_t)keycode), false);
     }
     if (name) {
         oled_write_P(PSTR("  '"), false);
