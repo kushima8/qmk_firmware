@@ -95,3 +95,7 @@ void keyball_process_trackball_default(
 void keyball_process_trackball_user(
         const trackball_delta_t *primary,
         const trackball_delta_t *secondary);
+
+// keyball_adjust_trackball_handness adjusts role of trackball on secondary
+// board.
+void keyball_adjust_trackball_handness(void);
