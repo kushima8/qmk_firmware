@@ -38,6 +38,51 @@ __attribute__((weak)) void pointing_device_task(void) {
     }
 }
 
+static uint16_t last_keycode;
+static uint8_t last_row;
+static uint8_t last_col;
+
+bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    last_keycode = keycode;
+    last_row = record->event.key.row;
+    last_col = record->event.key.col;
+    return process_record_user(keycode, record);
+}
+
+const char digits[] = "0123456789abcdef";
+
+static char format_buf[5]; // max width (4) + NUL (1)
+
+static const char * format_d(int16_t d, int w) {
+    format_buf[w] = '\0';
+    --w;
+    bool minus = d < 0;
+    if (minus) {
+        d = -d;
+    }
+    do {
+        format_buf[w] = (d % 10) + '0';
+        d /= 10;
+        w--;
+    } while(d != 0 && w >= 0);
+    if (minus && w >= 0) {
+        format_buf[w] = '-';
+        w--;
+    }
+    while (w >= 0) {
+        format_buf[w] = ' ';
+        w--;
+    }
+    return format_buf;
+}
+
+static const char * format_02x(uint8_t x) {
+    format_buf[0] = digits[(x >> 4) & 0x0f];
+    format_buf[1] = digits[x & 0x0f];
+    format_buf[2] = '\0';
+    return format_buf;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Keyball API
 
@@ -92,37 +137,19 @@ void keyball_adjust_trackball_handness(void) {
     }
 }
 
-static const char * format_i16(int16_t n, int w) {
-    static char buf[7];
-    buf[w] = '\0';
-    --w;
-    bool minus = n < 0;
-    if (minus) {
-        n = -n;
-    }
-    do {
-        buf[w] = (n % 10) + '0';
-        w--;
-        n /= 10;
-    } while(n != 0 && w >= 0);
-    if (minus && w >= 0) {
-        buf[w] = '-';
-        w--;
-    }
-    while (w >= 0) {
-        buf[w] = ' ';
-        w--;
-    }
-    return buf;
-}
-
 void keyball_oled_render_ballinfo(void) {
 #ifdef OLED_DRIVER_ENABLE
+    // Format: `Ball:{ball#1 x}{ball#1 y}{ball#2 x}{ball#2 y}
+    //
+    // Output example:
+    //
+    //     Ball: -12  34   0   0
+    //
     oled_write_P(PSTR("Ball:"), false);
-    oled_write(format_i16(ball1.x, 4), false);
-    oled_write(format_i16(ball1.y, 4), false);
-    oled_write(format_i16(ball2.x, 4), false);
-    oled_write(format_i16(ball2.y, 4), false);
+    oled_write(format_d(ball1.x, 4), false);
+    oled_write(format_d(ball1.y, 4), false);
+    oled_write(format_d(ball2.x, 4), false);
+    oled_write(format_d(ball2.y, 4), false);
 #endif
 }
 
@@ -135,9 +162,18 @@ const char PROGMEM code_to_name[] = {
     ',', '.', '/',
 };
 
-void keyball_oled_render_keyinfo(uint16_t keycode, const keyrecord_t *record) {
+void keyball_oled_render_keyinfo(void) {
 #ifdef OLED_DRIVER_ENABLE
+    // Format: `Key:   R{row}  C{col} K{key code}  '{key name}`
+    //
+    // It is aligned to fit with output of keyball_oled_render_ballinfo().
+    // For example:
+    //
+    //     Ball:   0   0   0   0
+    //     Key:   R3  C2 K57  'B
+    //
     char name = '\0';
+    uint16_t keycode = last_keycode;
     if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) ||
         (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
         keycode &= 0xFF;
@@ -146,14 +182,16 @@ void keyball_oled_render_keyinfo(uint16_t keycode, const keyrecord_t *record) {
         name = pgm_read_byte(code_to_name + keycode - 4);
     }
 
-    oled_write_P(PSTR("Key: R"), false);
-    oled_write(format_i16(record->event.key.row, 1), false);
-    oled_write_P(PSTR(" C"), false);
-    oled_write(format_i16(record->event.key.col, 1), false);
-    oled_write_P(PSTR(" K"), false);
-    oled_write(format_i16(keycode, 2), false);
+    oled_write_P(PSTR("Key:   R"), false);
+    oled_write(format_d(last_row, 1), false);
+    oled_write_P(PSTR("  C"), false);
+    oled_write(format_d(last_col, 1), false);
+    if (keycode) {
+        oled_write_P(PSTR(" K"), false);
+        oled_write(format_02x((uint8_t)keycode), false);
+    }
     if (name) {
-        oled_write_P(PSTR(" N:"), false);
+        oled_write_P(PSTR("  '"), false);
         oled_write_char(name, false);
     }
 #endif
