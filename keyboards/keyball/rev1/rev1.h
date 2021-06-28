@@ -104,6 +104,6 @@ void keyball_adjust_trackball_handness(void);
 // It uses just 21 columns to show the info.
 void keyball_oled_render_ballinfo(void);
 
-// keyball_oled_render_keyinfo renders key information to OLED.
+// keyball_oled_render_keyinfo renders last processed key information to OLED.
 // It shows column, row, key code, and key name (if available).
-void keyball_oled_render_keyinfo(uint16_t keycode, const keyrecord_t *record);
+void keyball_oled_render_keyinfo(void);

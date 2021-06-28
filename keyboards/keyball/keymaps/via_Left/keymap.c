@@ -103,17 +103,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 };
 
-#ifdef OLED_DRIVER_ENABLE
-static uint16_t last_keycode;
-static keyrecord_t last_record;
-#endif
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-#ifdef OLED_DRIVER_ENABLE
-    last_keycode = keycode;
-    last_record = *record;
-#endif
-
     report_mouse_t currentReport = {};
 
     switch (keycode) {
@@ -190,7 +180,7 @@ void oledkit_render_info_user(void) {
     oled_write_ln_P(n, false);
 
     keyball_oled_render_ballinfo();
-    keyball_oled_render_keyinfo(last_keycode, &last_record);
+    keyball_oled_render_keyinfo();
 }
 
 #endif
