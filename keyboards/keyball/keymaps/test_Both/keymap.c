@@ -36,7 +36,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
        KC_ESC,  KC_GRV, KC_LALT,        KC_BSPC,  KC_SPC,                           KC_ENT,  KC_DEL,        KC_LBRC, KC_RBRC, KC_BSLS 
   //`--------+--------+--------'      `--------+--------'                        `--------+--------'      `--------+--------+--------'
   ),
-#edif
 
 };
 
@@ -52,6 +51,7 @@ void keyboard_post_init_user() {
 
 void oledkit_render_info_user(void) {
     keyball_oled_render_ballinfo();
+    keyball_oled_render_keyinfo();
 }
 
 #endif
