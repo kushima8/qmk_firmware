@@ -10,6 +10,14 @@
 
 トラックボールのスクロールモードを変更します。
 
+### `KEYBALL_SCROLL_DIVIDER`
+
+スクロールモードではトラックボールの移動量を `KEYBALL_SCROLL_DIVIDER` で割るこ
+とで程よいスクロール量に調整しています。
+
+各キーマップの config.h で設定できます。デフォルトは `10` で `0` 以下の値を設定
+するとコンパイルエラーになります。
+
 ### `void keyball_process_trackball_default()` API
 
 トラックボールイベントのデフォルトハンドラです。1つ目のトラックボールはマウスポ
@@ -74,14 +82,6 @@ Keyballに搭載されているトラックボールのドライバーです。
 ```c
 #define TRACKBALL_SAMPLE_COUNT 100
 ```
-
-### `TRACKBALL_SCROLL_DIVIDER`
-
-スクロールモードにおいてトラックボールの移動をスクロール量として送る際に
-`TRACKBALL_SCROLL_DIVIDER` で割ることで程よいスクロール量に調整しています。
-
-各キーマップの config.h で設定できます。デフォルトは `10` で `0` 以下の値を設定
-するとコンパイルエラーになります。
 
 ## OLED Kit
 

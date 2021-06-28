@@ -5,21 +5,19 @@
 
 #include "trackball.h"
 
+#ifndef KEYBALL_SCROLL_DIVIDER
+#    define KEYBALL_SCROLL_DIVIDER 10
+#endif
+#if KEYBALL_SCROLL_DIVIDER <= 0
+#    error "KEYBALL_SCROLL_DIVIDER should be larger than zero"
+#endif
+
 static int primary = 0;
 static int secondary = 1;
 static bool is_scroll_mode = false;
 
-static bool should_swap_primary_trackball(void) {
-    // TODO: support trackball handness.
-    return !trackball_has() || is_keyboard_left();
-}
-
 __attribute__((weak)) void pointing_device_init(void) {
     trackball_init();
-    if (should_swap_primary_trackball()) {
-        primary = 1;
-        secondary = 0;
-    }
 }
 
 // clip2int8 clips an integer fit into int8_t.
@@ -29,8 +27,8 @@ static inline int8_t clip2int8(int16_t v) {
 
 __attribute__((weak)) void pointing_device_task(void) {
     trackball_delta_t d0 = {0}, d1 = {0};
-    bool c0 = trackball_consume_delta(primary, is_scroll_mode ? 10 : 1, &d0);
-    bool c1 = trackball_consume_delta(secondary, 10, &d1);
+    bool c0 = trackball_consume_delta(primary, is_scroll_mode ? KEYBALL_SCROLL_DIVIDER : 1, &d0);
+    bool c1 = trackball_consume_delta(secondary, KEYBALL_SCROLL_DIVIDER, &d1);
     if (c0 || c1) {
         keyball_process_trackball_user(&d0, &d1);
     }
@@ -72,4 +70,16 @@ __attribute__((weak)) void keyball_process_trackball_user(
         const trackball_delta_t *primary,
         const trackball_delta_t *secondary) {
     keyball_process_trackball_default(primary, secondary);
+}
+
+static bool should_swap_primary_trackball(void) {
+    // TODO: support trackball handness.
+    return !trackball_has() || is_keyboard_left();
+}
+
+void keyball_adjust_trackball_handness(void) {
+    if (should_swap_primary_trackball()) {
+        primary = 1;
+        secondary = 0;
+    }
 }
