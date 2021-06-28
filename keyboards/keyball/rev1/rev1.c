@@ -125,3 +125,36 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_i16(ball2.y, 4), false);
 #endif
 }
+
+const char PROGMEM code_to_name[] = {
+    'a', 'b', 'c', 'd', 'e', 'f',  'g', 'h', 'i',  'j',
+    'k', 'l', 'm', 'n', 'o', 'p',  'q', 'r', 's',  't',
+    'u', 'v', 'w', 'x', 'y', 'z',  '1', '2', '3',  '4',
+    '5', '6', '7', '8', '9', '0',  'R', 'E', 'B',  'T',
+    '_', '-', '=', '[', ']', '\\', '#', ';', '\'', '`',
+    ',', '.', '/',
+};
+
+void keyball_oled_render_keyinfo(uint16_t keycode, const keyrecord_t *record) {
+#ifdef OLED_DRIVER_ENABLE
+    char name = '\0';
+    if ((keycode >= QK_MOD_TAP && keycode <= QK_MOD_TAP_MAX) ||
+        (keycode >= QK_LAYER_TAP && keycode <= QK_LAYER_TAP_MAX)) {
+        keycode &= 0xFF;
+    }
+    if (keycode >= 4 && keycode < 53) {
+        name = pgm_read_byte(code_to_name + keycode - 4);
+    }
+
+    oled_write_P(PSTR("Key: R"), false);
+    oled_write(format_i16(record->event.key.row, 1), false);
+    oled_write_P(PSTR(" C"), false);
+    oled_write(format_i16(record->event.key.col, 1), false);
+    oled_write_P(PSTR(" K"), false);
+    oled_write(format_i16(keycode, 2), false);
+    if (name) {
+        oled_write_P(PSTR(" N:"), false);
+        oled_write_char(name, false);
+    }
+#endif
+}
