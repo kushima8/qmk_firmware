@@ -12,6 +12,13 @@
 #    error "KEYBALL_SCROLL_DIVIDER should be larger than zero"
 #endif
 
+#ifndef KEYBALL_POINTER_DIVIDER
+#    define KEYBALL_POINTER_DIVIDER 1
+#endif
+#if KEYBALL_POINTER_DIVIDER <= 0
+#    error "KEYBALL_POINTER_DIVIDER should be larger than zero"
+#endif
+
 static int primary = 0;
 static int secondary = 1;
 static bool is_scroll_mode = false;
@@ -29,7 +36,7 @@ static trackball_delta_t ball1, ball2;
 
 __attribute__((weak)) void pointing_device_task(void) {
     trackball_delta_t d0 = {0}, d1 = {0};
-    bool c0 = trackball_consume_delta(primary, is_scroll_mode ? KEYBALL_SCROLL_DIVIDER : 1, &d0);
+    bool c0 = trackball_consume_delta(primary, is_scroll_mode ? KEYBALL_SCROLL_DIVIDER : KEYBALL_POINTER_DIVIDER, &d0);
     bool c1 = trackball_consume_delta(secondary, KEYBALL_SCROLL_DIVIDER, &d1);
     if (c0 || c1) {
         ball1 = d0;
