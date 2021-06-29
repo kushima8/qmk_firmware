@@ -77,12 +77,12 @@ bool quick_LT(uint8_t layer, uint16_t keycode) {
 
 
 bool sh_t16(uint16_t keycode) {
-    #ifdef SWAP_HANDS_ENABLE
     swap_hands = !swap_hands;
-    #endif
-    if (tap_state == SINGLE_TAP) {
-        tap_code16jp(keycode);
-        //tap_code16(keycode);
+    switch (tap_state) {
+        case SINGLE_TAP:
+        case DOUBLE_HOLD:
+            tap_code16jp(keycode);
+        default: break;
     }
     return false;
 }
