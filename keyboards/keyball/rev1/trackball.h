@@ -18,11 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#ifndef TRACKBALL_DRIVER_DISABLE
-
 #include <stdint.h>
-
-#define TRACKBALL_DELTA_DIMENSION 2
 
 // trackball_init initializes trackball related resources.
 void trackball_init(void);
@@ -39,12 +35,12 @@ typedef struct {
     int16_t y;
 } trackball_delta_t;
 
+// These functions are design to be called by firmware.
+
 bool trackball_fetch_sensor(trackball_delta_t *p);
 
-void trackball_apply_delta(int num, const trackball_delta_t *delta);
+void trackball_apply_delta(int8_t num, const trackball_delta_t *delta);
 
-void trackball_reset_delta(int num);
+void trackball_reset_delta(int8_t num);
 
-bool trackball_consume_delta(int num, int16_t div, trackball_delta_t* out);
-
-#endif // TRACKBALL_DRIVER_DISABLE
+bool trackball_consume_delta(int8_t num, int16_t div, trackball_delta_t* out);
