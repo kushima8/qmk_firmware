@@ -1,0 +1,15 @@
+{
+  "keyboard_name": "YUIOP31RS",
+  "url": "https://github.com/koron/yuiop/tree/master/yuiop2pd",
+  "maintainer": "koron",
+  "width": 2.00,
+  "height": 1.00,
+  "layouts": {
+    "LAYOUT": {
+      "layout": [
+        {"label":"",      "x":1.50, "y":0.00},
+        {"label":"",      "x":2.50, "y":0.00}
+      ]
+    }
+  }
+}
