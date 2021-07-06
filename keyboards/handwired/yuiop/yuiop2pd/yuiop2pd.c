@@ -14,3 +14,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "yuiop2pd.h"
+
+#include "pointing_device.h"
+#include "analog.h"
+
+void pointing_device_init(void) {
+    analogReference(ADC_REF_POWER);
+}
+
+void pointing_device_task(void) {
+    report_mouse_t r = pointing_device_get_report();
+
+    int16_t dx = analogReadPin(F7) - 512;
+    r.x -= dx / 16;
+    int16_t dy = analogReadPin(F6) - 512;
+    r.y -= dy / 16;
+
+    int16_t dv = analogReadPin(F5) - 512;
+    r.v -= dv / 128;
+    int16_t dh = analogReadPin(F4) - 512;
+    r.h += dh / 128;
+
+    // TODO: modify r
+    pointing_device_set_report(r);
+    pointing_device_send();
+}
