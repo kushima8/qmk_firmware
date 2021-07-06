@@ -22,20 +22,35 @@ void pointing_device_init(void) {
     analogReference(ADC_REF_POWER);
 }
 
+typedef struct {
+    int16_t v;
+    int16_t div;
+} vd_t;
+
+static int16_t vd_put(vd_t *p, int16_t delta) {
+    p->v += delta;
+    // FIXME: consider overflow.
+    int16_t r = p->v / p->div;
+    p->v %= p->div;
+    return r;
+}
+
+static vd_t x = {0, 16};
+static vd_t y = {0, 16};
+static vd_t v = {0, 128};
+static vd_t h = {0, 128};
+
+static int16_t filter(int16_t v, int16_t d) {
+    return (v >= d || v <= -d) ? v : 0;
+}
+
 void pointing_device_task(void) {
     report_mouse_t r = pointing_device_get_report();
-
-    int16_t dx = analogReadPin(F7) - 512;
-    r.x -= dx / 16;
-    int16_t dy = analogReadPin(F6) - 512;
-    r.y -= dy / 16;
-
-    int16_t dv = analogReadPin(F5) - 512;
-    r.v -= dv / 128;
-    int16_t dh = analogReadPin(F4) - 512;
-    r.h += dh / 128;
-
-    // TODO: modify r
+    r.x -= vd_put(&x, filter(analogReadPin(F7) - 512, 16));
+    r.y -= vd_put(&y, filter(analogReadPin(F6) - 512, 16));
+    r.v -= vd_put(&v, filter(analogReadPin(F5) - 512, 16));
+    r.h += vd_put(&h, filter(analogReadPin(F4) - 512, 16));
     pointing_device_set_report(r);
+
     pointing_device_send();
 }
