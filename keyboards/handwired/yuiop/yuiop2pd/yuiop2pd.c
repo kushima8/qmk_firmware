@@ -18,39 +18,83 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "pointing_device.h"
 #include "analog.h"
 
+const int16_t margin        = 32;
+const int16_t div_pointer   = 16;
+const int16_t div_scroll    = 256;
+const int16_t interval      = 16;
+
 void pointing_device_init(void) {
     analogReference(ADC_REF_POWER);
 }
 
-typedef struct {
-    int16_t v;
-    int16_t div;
-} vd_t;
-
-static int16_t vd_put(vd_t *p, int16_t delta) {
-    p->v += delta;
-    // FIXME: consider overflow.
-    int16_t r = p->v / p->div;
-    p->v %= p->div;
+static int16_t add_i16(int16_t a, int16_t b) {
+    int16_t r = a + b;
+    if (a >= 0 && b >= 0 && r < 0) {
+        r = 32767;
+    } else if (a < 0 && b < 0 && r >= 0) {
+        r = -32768;
+    }
     return r;
 }
 
-static vd_t x = {0, 16};
-static vd_t y = {0, 16};
-static vd_t v = {0, 128};
-static vd_t h = {0, 128};
-
-static int16_t filter(int16_t v, int16_t d) {
-    return (v >= d || v <= -d) ? v : 0;
+static int16_t add_i8(int8_t a, int8_t b) {
+    int16_t r = a + b;
+    if (a >= 0 && b >= 0 && r < 0) {
+        r = 127;
+    } else if (a < 0 && b < 0 && r >= 0) {
+        r = -128;
+    }
+    return r;
 }
 
+static bool is_far(int16_t x, int16_t y, int16_t d) {
+    if (x >= d || x <= -d || y >= d || y <= -d) {
+        return true;
+    }
+    return x*x + y*y >= d*d;
+}
+
+static int16_t consume(int16_t *p, int16_t div) {
+    int16_t r = *p / div;
+    *p %= div;
+    return r;
+}
+
+static int8_t to_i8(int16_t v) {
+    return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v;
+}
+
+static int16_t cum_x = 0;
+static int16_t cum_y = 0;
+static int16_t cum_v = 0;
+static int16_t cum_h = 0;
+
 void pointing_device_task(void) {
-    report_mouse_t r = pointing_device_get_report();
-    r.x -= vd_put(&x, filter(analogReadPin(F7) - 512, 16));
-    r.y -= vd_put(&y, filter(analogReadPin(F6) - 512, 16));
-    r.v -= vd_put(&v, filter(analogReadPin(F5) - 512, 16));
-    r.h += vd_put(&h, filter(analogReadPin(F4) - 512, 16));
-    pointing_device_set_report(r);
+    static int8_t count = 0;
+
+    int16_t dx = analogReadPin(F7) - 512;
+    int16_t dy = analogReadPin(F6) - 512;
+    int16_t dv = analogReadPin(F4) - 512;
+    int16_t dh = analogReadPin(F5) - 512;
+    if (is_far(dx, dy, margin)) {
+        cum_x = add_i16(cum_x, -dx);
+        cum_y = add_i16(cum_y, -dy);
+    }
+    if (is_far(dv, dh, margin)) {
+        cum_v = add_i16(cum_v, dv);
+        cum_h = add_i16(cum_h, -dh);
+    }
+    count++;
+
+    if (count >= interval) {
+        count = 0;
+        report_mouse_t r = pointing_device_get_report();
+        r.x = add_i8(r.x, to_i8(consume(&cum_x, div_pointer * interval)));
+        r.y = add_i8(r.y, to_i8(consume(&cum_y, div_pointer * interval)));
+        r.v = add_i8(r.v, to_i8(consume(&cum_v, div_scroll * interval)));
+        r.h = add_i8(r.h, to_i8(consume(&cum_h, div_scroll * interval)));
+        pointing_device_set_report(r);
+    }
 
     pointing_device_send();
 }
