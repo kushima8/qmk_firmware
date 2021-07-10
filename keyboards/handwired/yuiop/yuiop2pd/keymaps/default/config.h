@@ -22,5 +22,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Disable some QMK Features as default.
 #define NO_ACTION_ONESHOT
-#define NO_ACTION_MACRO
+//#define NO_ACTION_MACRO
 #define NO_ACTION_FUNCTION
