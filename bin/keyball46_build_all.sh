@@ -2,7 +2,7 @@
 
 set -eu
 
-version=1.0.0-rc.2
+version=1.0.0
 
 for keymap in default \
   test test_Left test_Both \

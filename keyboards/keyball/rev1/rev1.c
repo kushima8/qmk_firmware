@@ -56,6 +56,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
     }
+
+    // translate KC_BTN? event to mouse report
     if (IS_MOUSEKEY_BUTTON(keycode)) {
         report_mouse_t r = {};
         r = pointing_device_get_report();
