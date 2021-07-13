@@ -28,12 +28,6 @@ enum keymap_layers {
     _BALL,
 };
 
-enum custom_keycodes {
-    QWERTY = SAFE_RANGE,
-    LOWER,
-    RAISE,
-};
-
 // layer
 #define KC_L_SPC    LT(_LOWER, KC_SPC)
 #define KC_R_ENT    LT(_RAISE, KC_ENT)
