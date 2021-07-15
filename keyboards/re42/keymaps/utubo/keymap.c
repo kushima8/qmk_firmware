@@ -33,7 +33,6 @@ enum custom_keycodes {
     LT_MHEN, // hold=>LOWER,   double-hold=>RAISE, tap=>Mukenkan
     LT_HENK, // hold=>LOWER,   double-hold=>RAISE, tap=>Henkan
     LT_P0,   // hold=>LOWER,   double-hold=>RAISE, tap=>KC_P0
-    AT_ESC , // hold=>KC_ALT,  tap=>KC_ESC
     GT_ZKHK, // hold=>KC_LGUI, tap=>JP_ZKHK
     SH_JPQT, // SH_T(JP_QUOT)
     SH_TAB,  // SH_T(KC_TAB)
@@ -44,6 +43,7 @@ enum custom_keycodes {
 #define RAISE   MO(_RAISE)
 #define TENKEY  TG(_TENKEY)
 #define CONFIG  TO(_CONFIG)
+#define AT_ESC  LALT_T(KC_ESC)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
@@ -185,7 +185,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case LT_HENK: return custom_lower(JP_HENK);
         case LT_P0:   return custom_lower(KC_P0);
         case RT_ENT:  return quick_LT(_RAISE, KC_ENT);
-        case AT_ESC:  return quick_MT(KC_LALT, KC_ESC);
         case GT_ZKHK: return quick_MT(KC_LGUI, JP_ZKHK);
         case SH_TAB:  return sh_t16(KC_TAB);
         case SH_JPQT: return sh_t16(JP_QUOT);
