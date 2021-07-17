@@ -18,18 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 
 void keyboard_post_init_user(void) {
+  debug_enable=true;
+  //debug_matrix=true;
+  //debug_keyboard=true;
+  //debug_mouse=true;
+
 #ifdef RGBLIGHT_ENABLE
-  rgblight_enable_noeeprom();
-  rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
+    rgblight_enable_noeeprom();
+    rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 #endif
 }
 
 void rotary_switch_update_state_user(uint8_t state) {
     // Change layer_state by rotary switch state.
-    layer_state_t next = layer_state & ~0b11111111111111110;
-    if (state >= 1 && state <= 16) {
-        next |= 1 << state;
-    }
+    layer_state_t next = state > 0 ? (layer_state_t)1 << state : 0;
+    dprintf("state=%d layer_state=%08lX next=%08lX\n", state, layer_state, next);
     if (next != layer_state) {
         layer_state_set(next);
     }
