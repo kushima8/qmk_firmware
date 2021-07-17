@@ -15,9 +15,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "yuiop31rs.h"
 
-__attribute__((weak)) void rotary_switch_update_state_kb(uint8_t state) { rotary_switch_update_state_user(state); }
+__attribute__((weak)) void rotary_switch_update_state_kb(uint8_t state) {
+    if (!rotary_switch_update_state_user(state)) {
+        return;
+    }
+    layer_state_t next = state > 0 ? (layer_state_t)1 << state : 0;
+    dprintf("state=%d layer_state=%08lX next=%08lX\n", state, layer_state, next);
+    if (next != layer_state) {
+        layer_state_set(next);
+    }
+}
 
-__attribute__((weak)) void rotary_switch_update_state_user(uint8_t state) {}
+__attribute__((weak)) bool rotary_switch_update_state_user(uint8_t state) { return true; }
 
 uint8_t rotary_switch_state = 0;
 
