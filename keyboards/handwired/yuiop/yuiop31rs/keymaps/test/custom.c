@@ -28,12 +28,3 @@ void keyboard_post_init_user(void) {
     rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 #endif
 }
-
-void rotary_switch_update_state_user(uint8_t state) {
-    // Change layer_state by rotary switch state.
-    layer_state_t next = state > 0 ? (layer_state_t)1 << state : 0;
-    dprintf("state=%d layer_state=%08lX next=%08lX\n", state, layer_state, next);
-    if (next != layer_state) {
-        layer_state_set(next);
-    }
-}
