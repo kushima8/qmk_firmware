@@ -40,13 +40,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DIP_SWITCH_MATRIX_GRID { {2,6}, {1,6}, {3,6}, {0,6} }
 #define MATRIX_MASKED
 
+// RGB LED common settings
+#define RGB_DI_PIN B5
+
 // RGB LED settings
 #ifdef RGBLIGHT_ENABLE
-#  define RGB_DI_PIN B5
-#  define RGBLED_NUM 31
-#  define RGBLIGHT_ANIMATIONS
-#  define RGBLIGHT_LIMIT_VAL 150
-#  define RGBLIGHT_HUE_STEP 17
-#  define RGBLIGHT_SAT_STEP 17
-#  define RGBLIGHT_VAL_STEP 15
+#    define RGBLED_NUM 31
+#    define RGBLIGHT_LIMIT_VAL 150
+#    define RGBLIGHT_HUE_STEP 17
+#    define RGBLIGHT_SAT_STEP 17
+#    define RGBLIGHT_VAL_STEP 15
+#    define RGBLIGHT_ANIMATIONS
+#endif
+
+// RGB MATRIX settings
+#ifdef RGB_MATRIX_ENABLE
+#    define DRIVER_LED_TOTAL 31
+#    define RGB_MATRIX_KEYPRESSES
+#    define RGB_MATRIX_FRAMEBUFFER_EFFECTS
+#    define RGB_MATRIX_MAXIMUM_BRIGHTNESS 150
 #endif
