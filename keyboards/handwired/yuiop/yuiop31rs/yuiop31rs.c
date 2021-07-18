@@ -30,7 +30,7 @@ __attribute__((weak)) bool rotary_switch_update_state_user(uint8_t state) { retu
 
 uint8_t rotary_switch_state = 0;
 
-void dip_switch_update_mask_kb(uint32_t state) { 
+void dip_switch_update_mask_kb(uint32_t state) {
     rotary_switch_state = (uint32_t)state;
     rotary_switch_update_state_kb(rotary_switch_state);
 }
@@ -43,3 +43,37 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111111,
     0b0111110,
 };
+
+#ifdef RGB_MATRIX_ENABLE
+// clang-format off
+led_config_t g_led_config = {
+    // Key Matrix to LED Index.
+    {
+        { NO_LED, NO_LED,      0,      1,      2,      3, NO_LED },
+        { NO_LED, NO_LED,      7,      6,      5,      4, NO_LED },
+        {      8,      9,     10,     11,     12,     13, NO_LED },
+        {     19,     18,     17,     16,     15,     14, NO_LED },
+        {     20,     21,     22,     23,     24,     25, NO_LED },
+        {     30,     29,     28,     27,     26, NO_LED, NO_LED },
+    },
+    // LED Index to Physical Position
+    {
+                        { 67,  0}, {112,  0}, {157,  0}, {202,  0},
+                              { 90, 13}, {134, 13}, {179, 13}, {224, 13},
+        {  0, 26}, { 45, 26}, { 90, 26}, {134, 26}, {179, 26}, {224, 26},
+        {  0, 38}, { 45, 38}, { 90, 38}, {134, 38}, {179, 38}, {224, 38},
+        {  0, 51}, { 45, 51}, { 90, 51}, {134, 51}, {179, 51}, {224, 51},
+             { 22, 64}, { 67, 64}, {112, 64}, {157, 64}, {202, 64},
+    },
+    // LED Index to Flag
+    {
+             4, 4, 4, 4,
+              4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4,
+          4, 4, 4, 4, 4,
+    }
+};
+// clang-format on
+#endif // RGB_MATRIX_ENABLE
