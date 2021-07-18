@@ -35,6 +35,7 @@ void dip_switch_update_mask_kb(uint32_t state) {
     rotary_switch_update_state_kb(rotary_switch_state);
 }
 
+// clang-format off
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111100,
     0b0111100,
@@ -43,6 +44,7 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0111111,
     0b0111110,
 };
+// clang-format on
 
 #ifdef RGB_MATRIX_ENABLE
 // clang-format off
@@ -76,4 +78,4 @@ led_config_t g_led_config = {
     }
 };
 // clang-format on
-#endif // RGB_MATRIX_ENABLE
+#endif  // RGB_MATRIX_ENABLE

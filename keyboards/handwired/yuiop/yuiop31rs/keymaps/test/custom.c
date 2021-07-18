@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 
 void keyboard_post_init_user(void) {
-  debug_enable=true;
-  //debug_matrix=true;
-  //debug_keyboard=true;
-  //debug_mouse=true;
+    debug_enable = true;
+    // debug_matrix=true;
+    // debug_keyboard=true;
+    // debug_mouse=true;
 
 #ifdef RGBLIGHT_ENABLE
     rgblight_enable_noeeprom();
