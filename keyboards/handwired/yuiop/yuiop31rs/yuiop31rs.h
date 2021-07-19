@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "quantum.h"
 
+// clang-format off
 #define LAYOUT( \
               K02, K03, K04, K05, \
               K12, K13, K14, K15, \
@@ -33,8 +34,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     {   K40,   K41,   K42,   K43,   K44,   K45, KC_NO }, \
     { KC_NO,   K51,   K52,   K53,   K54,   K55, KC_NO }  \
 }
+// clang-format off
 
 extern uint8_t rotary_switch_state;
 
 __attribute__((weak)) void rotary_switch_update_state_kb(uint8_t state);
-__attribute__((weak)) void rotary_switch_update_state_user(uint8_t state);
+__attribute__((weak)) bool rotary_switch_update_state_user(uint8_t state);
