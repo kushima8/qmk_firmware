@@ -51,9 +51,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,_______,_______,                     _______,_______,_______,_______,_______,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------+-------+-------+-------|
-        KC_CAPS,_______,RGB_TOG,RGB_HUI,RGB_SAI,RGB_VAI,_______,                             _______,_______,KC_PSCR,KC_SLCK,KC_PAUS,_______,_______,_______,_______,
+        KC_CAPS,_______,_______,_______,_______,_______,_______,                             _______,_______,KC_PSCR,KC_SLCK,KC_PAUS,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------+-------|
-        _______,_______,RGB_MOD,RGB_HUD,RGB_SAD,RGB_VAD,_______,                             _______,_______,KC_HOME,KC_PGUP,_______,_______,_______,_______,
+        _______,_______,_______,_______,_______,_______,_______,                             _______,_______,KC_HOME,KC_PGUP,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,_______,                             _______,_______,KC_END ,KC_PGDN,_______,_______,_______,_______,
     // |-------+-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------+-------|
@@ -91,76 +91,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // `-------+-------+-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------+-------+-------'
     ),
 };
-
-#ifdef OLED_DRIVER_ENABLE
-
-static void render_logo(void) {
-    static const char PROGMEM qmk_logo[] = {
-        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
-        0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,
-        0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00
-    };
-
-    oled_write_P(qmk_logo, false);
-}
-
-static void print_status_narrow(void) {
-
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR("LAYER"), false);
-    switch (get_highest_layer(layer_state)) {
-        case _FIRST:
-            oled_write_ln_P(PSTR("1st"), false);
-            break;
-        case _FN:
-            oled_write_ln_P(PSTR("FN"), false);
-            break;
-        case _SECOND:
-            oled_write_ln_P(PSTR("2nd"), false);
-            break;
-        case _THIRD:
-            oled_write_ln_P(PSTR("3rd"), false);
-            break;
-        default:
-            oled_write_P(PSTR("Undef"), false);
-    }
-
-    #ifdef RGBLIGHT_ENABLE
-        oled_write_ln_P(PSTR(""), false);
-        oled_write_ln_P(PSTR("LED"), false);
-        oled_write_ln_P(PSTR(""), false);
-        static char rgbMode[6] = {0};
-        snprintf(rgbMode, sizeof(rgbMode), "M:%-3d", rgblight_get_mode());
-        oled_write(rgbMode, false);
-        static char rgbHue[6] = {0};
-        snprintf(rgbHue, sizeof(rgbHue), "H:%-3d", rgblight_get_hue());
-        oled_write(rgbHue, false);
-        static char rgbSat[6] = {0};
-        snprintf(rgbSat, sizeof(rgbSat), "S:%-3d", rgblight_get_sat());
-        oled_write(rgbSat, false);
-        static char rgbVal[6] = {0};
-        snprintf(rgbVal, sizeof(rgbVal), "V:%-3d", rgblight_get_val());
-        oled_write(rgbVal, false);
-    #endif
-
-}
-
-oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-    if (is_keyboard_master()) {
-        return OLED_ROTATION_270;
-    }
-    return rotation;
-}
-
-void oled_task_user(void) {
-    if (is_keyboard_master()) {
-        print_status_narrow();
-    } else {
-        render_logo();
-    }
-}
-
-#endif
 
 #ifdef ENCODER_ENABLE
 
