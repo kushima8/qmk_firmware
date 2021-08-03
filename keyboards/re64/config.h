@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PRODUCT_ID   0x3634
 #define DEVICE_VER   0x0002
 #define MANUFACTURER kushima8
-#define PRODUCT      re64
+#define PRODUCT      Re64
 #define DESCRIPTION  60% split keyboard
 
 /* key matrix size */
