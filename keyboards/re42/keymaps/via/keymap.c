@@ -156,27 +156,17 @@ void oled_task_user(void) {
 void encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
         // Left rotary
-        switch (get_highest_layer(layer_state)) {
-            case _BASE:
-            case _LOWER:
-            case _RAISE:
-            case _ADJUST:
-                tap_code(clockwise ? KC_WH_U : KC_WH_D);
-                break;
-            default:
-                break;
+        if (!clockwise){
+            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 3, 0));
+        } else {
+            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 3, 1));
         }
     } else if (index == 1) {
         // Right rotary Note:Reverse Rotation
-        switch (get_highest_layer(layer_state)) {
-            case _BASE:
-            case _LOWER:
-            case _RAISE:
-            case _ADJUST:
-                tap_code(clockwise ? KC_WH_U : KC_WH_D);
-                break;
-            default:
-                break;
+        if (clockwise){
+            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 7, 4));
+        } else {
+            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 7, 5));
         }
     }
 }
