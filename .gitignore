@@ -76,3 +76,28 @@ __pycache__
 
 # Allow to exist but don't include it in the repo
 user_song_list.h
+keyboards/musashi60/.editorconfig
+keyboards/musashi60/config.h
+keyboards/musashi60/info.json
+keyboards/musashi60/musashi60.c
+keyboards/musashi60/musashi60.h
+keyboards/musashi60/readme.md
+keyboards/musashi60/rules.mk
+keyboards/musashi60/transport.c
+keyboards/musashi60/keymaps/default/config.h
+keyboards/musashi60/keymaps/default/keymap.c
+keyboards/musashi60/keymaps/default/readme.md
+keyboards/r2k2/config.h
+keyboards/r2k2/re42.c
+keyboards/r2k2/re42.h
+keyboards/r2k2/readme.md
+keyboards/r2k2/rules.mk
+keyboards/r2k2/keymaps/default/keymap.c
+keyboards/r2k2/keymaps/default/readme.md
+keyboards/r2k2/keymaps/leftjp/config.h
+keyboards/r2k2/keymaps/leftjp/keymap.c
+keyboards/r2k2/keymaps/leftjp/readme.md
+keyboards/r2k2/keymaps/via/keymap.c
+keyboards/r2k2/keymaps/via/readme.md
+keyboards/r2k2/keymaps/via/rules.mk
+keyboards/r2k2/lib/glcdfont.c
