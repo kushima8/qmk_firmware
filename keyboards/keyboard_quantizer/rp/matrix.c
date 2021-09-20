@@ -10,12 +10,15 @@
 
 #include "hardware/clocks.h"
 
+extern uint8_t qt_cmd_buf[3];
+extern bool    qt_cmd_new;
+
 extern bool   ch559_start;
 extern bool   ch559_update_mode;
 matrix_row_t* matrix_mouse_dest;
 
 static void spis_handler(uint8_t const* received, uint32_t receive_len,
-                         uint8_t const* next_send) {
+                         uint8_t * next_send) {
     // skip ping packet
     int idx = 0;
     while (received[idx] == 0xc0) {
@@ -25,6 +28,15 @@ static void spis_handler(uint8_t const* received, uint32_t receive_len,
     for (; idx < receive_len; idx++) {
         uart_recv_callback(received[idx]);
     }
+
+    if (qt_cmd_new) {
+        next_send[0] = 0xfe;
+        next_send[1] = qt_cmd_buf[0];
+        next_send[2] = qt_cmd_buf[1];
+        next_send[3] = qt_cmd_buf[2];
+        qt_cmd_new = false;
+    }
+
     spis_start();
 }
 
@@ -65,6 +77,13 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
             reset_timer = timer_read32();
         }
         // do not return to receive startup response
+    }
+
+    static uint8_t keyboard_led;
+    if (keyboard_led != keyboard_leds())
+    {
+        keyboard_led = keyboard_leds();
+        send_led_cmd(keyboard_led);
     }
 
     matrix_mouse_dest = &current_matrix[MATRIX_MSBTN_ROW];

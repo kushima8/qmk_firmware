@@ -3,6 +3,9 @@
 
 #define DYNAMIC_KEYMAP_LAYER_COUNT 6
 
+#undef PRODUCT_ID
+#define PRODUCT_ID 0x999b
+
 /* key matrix size */
 #define MATRIX_ROWS 24
 #define MATRIX_COLS 8

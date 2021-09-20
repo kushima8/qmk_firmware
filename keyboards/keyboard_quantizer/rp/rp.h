@@ -23,3 +23,5 @@
 
 void uart_recv_callback(uint8_t dat);
 void uart_buf_init(void);
+int  send_reset_cmd(void);
+int  send_led_cmd(uint8_t led);

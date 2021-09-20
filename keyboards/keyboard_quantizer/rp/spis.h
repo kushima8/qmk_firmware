@@ -10,7 +10,7 @@
 #define KQ_PIN_CS 29
 #define SPI_BUFFER_SIZE 1024
 
-typedef void(*spis_handler_t)(uint8_t const * received, uint32_t receive_len, uint8_t const * next_send);
+typedef void(*spis_handler_t)(uint8_t const * received, uint32_t receive_len, uint8_t * next_send);
 
 void spis_init(spis_handler_t spis_handler);
 void spis_start(void);

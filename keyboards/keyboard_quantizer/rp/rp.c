@@ -83,6 +83,18 @@ int send_reset_cmd(void) {
     return 0;
 }
 
+int send_led_cmd(uint8_t led) {
+    if (!qt_cmd_new) {
+        dprintf("send led command:%d\n", led);
+        qt_cmd_buf[0] = 0x80 | led;
+        qt_cmd_new    = true;
+
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 #define KQ_UART uart0
 
 void on_uart_rx(void) {
@@ -172,3 +184,4 @@ void dynamic_keymap_reset() {
         }
     }
 }
+
