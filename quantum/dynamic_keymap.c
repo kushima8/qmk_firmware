@@ -103,6 +103,7 @@ void dynamic_keymap_set_keycode(uint8_t layer, uint8_t row, uint8_t column, uint
     eeprom_update_byte(address + 1, (uint8_t)(keycode & 0xFF));
 }
 
+__attribute__((weak))
 void dynamic_keymap_reset(void) {
     // Reset the keymaps in EEPROM to what is in flash.
     // All keyboards using dynamic keymaps should define a layout
