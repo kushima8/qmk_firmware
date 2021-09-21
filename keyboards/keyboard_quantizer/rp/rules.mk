@@ -6,3 +6,4 @@ MCU = cortex-m0plus
 
 CUSTOM_MATRIX = lite
 VIA_ENABLE = yes
+POINTING_DEVICE_ENABLE = yes

@@ -165,8 +165,13 @@ __attribute__((weak)) void pico_cdc_receive_cb(uint8_t const* buf,
         printf("complete\n");
     } else if (buf[0] == 'd') {
         printf("debug print ");
-        debug_enable = true;
-        dprint("true\n");
+        if (!debug_enable) {
+            debug_enable = true;
+            dprint("true\n");
+        } else {
+            debug_enable = false;
+            print("false\n");
+        }
     }
 }
 

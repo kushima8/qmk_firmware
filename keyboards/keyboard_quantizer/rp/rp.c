@@ -180,7 +180,12 @@ void dynamic_keymap_reset() {
         } else if (row == MATRIX_MSBTN_ROW) {
             dynamic_keymap_set_keycode(layer, row, col, KC_BTN1 + col);
         } else if (row == MATRIX_MSGES_ROW) {
-            dynamic_keymap_set_keycode(layer, row, col, KC_NO);
+            if (col < MATRIX_MSWHEEL_COL) {
+                dynamic_keymap_set_keycode(layer, row, col, KC_NO);
+            } else {
+                dynamic_keymap_set_keycode(
+                    layer, row, col, KC_MS_WH_UP + col - MATRIX_MSWHEEL_COL);
+            }
         }
     }
 }
