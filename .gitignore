@@ -101,3 +101,5 @@ keyboards/r2k2/keymaps/via/keymap.c
 keyboards/r2k2/keymaps/via/readme.md
 keyboards/r2k2/keymaps/via/rules.mk
 keyboards/r2k2/lib/glcdfont.c
+keyboards/r2k2/r2k2.c
+keyboards/r2k2/r2k2.h
