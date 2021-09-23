@@ -65,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_ADJUST] = LAYOUT(
     // ,-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------.
-        _______,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,                             KC_F6  ,KC_7   ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,
+        _______,KC_F1  ,KC_F2  ,KC_F3  ,KC_F4  ,KC_F5  ,                             KC_F6  ,KC_F7  ,KC_F8  ,KC_F9  ,KC_F10 ,KC_F11 ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                             _______,_______,_______,_______,_______,KC_F12 ,
     // |-------+-------+-------+-------+-------+-------|                            |-------+-------+-------+-------+-------+-------|
@@ -76,9 +76,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 };
 
-uint32_t layer_state_set_user(uint32_t state) {
-    return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
-}
 
 #ifdef OLED_DRIVER_ENABLE
 
@@ -98,16 +95,16 @@ static void print_status_narrow(void) {
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
         case _BASE:
-            oled_write_ln_P(PSTR("Bas"), false);
+            oled_write_ln_P(PSTR("1st"), false);
             break;
         case _LOWER:
-            oled_write_ln_P(PSTR("Low"), false);
+            oled_write_ln_P(PSTR("2nd"), false);
             break;
         case _RAISE:
-            oled_write_ln_P(PSTR("Rai"), false);
+            oled_write_ln_P(PSTR("3rd"), false);
             break;
         case _ADJUST:
-            oled_write_ln_P(PSTR("Adj"), false);
+            oled_write_ln_P(PSTR("4th"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);

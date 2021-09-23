@@ -105,13 +105,13 @@ static void print_status_narrow(void) {
             oled_write_ln_P(PSTR("1st"), false);
             break;
         case _FN:
-            oled_write_ln_P(PSTR("FN"), false);
-            break;
-        case _SECOND:
             oled_write_ln_P(PSTR("2nd"), false);
             break;
-        case _THIRD:
+        case _SECOND:
             oled_write_ln_P(PSTR("3rd"), false);
+            break;
+        case _THIRD:
+            oled_write_ln_P(PSTR("4th"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);
