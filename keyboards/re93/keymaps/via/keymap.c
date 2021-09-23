@@ -165,22 +165,78 @@ void oled_task_user(void) {
 #ifdef ENCODER_ENABLE
 
 /* Rotary encoder settings */
-void encoder_update_user(uint8_t index, bool clockwise) {
+
+keyevent_t encoder_left_ccw  = {
+    .key = (keypos_t){.row = 4, .col = 7},
+    .pressed = false
+};
+
+keyevent_t encoder_left_cw  = {
+    .key = (keypos_t){.row = 5, .col = 7},
+    .pressed = false
+};
+
+keyevent_t encoder_right_ccw  = {
+    .key = (keypos_t){.row = 10, .col = 8},
+    .pressed = false
+};
+
+keyevent_t encoder_right_cw  = {
+    .key = (keypos_t){.row = 11, .col = 8},
+    .pressed = false
+};
+
+void matrix_scan_user(void) {
+    if (IS_PRESSED(encoder_left_ccw)) {
+        encoder_left_ccw.pressed = false;
+        encoder_left_ccw.time = (timer_read() | 1);
+        action_exec(encoder_left_ccw);
+    }
+
+    if (IS_PRESSED(encoder_left_cw)) {
+        encoder_left_cw.pressed = false;
+        encoder_left_cw.time = (timer_read() | 1);
+        action_exec(encoder_left_cw);
+    }
+
+    if (IS_PRESSED(encoder_right_ccw)) {
+        encoder_right_ccw.pressed = false;
+        encoder_right_ccw.time = (timer_read() | 1);
+        action_exec(encoder_right_ccw);
+    }
+
+    if (IS_PRESSED(encoder_right_cw)) {
+        encoder_right_cw.pressed = false;
+        encoder_right_cw.time = (timer_read() | 1);
+        action_exec(encoder_right_cw);
+    }
+}
+
+bool encoder_update_user(uint8_t index, bool clockwise) {
     if (index == 0) {
         // Left rotary
         if (!clockwise){
-            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 4, 7));
+            encoder_left_cw.pressed = true;
+            encoder_left_cw.time = (timer_read() | 1);
+            action_exec(encoder_left_cw);
         } else {
-            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 5, 7));
+            encoder_left_ccw.pressed = true;
+            encoder_left_ccw.time = (timer_read() | 1);
+            action_exec(encoder_left_ccw);
         }
     } else if (index == 1) {
         // Right rotary Note:Reverse Rotation
         if (!clockwise){
-            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 10, 8));
+            encoder_right_cw.pressed = true;
+            encoder_right_cw.time = (timer_read() | 1);
+            action_exec(encoder_right_cw);
         } else {
-            tap_code(dynamic_keymap_get_keycode(biton32(layer_state), 11, 8));
+            encoder_right_ccw.pressed = true;
+            encoder_right_ccw.time = (timer_read() | 1);
+            action_exec(encoder_right_ccw);
         }
     }
+    return true;
 }
 
 #endif
