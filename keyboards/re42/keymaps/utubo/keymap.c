@@ -36,6 +36,7 @@ enum custom_keycodes {
     GT_ZKHK, // hold=>KC_LGUI, tap=>JP_ZKHK
     SH_JPQT, // SH_T(JP_QUOT)
     SH_TAB,  // SH_T(KC_TAB)
+    DF_LCTL, // KC_LCTL and layter to DEFAULT
 };
 
 #define DEFAULT TO(_DEFAULT)
@@ -44,6 +45,7 @@ enum custom_keycodes {
 #define TENKEY  TG(_TENKEY)
 #define CONFIG  TO(_CONFIG)
 #define AT_ESC  LALT_T(KC_ESC)
+#define RCT_ENT RCTL_T(KC_ENT)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT(
@@ -87,7 +89,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         _______,KC_F6  ,KC_F7  ,KC_F8  ,KC_F9  ,KC_F10 ,                     KC_PSCR,KC_APP ,KC_HOME,KC_END ,KC_SLSH,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------|
-        _______,                        _______,RAISE  ,_______,     _______,_______,_______                        ,_______
+        _______,                        _______,RAISE  ,_______,     _______,RCT_ENT,_______                        ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------'
     ),
     [_RAISE] = LAYOUT(
@@ -98,7 +100,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |-------+-------+-------+-------+-------+-------|                    |-------+-------+-------+-------+-------+-------|
         _______,_______,_______,_______,_______,_______,                     JP_PLUS,JP_UNDS,JP_LABK,JP_RABK,JP_QUES,_______,
     // |-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------|
-        _______,                        _______,_______,_______,     _______,_______,_______                        ,_______
+        _______,                        _______,DF_LCTL,_______,     _______,DF_LCTL,_______                        ,_______
     // `-------+-------+-------+-------+-------+-------+-------|    |-------+-------+-------+-------+-------+-------+-------'
     ),
     [_ADJUST] = LAYOUT(
@@ -188,22 +190,38 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case GT_ZKHK: return quick_MT(KC_LGUI, JP_ZKHK);
         case SH_TAB:  return sh_t16(KC_TAB);
         case SH_JPQT: return sh_t16(JP_QUOT);
+        case DF_LCTL:
+            if (record->event.pressed) {
+                layer_off(_LOWER);
+                layer_off(_RAISE);
+                register_code(KC_LCTL);
+            } else {
+                unregister_code(KC_LCTL);
+            }
+            return false;
     }
 
     return process_jp_symbols(keycode, record);
 }
 
 #ifdef OLED_DRIVER_ENABLE
-
 static void render_logo(void) {
-    static const char PROGMEM qmk_logo[] = {
-        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
-        0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,
-        0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00
+    static const char PROGMEM raw_logo[] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,112,136,  8,  8, 16, 32, 64,248, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0,   0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 64, 72, 72, 72,126,  8,  8, 0, 0, 0, 0,198, 47,215,251,252,156,172, 46, 46, 31,244,192, 96,224,224,208,248, 96, 64, 64, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,128,156,162, 36, 56, 34,156, 0, 0, 0, 0, 99,244,235,223, 63, 57,116,116,116,248, 47,  3,  6,  7,  7, 11, 31,  6,  2,  2, 0, 0, 0, 0, 0, 0, 0, 0,
     };
-
-    oled_write_P(qmk_logo, false);
+    oled_write_raw_P(raw_logo, sizeof(raw_logo));
 }
+// static void render_logo(void) {
+//     static const char PROGMEM qmk_logo[] = {
+//         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
+//         0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,
+//         0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00
+//     };
+//
+//     oled_write_P(qmk_logo, false);
+// }
 
 static void print_status_narrow(void) {
 
