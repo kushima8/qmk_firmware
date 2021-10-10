@@ -178,7 +178,7 @@ define TRY_TO_MATCH_RULE_FROM_LIST_HELPER2
             BEST_MATCH_RULE := $$(RULE)
             RULE_FOUND := false
             RULE := $$(RULE_BEFORE)
-            $$(eval $$(call TRY_TO_MATCH_RULE_FROM_LIST_HELPER2,$$(filter-out $$(MATCHED_ITEM),$1)))
+            #$$(eval $$(call TRY_TO_MATCH_RULE_FROM_LIST_HELPER2,$$(filter-out $$(MATCHED_ITEM),$1)))
         endif
      endif
 endef
