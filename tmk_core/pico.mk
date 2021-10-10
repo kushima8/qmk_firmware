@@ -290,6 +290,7 @@ LDFLAGS += -Wl,--wrap=vprintf
 LDFLAGS += -Wl,--wrap=puts
 LDFLAGS += -Wl,--wrap=putchar
 LDFLAGS += -Wl,--wrap=getchar
+LDFLAGS += -Wl,--print-memory-usage
 
 PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/pico_stdlib/stdlib.c
 PROTOCOLSRC += $(PICO_SDK_PATH)/src/rp2_common/hardware_flash/flash.c
