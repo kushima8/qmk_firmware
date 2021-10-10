@@ -20,6 +20,9 @@
 #define KQ_PIN_CHBOOT 24
 #define KQ_PIN_UART_TX 16
 #define KQ_PIN_UART_RX 17
+#define KQ_PIN_CLK 21
+#define KQ_PIN_LED0 13
+#define KQ_PIN_LED1 12
 
 void uart_recv_callback(uint8_t dat);
 void uart_buf_init(void);

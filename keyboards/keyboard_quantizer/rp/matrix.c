@@ -17,6 +17,9 @@ extern bool   ch559_start;
 extern bool   ch559_update_mode;
 matrix_row_t* matrix_mouse_dest;
 
+static int32_t led_count = -1;
+#define LED_BLINK_TIME_MS 100
+
 static void spis_handler(uint8_t const* received, uint32_t receive_len,
                          uint8_t * next_send) {
     // skip ping packet
@@ -27,6 +30,7 @@ static void spis_handler(uint8_t const* received, uint32_t receive_len,
 
     for (; idx < receive_len; idx++) {
         uart_recv_callback(received[idx]);
+        led_count = timer_read();
     }
 
     if (qt_cmd_new) {
@@ -53,12 +57,14 @@ void matrix_init_custom(void) {
 
     // setPinInputHigh(BOOTPIN);
 
-    // setPinOutput(KQ_PIN_LED0);
+    setPinOutput(KQ_PIN_LED0);
+    setPinOutput(KQ_PIN_LED1);
+    writePinHigh(KQ_PIN_LED1);
 
     // Deassrt reset
     writePinLow(KQ_PIN_CHRST);
 
-    clock_gpio_init(21, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1);
+    clock_gpio_init(KQ_PIN_CLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1);
 
     ch559_start = false;
 }
@@ -84,6 +90,15 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
     {
         keyboard_led = keyboard_leds();
         send_led_cmd(keyboard_led);
+    }
+
+    if (led_count > 0) {
+        if (timer_elapsed(led_count) < LED_BLINK_TIME_MS) {
+            writePinHigh(KQ_PIN_LED0);
+        } else {
+            writePinLow(KQ_PIN_LED0);
+            led_count = -1;
+        }
     }
 
     matrix_mouse_dest = &current_matrix[MATRIX_MSBTN_ROW];

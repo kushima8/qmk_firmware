@@ -134,7 +134,9 @@ void activate_ch55x_bootloader(void) {
     writePinHigh(KQ_PIN_CHRST);
     // xprintf("Assert reset\n");
     setPinOutput(KQ_PIN_CHBOOT);
+    setPinOutput(KQ_PIN_CLK);
     writePinHigh(KQ_PIN_CHBOOT);
+    writePinLow(KQ_PIN_CLK);
     wait_ms(10);
     // xprintf("Dessert reset\n");
     writePinLow(KQ_PIN_CHRST);
@@ -159,7 +161,7 @@ void pico_cdc_change_baudrate_cb(uint32_t baudrate) {
     }
 }
 
-void keyboard_post_init_kb_rev(void) { debug_enable = true; }
+void keyboard_post_init_kb_rev(void) { debug_enable = false; }
 
 void dynamic_keymap_reset() {
     for (int idx = 0; idx < DYNAMIC_KEYMAP_LAYER_COUNT * MATRIX_COLS_DEFAULT *
