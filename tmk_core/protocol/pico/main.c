@@ -36,8 +36,13 @@
 #include "usb_descriptors.h"
 
 #include "pico/stdio/driver.h"
+#include "hardware/watchdog.h"
+#include "hardware/structs/watchdog.h"
 #include "bsp/board.h"
 #include "tusb.h"
+
+void platform_setup(void);
+extern char __StackTop;
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
@@ -84,6 +89,12 @@ void pico_cdc_disable_printf(void) {
 
 /*------------- MAIN -------------*/
 int main(void) {
+    if (watchdog_caused_reboot() && watchdog_hw->scratch[0] == 0x2040dead) {
+        bootloader_jump();
+    }
+    watchdog_enable(8000, 1);
+    watchdog_hw->scratch[0] = 0x2040dead;
+
     board_init();
     platform_setup();
     tusb_init();
@@ -99,6 +110,8 @@ int main(void) {
         qmk_task();
 
         pico_eepemu_lazy_write_back();
+
+        watchdog_update();
     }
 
     return 0;
