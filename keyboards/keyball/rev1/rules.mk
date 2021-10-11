@@ -31,7 +31,7 @@ SRC += spi_master.c
 SRC += pmw/pmw.c
 
 # To support OLED
-OLED_DRIVER_ENABLE = no     # Please Enable this in each keymaps.
+OLED_ENABLE = no     # Please Enable this in each keymaps.
 SRC += oledkit.c
 
 # Link Time Optimization required for size.
