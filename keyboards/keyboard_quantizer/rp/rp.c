@@ -133,10 +133,7 @@ void activate_ch55x_bootloader(void) {
 
     writePinHigh(KQ_PIN_CHRST);
     // xprintf("Assert reset\n");
-    setPinOutput(KQ_PIN_CHBOOT);
-    setPinOutput(KQ_PIN_CLK);
     writePinHigh(KQ_PIN_CHBOOT);
-    writePinLow(KQ_PIN_CLK);
     wait_ms(10);
     // xprintf("Dessert reset\n");
     writePinLow(KQ_PIN_CHRST);
@@ -150,6 +147,20 @@ void activate_ch55x_bootloader(void) {
 void pico_cdc_receive_cb(uint8_t const* buf, uint32_t cnt) {
     if (ch559_update_mode) {
         uart_write_blocking(KQ_UART, buf, cnt);
+    } else if (cnt > 0) {
+        printf("%c\n", buf[0]);
+
+        switch (buf[0]) {
+            case 'c':
+                send_reset_cmd();
+                break;
+            case 'd':
+                debug_enable = true;
+                break;
+            case 'b':
+                bootloader_jump();
+                break;
+        }
     }
 }
 
@@ -158,6 +169,7 @@ void pico_cdc_change_baudrate_cb(uint32_t baudrate) {
         bootloader_jump();
     } else if (baudrate == 57600) {
         activate_ch55x_bootloader();
+        writePinHigh(KQ_PIN_LED0);
     }
 }
 
