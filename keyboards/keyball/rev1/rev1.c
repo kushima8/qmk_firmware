@@ -105,6 +105,43 @@ static char to_1x(uint8_t x) {
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// tasks for trackball
+
+typedef struct {
+    bool has;
+    trackball_delta_t delta;
+} trackball_data_t;
+
+static void get_trackball_data_secondary_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
+    trackball_data_t *data = (trackball_data_t*)out_data;
+    *data.has = true;
+    // TODO:
+}
+
+void matrix_scan_kb(void) {
+    // fetch trackball sensor on primary, and apply it.
+    trackball_delta_t delta;
+    bool has = trackball_fetch_sensor(&delta);
+    trackball_apply_delta(0, has ? &delta : NULL);
+    // TODO: apply secondary trackball sensor.
+    matrix_scan_user();
+}
+
+void matrix_slave_scan_kb(void) {
+    // fetch trackball sensor on secondary.
+    trackball_delta_t delta;
+    bool has = trackball_fetch_sensor(&delta);
+    // TODO: prepare to send data to primary.
+    if (has) {
+    }
+    matrix_slave_scan_user();
+}
+
+void housekeeping_task_kb(void) {
+    // TODO: receive secondary trackball data .
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Keyball API
 
 bool keyball_get_scroll_mode(void) { return is_scroll_mode; }
