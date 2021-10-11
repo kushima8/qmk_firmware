@@ -1,7 +1,10 @@
 #include "rev1.h"
 
+#include <string.h>
+
 #include "quantum.h"
 #include "pointing_device.h"
+#include "transactions.h"
 
 #include "trackball.h"
 
@@ -105,17 +108,18 @@ static char to_1x(uint8_t x) {
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// tasks for trackball
+// tasks for secondary trackball
 
 typedef struct {
     bool has;
     trackball_delta_t delta;
 } trackball_data_t;
 
+trackball_data_t secondary_trackball_data = {};
+
 static void get_trackball_data_secondary_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
     trackball_data_t *data = (trackball_data_t*)out_data;
-    *data.has = true;
-    // TODO:
+    *data = secondary_trackball_data;
 }
 
 void matrix_scan_kb(void) {
@@ -123,7 +127,11 @@ void matrix_scan_kb(void) {
     trackball_delta_t delta;
     bool has = trackball_fetch_sensor(&delta);
     trackball_apply_delta(0, has ? &delta : NULL);
-    // TODO: apply secondary trackball sensor.
+    // apply secondary trackball sensor.
+    trackball_secondary_availablity(secondary_trackball_data.has);
+    trackball_apply_delta(1, secondary_trackball_data.has ? &secondary_trackball_data.delta : NULL);
+    memset(&secondary_trackball_data, 0, sizeof(secondary_trackball_data));
+    // delegate to user function.
     matrix_scan_user();
 }
 
@@ -131,14 +139,39 @@ void matrix_slave_scan_kb(void) {
     // fetch trackball sensor on secondary.
     trackball_delta_t delta;
     bool has = trackball_fetch_sensor(&delta);
-    // TODO: prepare to send data to primary.
+    // prepare to send data to primary.
     if (has) {
+        secondary_trackball_data.has = true;
+        secondary_trackball_data.delta = delta;
+        //trackball_delta_add(&secondary_trackball_data.delta, &delta);
+    } else {
+        memset(&secondary_trackball_data, 0, sizeof(secondary_trackball_data));
     }
+    // delegate to user function.
     matrix_slave_scan_user();
 }
 
 void housekeeping_task_kb(void) {
-    // TODO: receive secondary trackball data .
+    // receive secondary trackball data .
+    if (is_keyboard_master()) {
+        trackball_data_t data;
+        if (transaction_rpc_recv(GET_TRACKBALL_DATA, sizeof(data), &data)) {
+            secondary_trackball_data = data;
+#if 0
+            if (data.has) {
+                secondary_trackball_data.has = true;
+                trackball_delta_add(&secondary_trackball_data.delta, &data.delta);
+            }
+#endif
+        }
+    }
+}
+
+void keyboard_post_init_kb(void) {
+    // register transaction to get trackball data.
+    transaction_register_rpc(GET_TRACKBALL_DATA, get_trackball_data_secondary_handler);
+    // delegate to user function.
+    keyboard_post_init_user();
 }
 
 //////////////////////////////////////////////////////////////////////////////

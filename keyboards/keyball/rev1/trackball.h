@@ -35,6 +35,8 @@ typedef struct {
     int16_t y;
 } trackball_delta_t;
 
+void trackball_delta_add(trackball_delta_t *a, const trackball_delta_t *b);
+
 // These functions are design to be called by firmware.
 
 bool trackball_fetch_sensor(trackball_delta_t *p);
