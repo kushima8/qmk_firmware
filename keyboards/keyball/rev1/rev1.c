@@ -71,7 +71,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
 
 static const char *format_4d(int8_t d) {
     static char buf[5] = {0};  // max width (4) + NUL (1)
@@ -220,7 +220,7 @@ void keyball_adjust_trackball_handness(void) {
 }
 
 void keyball_oled_render_ballinfo(void) {
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
     // Format: `Ball:{ball#1 x}{ball#1 y}{ball#2 x}{ball#2 y}
     //
     // Output example:
@@ -247,7 +247,7 @@ const char PROGMEM code_to_name[] = {
 // clang-format on
 
 void keyball_oled_render_keyinfo(void) {
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
     // Format: `Key:   R{row}  C{col} K{kc}  '{name}`
     //
     // Where `kc` is lower 8 bit of keycode.
