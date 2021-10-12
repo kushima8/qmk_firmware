@@ -111,21 +111,21 @@ static char to_1x(uint8_t x) {
 // tasks for secondary trackball
 
 typedef struct {
-    bool has;
+    bool              has;
     trackball_delta_t delta;
 } trackball_data_t;
 
-trackball_data_t secondary_trackball = { .has = false };
+trackball_data_t secondary_trackball = {.has = false};
 
-static void get_trackball_data_secondary_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
-    trackball_data_t *data = (trackball_data_t*)out_data;
-    *data = secondary_trackball;
+static void get_trackball_data_secondary_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+    trackball_data_t *data = (trackball_data_t *)out_data;
+    *data                  = secondary_trackball;
 }
 
 void matrix_scan_kb(void) {
     // fetch trackball sensor on primary, and apply it.
     trackball_delta_t delta;
-    bool has = trackball_fetch_sensor(&delta);
+    bool              has = trackball_fetch_sensor(&delta);
     trackball_apply_delta(0, has ? &delta : NULL);
     // apply secondary trackball sensor.
     trackball_secondary_availablity(secondary_trackball.has);
@@ -137,10 +137,10 @@ void matrix_scan_kb(void) {
 void matrix_slave_scan_kb(void) {
     // fetch trackball sensor on secondary.
     trackball_delta_t delta;
-    bool has = trackball_fetch_sensor(&delta);
+    bool              has = trackball_fetch_sensor(&delta);
     // prepare to send data to primary.
     if (has) {
-        secondary_trackball.has = true;
+        secondary_trackball.has   = true;
         secondary_trackball.delta = delta;
     }
     // delegate to user function.
