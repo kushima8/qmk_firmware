@@ -71,7 +71,7 @@ static int16_t add16(int16_t a, int16_t b) {
     return r;
 }
 
-void trackball_delta_add(trackball_delta_t *a, const trackball_delta_t *b) {
+static void delta_add(trackball_delta_t *a, const trackball_delta_t *b) {
     a->x = add16(a->x, b->x);
     a->y = add16(a->y, b->y);
 }
@@ -103,7 +103,7 @@ void trackball_apply_delta(int8_t num, const trackball_delta_t *delta) {
         state[num].count = -1;
         return;
     }
-    trackball_delta_add(&state[num].accum, delta);
+    delta_add(&state[num].accum, delta);
     state[num].count++;
 }
 
