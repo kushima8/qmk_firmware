@@ -115,11 +115,11 @@ typedef struct {
     trackball_delta_t delta;
 } trackball_data_t;
 
-trackball_data_t secondary_trackball_data = { .has = false };
+trackball_data_t secondary_trackball = { .has = false };
 
 static void get_trackball_data_secondary_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
     trackball_data_t *data = (trackball_data_t*)out_data;
-    *data = secondary_trackball_data;
+    *data = secondary_trackball;
 }
 
 void matrix_scan_kb(void) {
@@ -128,8 +128,8 @@ void matrix_scan_kb(void) {
     bool has = trackball_fetch_sensor(&delta);
     trackball_apply_delta(0, has ? &delta : NULL);
     // apply secondary trackball sensor.
-    trackball_secondary_availablity(secondary_trackball_data.has);
-    trackball_apply_delta(1, secondary_trackball_data.has ? &secondary_trackball_data.delta : NULL);
+    trackball_secondary_availablity(secondary_trackball.has);
+    trackball_apply_delta(1, secondary_trackball.has ? &secondary_trackball.delta : NULL);
     // delegate to user function.
     matrix_scan_user();
 }
@@ -140,9 +140,8 @@ void matrix_slave_scan_kb(void) {
     bool has = trackball_fetch_sensor(&delta);
     // prepare to send data to primary.
     if (has) {
-        secondary_trackball_data.has = true;
-        secondary_trackball_data.delta = delta;
-        //trackball_delta_add(&secondary_trackball_data.delta, &delta);
+        secondary_trackball.has = true;
+        secondary_trackball.delta = delta;
     }
     // delegate to user function.
     matrix_slave_scan_user();
@@ -153,7 +152,7 @@ void housekeeping_task_kb(void) {
     if (is_keyboard_master()) {
         trackball_data_t data;
         if (transaction_rpc_recv(GET_TRACKBALL_DATA, sizeof(data), &data)) {
-            secondary_trackball_data = data;
+            secondary_trackball = data;
         }
     }
 }
