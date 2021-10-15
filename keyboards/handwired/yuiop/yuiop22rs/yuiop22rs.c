@@ -21,9 +21,10 @@ __attribute__((weak)) void rotary_switch_update_state_user(uint8_t state) {}
 
 uint8_t rotary_switch_state = 0;
 
-void dip_switch_update_mask_kb(uint32_t state) { 
+bool dip_switch_update_mask_kb(uint32_t state) {
     rotary_switch_state = (uint32_t)state;
     rotary_switch_update_state_kb(rotary_switch_state);
+    return dip_switch_update_mask_user(state);
 }
 
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
