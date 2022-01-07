@@ -94,3 +94,5 @@ compile_commands.json
 
 # caches of output of util/list_keyboards.sh
 .keyboards_cache
+
+tmp/
