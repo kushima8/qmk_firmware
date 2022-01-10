@@ -26,13 +26,14 @@ static void oled_render_logo(void) {
     oled_write(kaoriya_verinfo, false);
 }
 
-void oled_task_user(void) {
+bool oled_task_user(void) {
     if (is_keyboard_master()) {
         // TODO:
         oled_render_logo();
     } else {
         oled_render_logo();
     }
+    return true;
 }
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {

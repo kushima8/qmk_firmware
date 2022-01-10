@@ -3,7 +3,7 @@ SRC += kaoriya.c layer.c
 #CONSOLE_ENABLE = yes
 
 # Enable OLED
-OLED_DRIVER_ENABLE = yes
+OLED_ENABLE = yes
 SRC += oled.c
 
 # Mouse keys

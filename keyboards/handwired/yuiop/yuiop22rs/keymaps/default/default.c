@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
 
 static char keylog[2][24] = {};
 
@@ -34,13 +34,14 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   return OLED_ROTATION_180;
 }
 
-void oled_task_user(void) {
+bool oled_task_user(void) {
     oled_write_ln_P(PSTR(STR(PRODUCT)), false);
     oled_write_ln(keylog[0], false);
     oled_write_ln(keylog[1], false);
+    return true;
 }
 
-#endif // OLED_DRIVER_ENABLE
+#endif // OLED_ENABLE
 
 void rotary_switch_update_state_user(uint8_t state) {
     // Change layer_state by rotary switch state.
@@ -52,10 +53,10 @@ void rotary_switch_update_state_user(uint8_t state) {
         layer_state_set(next);
     }
 
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
     snprintf(keylog[1], sizeof(keylog[1]), "RS:%02X L:%04lX", state, (uint32_t)layer_state);
     oled_set_cursor(0, 2);
     oled_write_ln(keylog[1], false);
     oled_render();
-#endif // OLED_DRIVER_ENABLE
+#endif // OLED_ENABLE
 }
