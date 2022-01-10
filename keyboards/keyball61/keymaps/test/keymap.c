@@ -26,8 +26,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_A, KC_B, KC_C,
             KC_D, KC_E, KC_F,
             KC_G, KC_H, KC_I,
+#if 0
             KC_J, KC_K, KC_L,
             KC_M, KC_N, KC_O
+#else
+            KC_J, KC_K, KC_L, KC_M,
+            KC_N, KC_O, KC_P, KC_Q
+#endif
     ),
 };
 // clang-format on

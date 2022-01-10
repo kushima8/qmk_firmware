@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // clang-format off
 
+#if 0
 #define LAYOUT( \
     L00, L01, L02, \
     L10, L11, L12, \
@@ -36,5 +37,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         { L30, L31, L32, KC_NO }, \
         { L40, L41, L42, KC_NO }  \
     }
+#else
+#define LAYOUT( \
+    L00, L01, L02,      \
+    L10, L11, L12,      \
+    L20, L21, L22,      \
+    L30, L31, L32, L33, \
+    L40, L41, L42, L43  \
+    ) \
+    { \
+        { L00, L01, L02, KC_NO }, \
+        { L10, L11, L12, KC_NO }, \
+        { L20, L21, L22, KC_NO }, \
+        { L30, L31, L32, L33   }, \
+        { L40, L41, L42, L43   }  \
+    }
+#endif
 
 // clang-format on
