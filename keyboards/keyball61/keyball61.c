@@ -22,15 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // clang-format off
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
-    0b0000111,
-    0b0000111,
-    0b0000111,
-#if 0
-    0b0000111,
-    0b0000111,
-#else
-    0b0001111,
-    0b0001111,
-#endif
+    0b01110111,
+    0b01110111,
+    0b01110111,
+    0b11110111,
+    0b11110111,
 };
 // clang-format on
