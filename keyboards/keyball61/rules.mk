@@ -21,6 +21,10 @@ SWAP_HANDS_ENABLE = no      # Enable one-hand typing
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 
+# Keyball61 is duplex matrix, uses custom matrix.
+CUSTOM_MATRIX = lite
+SRC += matrix.c
+
 # Keyball61 is split keyboard.
 #SPLIT_KEYBOARD = yes
 
