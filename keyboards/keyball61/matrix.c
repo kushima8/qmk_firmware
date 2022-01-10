@@ -1,15 +1,20 @@
 #include "quantum.h"
 #include "matrix.h"
 #include "debounce.h"
+#include "split_common/split_util.h"
+#include "split_common/transactions.h"
 
-#define PINNUM_ROW  MATRIX_ROWS
+#define PINNUM_ROW  (MATRIX_ROWS / 2)
 #define PINNUM_COL  (MATRIX_COLS / 2)
 
 static pin_t row_pins[PINNUM_ROW] = MATRIX_ROW_PINS;
 static pin_t col_pins[PINNUM_COL] = MATRIX_COL_PINS;
 
 void matrix_init_custom(void) {
-    // nothing to do...
+#if 0
+    split_pre_init();
+    split_post_init();
+#endif
 }
 
 static void set_pins_input(pin_t* pins, uint8_t n) {
@@ -25,7 +30,7 @@ static void set_pins_output(pin_t* pins, uint8_t n) {
     }
 }
 
-bool matrix_scan_custom(matrix_row_t current_matrix[]) {
+static bool duplex_scan(matrix_row_t current_matrix[]) {
     bool changed = false;
 
     // scan column to row
@@ -75,5 +80,11 @@ bool matrix_scan_custom(matrix_row_t current_matrix[]) {
         writePinHigh(col_pins[col]);
         matrix_output_unselect_delay(col, pressed);
     }
+    return changed;
+}
+
+bool matrix_scan_custom(matrix_row_t current_matrix[]) {
+    bool changed = duplex_scan(current_matrix);
+    // TODO: consider split
     return changed;
 }
