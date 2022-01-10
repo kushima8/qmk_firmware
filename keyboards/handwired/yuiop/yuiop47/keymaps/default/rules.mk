@@ -1,5 +1,5 @@
 # OLED driver enabled
-OLED_DRIVER_ENABLE = yes
+OLED_ENABLE = yes
 SRC += oled.c
 
 # LED won't work

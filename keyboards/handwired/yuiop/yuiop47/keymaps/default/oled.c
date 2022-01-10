@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
 
 #include <stdio.h>
 
@@ -34,9 +34,10 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   return rotation;
 }
 
-void oled_task_user(void) {
+bool oled_task_user(void) {
     oled_write_ln_P(PSTR(STR(PRODUCT)), false);
     oled_write_ln(keylog, false);
+    return true;
 }
 
-#endif // OLED_DRIVER_ENABLE
+#endif // OLED_ENABLE
