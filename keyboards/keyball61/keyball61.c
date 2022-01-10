@@ -25,7 +25,12 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b0000111,
     0b0000111,
     0b0000111,
+#if 0
     0b0000111,
     0b0000111,
+#else
+    0b0001111,
+    0b0001111,
+#endif
 };
 // clang-format on
