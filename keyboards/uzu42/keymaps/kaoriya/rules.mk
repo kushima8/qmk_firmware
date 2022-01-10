@@ -13,5 +13,5 @@ EXTRAKEY_ENABLE = yes
 RGBLIGHT_ENABLE = yes
 
 # Enable OLED
-OLED_DRIVER_ENABLE = yes
+OLED_ENABLE = yes
 SRC += oled.c

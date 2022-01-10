@@ -3,7 +3,13 @@
 #
 # This allows us to exclude keyboards by including a .noci file.
 
-if [ -e .keyboards_cache ] ; then
+while getopts f OPT ; do
+  case $OPT in
+    f) force=1 ;;
+  esac
+done
+
+if [ x"$force" != "x1" -a -e .keyboards_cache ] ; then
 	cat .keyboards_cache
 	exit 0
 fi
