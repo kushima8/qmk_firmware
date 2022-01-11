@@ -79,15 +79,26 @@ static bool duplex_scan(matrix_row_t current_matrix[]) {
     return changed;
 }
 
-bool matrix_scan_custom(matrix_row_t current_matrix[]) {
-    bool changed = duplex_scan(current_matrix);
-    // TODO: consider split
-    return changed;
-}
-
 void matrix_init_custom(void) {
+    // TODO: consider split
     //split_pre_init();
     set_pins_input(col_pins, PINNUM_COL);
     set_pins_input(row_pins, PINNUM_ROW);
     //split_post_init();
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// override quantum/matrix_common.c
+
+extern matrix_row_t raw_matrix[MATRIX_ROWS];
+extern matrix_row_t matrix[MATRIX_ROWS];
+
+uint8_t matrix_scan(void) {
+    // TODO: consider split
+    bool changed = duplex_scan(raw_matrix);
+
+    debounce(raw_matrix, matrix, MATRIX_ROWS, changed);
+
+    matrix_scan_quantum();
+    return changed;
 }
