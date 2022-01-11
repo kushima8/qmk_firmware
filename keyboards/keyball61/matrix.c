@@ -123,7 +123,6 @@ extern matrix_row_t raw_matrix[MATRIX_ROWS];
 extern matrix_row_t matrix[MATRIX_ROWS];
 
 uint8_t matrix_scan(void) {
-    //memset(raw_matrix, 0, sizeof(raw_matrix));
     bool changed = duplex_scan(raw_matrix);
 
     debounce(raw_matrix, matrix + thisHand, ROWS_PER_HAND, changed);
