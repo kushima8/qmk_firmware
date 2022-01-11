@@ -18,23 +18,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-/* USB Device descriptor parameter */
+#include "config_common.h"
+
+// USB Device descriptor parameters
 #define VENDOR_ID 0x5957        // "YW" = Yowkees
 #define PRODUCT_ID 0x0100       // dummy ID
 #define DEVICE_VER 0x0001
 #define MANUFACTURER Yowkees
 #define PRODUCT Keyball61
 
-/* key matrix size */
+// Key matrix parameters (Keyball61 is duplex matrix)
 #define MATRIX_ROWS         (5 * 2)     // split keyboard
 #define MATRIX_COLS         (4 * 2)     // duplex matrix
 #define MATRIX_ROW_PINS     { D4, C6, D7, E6, B4 }
 #define MATRIX_COL_PINS     { F4, F5, F6, F7 }
 #define MATRIX_MASKED
-#define DIODE_DIRECTION     ROW2COL
+#define DEBOUNCE            5
 
-#define DEBOUNCE 5
+// Split parameters
+#define SOFT_SERIAL_PIN         D2
+#define SPLIT_HAND_MATRIX_GRID  F7, D7
+#define SPLIT_USB_DETECT
+#define SPLIT_USB_TIMEOUT       500
 
-//#define SOFT_SERIAL_PIN     D2
-
+// RGB LED settings
 #define RGB_DI_PIN D3
