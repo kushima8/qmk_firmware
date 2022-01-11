@@ -26,7 +26,7 @@ CUSTOM_MATRIX = lite
 SRC += matrix.c
 
 # Keyball61 is split keyboard.
-#SPLIT_KEYBOARD = yes
+SPLIT_KEYBOARD = yes
 
 # To support trackball.
 #POINTING_DEVICE_ENABLE = yes

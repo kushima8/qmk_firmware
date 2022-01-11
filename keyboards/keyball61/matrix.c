@@ -1,3 +1,21 @@
+/*
+Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <string.h>
 #include "quantum.h"
 #include "matrix.h"
 #include "debounce.h"
@@ -6,6 +24,9 @@
 
 #define PINNUM_ROW  (MATRIX_ROWS / 2)
 #define PINNUM_COL  (MATRIX_COLS / 2)
+
+#define ROWS_PER_HAND           (MATRIX_ROWS / 2)
+#define MATRIXSIZE_PER_HAND     (ROWS_PER_HAND * sizeof(matrix_row_t))
 
 static pin_t row_pins[PINNUM_ROW] = MATRIX_ROW_PINS;
 static pin_t col_pins[PINNUM_COL] = MATRIX_COL_PINS;
@@ -79,25 +100,56 @@ static bool duplex_scan(matrix_row_t current_matrix[]) {
     return changed;
 }
 
+static uint8_t thisHand, thatHand;
+
 void matrix_init_custom(void) {
-    // TODO: consider split
-    //split_pre_init();
+    split_pre_init();
+
     set_pins_input(col_pins, PINNUM_COL);
     set_pins_input(row_pins, PINNUM_ROW);
-    //split_post_init();
+
+    thisHand = isLeftHand ? 0 : ROWS_PER_HAND;
+    thatHand = ROWS_PER_HAND - thisHand;
+
+    split_post_init();
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// override quantum/matrix_common.c
+// user-defined overridable functions
+__attribute__((weak)) void matrix_slave_scan_kb(void) { matrix_slave_scan_user(); }
+__attribute__((weak)) void matrix_slave_scan_user(void) {}
 
+// override quantum/matrix_common.c
 extern matrix_row_t raw_matrix[MATRIX_ROWS];
 extern matrix_row_t matrix[MATRIX_ROWS];
 
 uint8_t matrix_scan(void) {
-    // TODO: consider split
+    //memset(raw_matrix, 0, sizeof(raw_matrix));
     bool changed = duplex_scan(raw_matrix);
 
-    debounce(raw_matrix, matrix, MATRIX_ROWS, changed);
+    debounce(raw_matrix, matrix + thisHand, ROWS_PER_HAND, changed);
+
+    if (!is_keyboard_master()) {
+        // send to primary.
+        transport_slave(matrix + thatHand, matrix + thisHand);
+        matrix_slave_scan_kb();
+        return changed;
+    }
+
+    // receive from secondary.
+    static bool last_connected = false;
+    matrix_row_t *that_raw = raw_matrix + ROWS_PER_HAND;
+    memset(that_raw, 0, MATRIXSIZE_PER_HAND);
+    if (transport_master_if_connected(matrix + thisHand, that_raw)) {
+        last_connected = true;
+        if (memcmp(matrix + thatHand, that_raw, MATRIXSIZE_PER_HAND) != 0) {
+            memcpy(matrix + thatHand, that_raw, MATRIXSIZE_PER_HAND);
+            changed = true;
+        }
+    } else if (last_connected) {
+        last_connected = false;
+        memset(matrix + thatHand, 0, MATRIXSIZE_PER_HAND);
+        changed = true;
+    }
 
     matrix_scan_quantum();
     return changed;
