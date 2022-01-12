@@ -5,7 +5,7 @@
 A split keyboard with 4x6 vertically staggered keys and 34mm track ball.
 
 * Keyboard Maintainer: [@Yowkees](https://twitter.com/Yowkees)
-* Hardware Supported: keyball PCB, ProMicro
+* Hardware Supported: Keyball46 PCB, ProMicro
 * Hardware Availability: 
 
 Make example for this keyboard (after setting up your build environment):
