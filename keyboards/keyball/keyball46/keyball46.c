@@ -22,11 +22,54 @@
 #    error "KEYBALL_POINTER_DIVIDER should be larger than zero"
 #endif
 
+// clang-format off
+matrix_row_t matrix_mask[MATRIX_ROWS] = {
+    0b0111111,
+    0b0111111,
+    0b0011111,
+    0b0111111,
+
+    0b0111111,
+    0b0111111,
+    0b0011111,
+    0b0111111,
+};
+// clang-format on
+
+static void adjust_matrix_mask_primary(void) {
+    int base = is_keyboard_left() ? 0 : 4;
+    matrix_mask[base + 2] = 0b0111111;
+    matrix_mask[base + 3] = 0b0011111;
+}
+
+static void adjust_matrix_mask_secondary(void) {
+    int base = is_keyboard_left() ? 4 : 0;
+    matrix_mask[base + 2] = 0b0111111;
+    matrix_mask[base + 3] = 0b0011111;
+    keyball_adjust_trackball_handness();
+}
+
+static uint8_t peek_matrix_intersection(pin_t out_pin, pin_t in_pin) {
+    setPinInputHigh(in_pin);
+    setPinOutput(out_pin);
+    writePinLow(out_pin);
+    wait_us(1);
+    uint8_t pin_state = readPin(in_pin);
+    setPinInputHigh(out_pin);
+    return pin_state;
+}
+
+bool is_keyboard_left(void) {
+    return !peek_matrix_intersection(trackball_has() ? F7: F6, B5);
+}
+
 static int  primary        = 0;
 static int  secondary      = 1;
 static bool is_scroll_mode = false;
 
-__attribute__((weak)) void pointing_device_init(void) { trackball_init(); }
+void keyboard_pre_init_kb() {
+    trackball_init();
+}
 
 // clip2int8 clips an integer fit into int8_t.
 static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
@@ -128,7 +171,9 @@ void matrix_scan_kb(void) {
     bool              has = trackball_fetch_sensor(&delta);
     trackball_apply_delta(0, has ? &delta : NULL);
     // apply secondary trackball sensor.
-    trackball_secondary_availablity(secondary_trackball.has);
+    if (secondary_trackball.has) {
+        adjust_matrix_mask_secondary();
+    }
     trackball_apply_delta(1, secondary_trackball.has ? &secondary_trackball.delta : NULL);
     // delegate to user function.
     matrix_scan_user();
@@ -158,6 +203,9 @@ void housekeeping_task_kb(void) {
 }
 
 void keyboard_post_init_kb(void) {
+    if (trackball_has()) {
+        adjust_matrix_mask_primary();
+    }
     // register transaction to get trackball data.
     transaction_register_rpc(GET_TRACKBALL_DATA, get_trackball_data_secondary_handler);
     // delegate to user function.

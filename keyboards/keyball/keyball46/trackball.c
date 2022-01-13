@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "quantum.h"
 #include "pointing_device.h"
 
-#include "optical_sensor/optical_sensor.h"
+#include "drivers/pmw3360/pmw3360.h"
 #include "trackball.h"
 
 #ifndef TRACKBALL_MAX_NUMBER
@@ -47,17 +47,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //////////////////////////////////////////////////////////////////////////////
 
+static bool has_ball;
+
 void trackball_init(void) {
-    if (trackball_has()) {
-        optical_sensor_init();
+    has_ball = pmw3360_init();
+    if (has_ball) {
+        pmw3360_reg_write(pmw3360_Config1, 49); // (49+1)*100 CPI
+        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
     }
 }
 
-__attribute__((weak)) void trackball_secondary_availablity(bool available) {}
-
-__attribute__((weak)) bool trackball_has(void) {
-    // FIXME: support for secondary.
-    return is_keyboard_master();
+bool trackball_has(void) {
+    return has_ball;
 }
 
 // add16 adds two int16_t with clipping.
@@ -80,11 +81,13 @@ bool trackball_fetch_sensor(trackball_delta_t *p) {
     if (!trackball_has()) {
         return false;
     }
-    report_optical_sensor_t r = optical_sensor_get_report();
+    pmw3360_motion_t d = {0};
+    pmw3360_motion_burst(&d);
+
     // The sensor returns negative values for downward rotation, but screen has
     // positive axis for downward, so we invert the sign of Y.
-    p->x = r.x;
-    p->y = -r.y;
+    p->x = d.x;
+    p->y = -d.y;
     return true;
 }
 

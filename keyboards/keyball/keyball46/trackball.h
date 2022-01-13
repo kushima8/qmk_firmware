@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // trackball_init initializes trackball related resources.
 void trackball_init(void);
 
-void trackball_secondary_availablity(bool available);
-
 // trackball_has should returns status of trackball availability.  it delegates
 // is_keyboard_master() as default, but it can be overridden by keyboards or
 // keymaps.
