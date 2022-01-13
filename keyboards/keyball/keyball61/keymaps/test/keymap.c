@@ -43,7 +43,7 @@ void keyboard_post_init_user() {
 
 #ifdef OLED_ENABLE
 
-//#include "oledkit.h"
+//#include "lib/oledkit/oledkit.h"
 
 void oledkit_render_info_user(void) {
     keyball_oled_render_ballinfo();

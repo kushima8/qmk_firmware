@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #include "pointing_device.h"
-#include "oledkit.h"
+#include "lib/oledkit/oledkit.h"
 
 enum keymap_layers {
     _QWERTY,
