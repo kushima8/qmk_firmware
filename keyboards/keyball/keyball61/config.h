@@ -43,3 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // RGB LED settings
 #define RGB_DI_PIN D3
+#ifdef RGBLIGHT_ENABLE
+#    define RGBLED_NUM 37
+#endif
