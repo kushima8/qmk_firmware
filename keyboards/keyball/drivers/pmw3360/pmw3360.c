@@ -86,8 +86,8 @@ bool pmw3360_init(void) {
     pmw3360_reg_read(pmw3360_Delta_Y_L);
     pmw3360_reg_read(pmw3360_Delta_Y_H);
     // configuration
-    pmw3360_reg_write(pmw3360_Config2, 0x00); // FIXME: verify meaning of value
-    pmw3360_reg_write(pmw3360_Config1, 0x06); // FIXME: verify meaning of value
+    pmw3360_reg_write(pmw3360_Config2, 0x00);
+    pmw3360_reg_write(pmw3360_Config1, 0x05); // 600 CPI
     // check product ID and revision ID
     uint8_t pid = pmw3360_reg_read(pmw3360_Product_ID);
     uint8_t rev = pmw3360_reg_read(pmw3360_Revision_ID);

@@ -27,7 +27,7 @@ SPLIT_KEYBOARD = yes
 # To support trackball.
 POINTING_DEVICE_ENABLE = yes
 SRC += trackball.c              # Trackball application interface
-SRC += pmw/pmw.c                # Optical sensor firmware and driver
+SRC += drivers/pmw3360/pmw3360.c
 QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
 
 # To support OLED

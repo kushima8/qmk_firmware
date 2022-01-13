@@ -34,17 +34,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* key matrix size */
 #define MATRIX_ROWS 8
 #define MATRIX_COLS 6
-#define MATRIX_ROW_PINS \
-    { F4, F5, F6, F7 }
-#define MATRIX_COL_PINS \
-    { D4, C6, D7, E6, B4, B5 }
-#define UNUSED_PINS
+#define MATRIX_ROW_PINS { F4, F5, F6, F7 }
+#define MATRIX_COL_PINS { D4, C6, D7, E6, B4, B5 }
+// To ignore SPLIT_HAND_MATRIX_GRID as matrix.
+#define MATRIX_MASKED
 #define DIODE_DIRECTION COL2ROW
 #define SOFT_SERIAL_PIN D2
 
 // Detect master/slave configuration by USB instead of VBUS.
 #define SPLIT_USB_DETECT
 #define SPLIT_USB_TIMEOUT 500
+
+// Detect handiness configuration by matrix. When this intersection is shorted,
+// it is considered left for Keyball46.
+//#define SPLIT_HAND_MATRIX_GRID F7, B5     // for ball
+//#define SPLIT_HAND_MATRIX_GRID F6, B5     // for noball
 
 #define SPLIT_TRANSACTION_IDS_KB GET_TRACKBALL_DATA
 
