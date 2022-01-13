@@ -31,8 +31,8 @@ SRC += pmw/pmw.c                # Optical sensor firmware and driver
 QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
 
 # To support OLED
-OLED_ENABLE = no        # Please Enable this in each keymaps.
-SRC += oledkit.c        # OLED utility for Keyball46
+OLED_ENABLE = no                # Please Enable this in each keymaps.
+SRC += lib/oledkit/oledkit.c    # OLED utility for Keyball series.
 
 # Link Time Optimization required for size.
 LTO_ENABLE = yes

@@ -78,7 +78,7 @@ OLED KitはKeyballのキーマップがOLEDにロゴなどの各種情報を表�
 
 表示内容をカスタマイズするには keymap.c 等に以下の2つを追加してください。
 
-1. `#include "oledkit.h"`
+1. `#include "lib/oledkit/oledkit.h"`
 2. `void oledkit_render_info_user(void)` を定義する
 
 `oledkit_render_info_user()` はプライマリ(USBケーブルが接続されている)側のキー
