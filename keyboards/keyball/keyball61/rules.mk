@@ -29,10 +29,13 @@ SRC += matrix.c
 SPLIT_KEYBOARD = yes
 
 # To support trackball.
-#POINTING_DEVICE_ENABLE = yes
+POINTING_DEVICE_ENABLE = yes
+POINTING_DEVICE_DRIVER = custom
 #SRC += trackball.c              # Trackball application interface
 #SRC += pmw/pmw.c                # Optical sensor firmware and driver
-#QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
+SRC += drivers/pmw3360/pmw3360.c
+SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
+QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
 
 # To support OLED
 #OLED_ENABLE = no        # Please Enable this in each keymaps.
