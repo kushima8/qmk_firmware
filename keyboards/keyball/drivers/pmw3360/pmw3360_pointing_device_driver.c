@@ -22,29 +22,16 @@ bool pmw3360_has = false;
 
 void pointing_device_driver_init(void) {
     pmw3360_has = pmw3360_init();
-    pmw3360_select();
-    // prepare to read motions.
-    pmw3360_reg_write(pmw3360_Motion, 0);
-}
-
-static int16_t read_delta(uint8_t regLow, uint8_t regHigh) {
-    uint8_t l = pmw3360_reg_read(regLow);
-    uint8_t h = pmw3360_reg_read(regHigh);
-    return ((int16_t)h << 8) | l;
+    pmw3360_reg_write(pmw3360_Motion_Burst, 0);
 }
 
 #define constrain_hid(amt) ((amt) < -127 ? -127 : ((amt) > 127 ? 127 : (amt)))
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
-    if (!pmw3360_has) {
-        return mouse_report;
-    }
-    uint8_t mot = pmw3360_reg_read(pmw3360_Motion);
-    if ((mot & 0x80) != 0) {
-        int16_t dx = read_delta(pmw3360_Delta_X_L, pmw3360_Delta_X_H);
-        int16_t dy = read_delta(pmw3360_Delta_Y_L, pmw3360_Delta_Y_H);
-        mouse_report.x = constrain_hid(dy);
-        mouse_report.y = constrain_hid(dx);
+    pmw3360_motion_t d = {0};
+    if (pmw3360_has && pmw3360_motion_burst(&d)) {
+        mouse_report.x = constrain_hid(d.y);
+        mouse_report.y = constrain_hid(d.x);
     }
     return mouse_report;
 }
@@ -53,13 +40,19 @@ uint16_t pointing_device_driver_get_cpi(void) {
     if (!pmw3360_has) {
         return 0;
     }
-    // TODO:
-    return 0;
+    uint8_t cpi8 = pmw3360_reg_read(pmw3360_Config1);
+    return ((uint16_t)cpi8 + 1) * 100;
 }
 
 void pointing_device_driver_set_cpi(uint16_t cpi) {
     if (!pmw3360_has) {
         return;
     }
-    // TODO:
+    if (cpi < pmw3360_MINCPI) {
+        cpi = pmw3360_MINCPI;
+    } else if (cpi > pmw3360_MAXCPI) {
+        cpi = pmw3360_MAXCPI;
+    }
+    pmw3360_reg_write(pmw3360_Config1, (uint8_t)((cpi / 100) - 1));
+    pmw3360_reg_write(pmw3360_Motion_Burst, 0);
 }

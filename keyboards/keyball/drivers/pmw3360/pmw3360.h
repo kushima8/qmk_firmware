@@ -34,23 +34,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /// It will return true when succeeded, otherwise false.
 bool pmw3360_init(void);
 
-/// pmw3360_select enables/selects PMW3360DM-T2QU module.
-/// This makes PMW3360_NCS_PIN low.
-void pmw3360_select(void);
+typedef struct {
+    int16_t x;
+    int16_t y;
+} pmw3360_motion_t;
 
-/// pmw3360_select disnables/unselects PMW3360DM-T2QU module.
-/// This makes PMW3360_NCS_PIN high.
-void pmw3360_unselect(void);
+/// pmw3360_motion_read gets a motion data by Motion register.
+/// This requires to write a dummy data to pmw3360_Motion register
+/// just before.
+bool pmw3360_motion_read(pmw3360_motion_t *d);
+
+/// pmw3360_motion_burst gets a motion data by Motion_Burst command.
+/// This requires to write a dummy data to pmw3360_Motion_Burst register
+/// just before.
+bool pmw3360_motion_burst(pmw3360_motion_t *d);
 
 //////////////////////////////////////////////////////////////////////////////
 // Register operations
 
 /// pmw3360_reg_write writes a value to a register.
-/// This requires the module is selected.
 void pmw3360_reg_write(uint8_t addr, uint8_t data);
 
 /// pmw3360_reg_read reads a value from a register.
-/// This requires the module is selected.
 uint8_t pmw3360_reg_read(uint8_t addr);
 
 typedef enum {
@@ -103,6 +108,9 @@ typedef enum {
     pmw3360_Lift_Config                = 0x63,
     pmw3360_Raw_Data_Burst             = 0x64,
     pmw3360_LiftCutoff_Tune2           = 0x65,
+
+    pmw3360_MINCPI = 100,
+    pmw3360_MAXCPI = 12000,
 } pmw3360_reg_t;
 
 //////////////////////////////////////////////////////////////////////////////
