@@ -49,6 +49,12 @@ bool pmw3360_motion_read(pmw3360_motion_t *d);
 /// just before.
 bool pmw3360_motion_burst(pmw3360_motion_t *d);
 
+// TODO: document
+uint16_t pmw3360_cpi_get(void);
+
+// TODO: document
+void pmw3360_cpi_set(uint16_t cpi);
+
 //////////////////////////////////////////////////////////////////////////////
 // Register operations
 
@@ -108,10 +114,12 @@ typedef enum {
     pmw3360_Lift_Config                = 0x63,
     pmw3360_Raw_Data_Burst             = 0x64,
     pmw3360_LiftCutoff_Tune2           = 0x65,
+} pmw3360_reg_t;
 
+enum {
     pmw3360_MINCPI = 100,
     pmw3360_MAXCPI = 12000,
-} pmw3360_reg_t;
+};
 
 //////////////////////////////////////////////////////////////////////////////
 // SPI operations

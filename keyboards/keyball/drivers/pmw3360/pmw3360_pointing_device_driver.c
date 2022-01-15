@@ -40,19 +40,12 @@ uint16_t pointing_device_driver_get_cpi(void) {
     if (!pmw3360_has) {
         return 0;
     }
-    uint8_t cpi8 = pmw3360_reg_read(pmw3360_Config1);
-    return ((uint16_t)cpi8 + 1) * 100;
+    return pmw3360_cpi_get();
 }
 
 void pointing_device_driver_set_cpi(uint16_t cpi) {
     if (!pmw3360_has) {
         return;
     }
-    if (cpi < pmw3360_MINCPI) {
-        cpi = pmw3360_MINCPI;
-    } else if (cpi > pmw3360_MAXCPI) {
-        cpi = pmw3360_MAXCPI;
-    }
-    pmw3360_reg_write(pmw3360_Config1, (uint8_t)((cpi / 100) - 1));
-    pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+    pmw3360_cpi_set(cpi);
 }
