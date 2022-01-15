@@ -21,42 +21,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 #include "quantum.h"
-#include "transactions.h"
 
+#include "transactions.h"
 #include "drivers/pmw3360/pmw3360.h"
-#include "print.h"
+
+//////////////////////////////////////////////////////////////////////////////
+
+#define KEYBALL_CPI_DEFAULT 500
+
+//////////////////////////////////////////////////////////////////////////////
+
+#define TX_GETINFO_INTERVAL 500
+#define TX_GETINFO_MAXTRY 10
+#define TX_GETMOTION_INTERVAL 5
 
 //////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
     uint16_t vid;
     uint16_t pid;
-    uint8_t  motion_num;  // currently support only 0 or 1
+    uint8_t  ballcnt;  // count of balls: support only 0 or 1, for now
 } keyball_info_t;
 
 typedef uint8_t keyball_motion_id_t;
 
 typedef struct {
-    uint8_t id;
     int16_t x;
     int16_t y;
-    uint8_t n;  // accumulative scan count after last consuming.
+    uint8_t n;  // accumulative scan count after last consume.
 } keyball_motion_t;
 
 typedef uint16_t keyball_cpi_t;
 
 //////////////////////////////////////////////////////////////////////////////
 
-// TODO: mark variables as 'static' if can.
+static bool this_have_ball = false;
+static bool that_have_ball = false;
 
-bool this_have_ball = false;
-bool that_have_ball = false;
+static keyball_motion_t this_motion = {0};
+static keyball_motion_t that_motion = {0};
 
-keyball_motion_t this_motion = {0};
-keyball_motion_t that_motion = {0};
-
-uint16_t cpi_val     = 0;  // FIXME:
-bool     cpi_changed = false;
+static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
+static bool     cpi_changed = false;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +109,7 @@ static int16_t add16(int16_t a, int16_t b) {
 }
 
 // incU8 increments a uint8_t with clipping.
-static uint8_t incU8(uint8_t a) { return a < 0xff ? a + 1 : 0xff; }
+static inline uint8_t incU8(uint8_t a) { return a < 0xff ? a + 1 : 0xff; }
 
 // clip2int8 clips an integer fit into int8_t.
 static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
@@ -136,12 +142,13 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r) {
 void pointing_device_driver_init(void) {
     this_have_ball = pmw3360_init();
     if (this_have_ball) {
-        pmw3360_cpi_set(500);  // 500 CPI as default
+        pmw3360_cpi_set(KEYBALL_CPI_DEFAULT);
         pmw3360_reg_write(pmw3360_Motion_Burst, 0);
     }
 }
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
+    // fetch from optical sensor.
     if (this_have_ball) {
         pmw3360_motion_t d = {0};
         if (pmw3360_motion_burst(&d)) {
@@ -152,41 +159,40 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
             }
         }
     }
-    if (this_have_ball) {
-        motion_to_mouse_move(&this_motion, &rep);
-        if (that_have_ball) {
-            // dual ball
-            motion_to_mouse_scroll(&this_motion, &rep);
+    // report mouse event, if keyboard is primary.
+    if (is_keyboard_master()) {
+        if (this_have_ball) {
+            motion_to_mouse_move(&this_motion, &rep);
+            if (that_have_ball) {
+                // dual ball
+                motion_to_mouse_scroll(&this_motion, &rep);
+            }
+        } else if (that_have_ball) {
+            // only that ball
+            motion_to_mouse_move(&that_motion, &rep);
         }
-    } else if (that_have_ball) {
-        // only that ball
-        motion_to_mouse_move(&that_motion, &rep);
     }
     return rep;
 }
 
-uint16_t pointing_device_driver_get_cpi(void) {
-    if (!this_have_ball) {
-        return 0;
-    }
-    // TODO:
-    return 0;
-}
+uint16_t pointing_device_driver_get_cpi(void) { return cpi_value; }
 
 void pointing_device_driver_set_cpi(uint16_t cpi) {
-    if (!this_have_ball) {
-        return;
+    if (this_have_ball) {
+        pmw3360_cpi_set(cpi);
+        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
     }
-    // TODO:
+    cpi_value   = cpi;
+    cpi_changed = true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 static void keyball_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     keyball_info_t info = {
-        .vid        = VENDOR_ID,
-        .pid        = PRODUCT_ID,
-        .motion_num = 0,  // TODO: put 1 when pmw3360_has
+        .vid     = VENDOR_ID,
+        .pid     = PRODUCT_ID,
+        .ballcnt = this_have_ball ? 1 : 0,
     };
     memcpy(out_data, &info, sizeof(info));
 }
@@ -195,31 +201,28 @@ static void keyball_get_info_invoke(void) {
     static bool     negotiated = false;
     static uint32_t last_sync  = 0;
     static int      round      = 0;
-    if (negotiated || timer_elapsed32(last_sync) < 500) {
+    if (negotiated || timer_elapsed32(last_sync) < TX_GETINFO_INTERVAL) {
         return;
     }
     last_sync = timer_read32();
     round++;
     keyball_info_t recv = {0};
     if (!transaction_rpc_recv(KEYBALL_GET_INFO, sizeof(recv), &recv)) {
-        if (round < 10) {
-            uprintf("keyball_get_info_invoke: missed #%d\n", round);
+        if (round < TX_GETINFO_MAXTRY) {
+            dprintf("keyball_get_info_invoke: missed #%d\n", round);
             return;
         }
     }
     negotiated = true;
     if (recv.vid == VENDOR_ID && recv.pid == PRODUCT_ID) {
-        that_have_ball = recv.motion_num > 0;
+        that_have_ball = recv.ballcnt > 0;
     }
-    uprintf("keyball_get_info_invoke: negotiated #%d %d\n", round, that_have_ball);
+    dprintf("keyball_get_info_invoke: negotiated #%d %d\n", round, that_have_ball);
     matrix_adjust_that();
 }
 
 static void keyball_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    if (in_buflen < sizeof(keyball_motion_id_t) || out_buflen < sizeof(keyball_motion_t) || !this_have_ball || this_motion.n == 0 || *((keyball_motion_id_t *)in_data) != 0) {
-        return;
-    }
-    ATOMIC_BLOCK_FORCEON {
+    if (this_have_ball && *((keyball_motion_id_t *)in_data) == 0) {
         *(keyball_motion_t *)out_data = this_motion;
         // clear motion
         this_motion.x = 0;
@@ -229,26 +232,33 @@ static void keyball_get_motion_handler(uint8_t in_buflen, const void *in_data, u
 }
 
 static void keyball_get_motion_invoke(void) {
-    if (!that_have_ball) {
+    static uint32_t last_sync = 0;
+    if (!that_have_ball || that_motion.n != 0 || timer_elapsed32(last_sync) < TX_GETMOTION_INTERVAL) {
         return;
     }
     keyball_motion_id_t req  = 0;
     keyball_motion_t    recv = {0};
-    if (!transaction_rpc_exec(KEYBALL_GET_MOTION, sizeof(req), &req, sizeof(recv), &recv)) {
-        return;
+    if (transaction_rpc_exec(KEYBALL_GET_MOTION, sizeof(req), &req, sizeof(recv), &recv)) {
+        ATOMIC_BLOCK_FORCEON { that_motion = recv; }
+    } else {
+        dprintf("keyball_get_motion_invoke: failed");
     }
-    that_motion = recv;
+    last_sync = timer_read32();
+    return;
 }
 
 static void keyball_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    // TODO:
+    if (this_have_ball) {
+        pmw3360_cpi_set(*(keyball_cpi_t *)in_data);
+        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+    }
 }
 
 static void keyball_set_cpi_invoke(void) {
     if (!that_have_ball || !cpi_changed) {
         return;
     }
-    keyball_cpi_t req = cpi_val;
+    keyball_cpi_t req = cpi_value;
     if (!transaction_rpc_send(KEYBALL_SET_CPI, sizeof(req), &req)) {
         return;
     }
@@ -256,20 +266,13 @@ static void keyball_set_cpi_invoke(void) {
 }
 
 void keyball_set_cpi(uint16_t cpi) {
-    if (cpi_val != cpi) {
-        cpi_val     = cpi;
+    if (cpi_value != cpi) {
+        cpi_value   = cpi;
         cpi_changed = true;
     }
 }
 
 //////////////////////////////////////////////////////////////////////////////
-
-#if 0
-void keyboard_pre_init_kb(void) {
-    debug_enable = true;
-    keyboard_pre_init_user();
-}
-#endif
 
 void keyboard_post_init_kb(void) {
     // register transaction handlers on secondary.
@@ -290,13 +293,16 @@ void housekeeping_task_kb(void) {
     }
 }
 
+#if 0  // for debug
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     static bool first = true;
     if (first) {
         first = false;
-        uprintf("Keyball Hello #%d\n", 9);
-        uprintf("CPI=%d\n", pmw3360_cpi_get());
-        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+#    ifdef CONSOLE_ENABLE
+        uprintf("Keyball Hello #%d\n", 10);
+        uprintf("ball: this=%d that=%d\n", this_have_ball, that_have_ball);
+#    endif
     }
     return true;
 }
+#endif
