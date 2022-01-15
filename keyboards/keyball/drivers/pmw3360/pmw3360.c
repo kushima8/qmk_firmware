@@ -42,6 +42,20 @@ void pmw3360_reg_write(uint8_t addr, uint8_t data) {
     wait_us(180);
 }
 
+uint16_t pmw3360_cpi_get(void) {
+    uint8_t cpi8 = pmw3360_reg_read(pmw3360_Config1);
+    return ((uint16_t)cpi8 + 1) * 100;
+}
+
+void pmw3360_cpi_set(uint16_t cpi) {
+    if (cpi < pmw3360_MINCPI) {
+        cpi = pmw3360_MINCPI;
+    } else if (cpi > pmw3360_MAXCPI) {
+        cpi = pmw3360_MAXCPI;
+    }
+    pmw3360_reg_write(pmw3360_Config1, (uint8_t)((cpi / 100) - 1));
+}
+
 bool pmw3360_motion_read(pmw3360_motion_t *d) {
     uint8_t mot = pmw3360_reg_read(pmw3360_Motion);
     if ((mot & 0x88) != 0x80) {
@@ -87,7 +101,6 @@ bool pmw3360_init(void) {
     pmw3360_reg_read(pmw3360_Delta_Y_H);
     // configuration
     pmw3360_reg_write(pmw3360_Config2, 0x00);
-    pmw3360_reg_write(pmw3360_Config1, 0x05); // 600 CPI
     // check product ID and revision ID
     uint8_t pid = pmw3360_reg_read(pmw3360_Product_ID);
     uint8_t rev = pmw3360_reg_read(pmw3360_Revision_ID);

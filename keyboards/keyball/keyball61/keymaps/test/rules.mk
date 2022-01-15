@@ -2,4 +2,4 @@
 #OLED_ENABLE = yes
 
 # for debug
-#CONSOLE_ENABLE = yes
+CONSOLE_ENABLE = yes

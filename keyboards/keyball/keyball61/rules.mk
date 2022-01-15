@@ -33,7 +33,7 @@ POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = custom
 #SRC += trackball.c              # Trackball application interface
 SRC += drivers/pmw3360/pmw3360.c
-SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
+#SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
 QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
 
 # To support OLED
