@@ -56,6 +56,7 @@ typedef uint16_t keyball_cpi_t;
 //////////////////////////////////////////////////////////////////////////////
 
 static bool this_have_ball = false;
+static bool that_enable    = false;
 static bool that_have_ball = false;
 
 static keyball_motion_t this_motion = {0};
@@ -81,19 +82,31 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
 };
 // clang-format on
 
-static void matrix_adjust_this(void) {
+static void adjust_rgblight_ranges(void) {
+#ifdef RGBLIGHT_ENABLE
+    // adjust RGBLIGHT's clipping and effect ranges
+    uint8_t lednum_this = this_have_ball ? 34 : 37;
+    uint8_t lednum_that = !that_enable ? 0 : that_have_ball ? 34 : 37;
+    rgblight_set_clipping_range(is_keyboard_left() ? 0 : lednum_that, lednum_this);
+    rgblight_set_effect_range(0, lednum_this + lednum_that);
+#endif
+}
+
+static void adjust_board_as_this(void) {
     if (this_have_ball) {
         matrix_mask[is_keyboard_left() ? 4 : 9] = 0b11000011;
     }
-    // FIXME: adjust other matrix related
+    adjust_rgblight_ranges();
 }
 
-static void matrix_adjust_that(void) {
-    if (that_have_ball) {
+static void adjust_board_on_primary(void) {
+    if (that_enable && that_have_ball) {
         matrix_mask[is_keyboard_left() ? 9 : 4] = 0b11000011;
     }
-    // FIXME: adjust other matrix related
+    adjust_rgblight_ranges();
 }
+
+static void adjust_board_on_secondary(void) { adjust_rgblight_ranges(); }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -189,12 +202,18 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {
 //////////////////////////////////////////////////////////////////////////////
 
 static void keyball_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+    keyball_info_t *that = (keyball_info_t *)in_data;
+    if (that->vid == VENDOR_ID && that->pid == PRODUCT_ID) {
+        that_enable    = true;
+        that_have_ball = that->ballcnt > 0;
+    }
     keyball_info_t info = {
         .vid     = VENDOR_ID,
         .pid     = PRODUCT_ID,
         .ballcnt = this_have_ball ? 1 : 0,
     };
     memcpy(out_data, &info, sizeof(info));
+    adjust_board_on_secondary();
 }
 
 static void keyball_get_info_invoke(void) {
@@ -206,8 +225,13 @@ static void keyball_get_info_invoke(void) {
     }
     last_sync = timer_read32();
     round++;
+    keyball_info_t req = {
+        .vid     = VENDOR_ID,
+        .pid     = PRODUCT_ID,
+        .ballcnt = this_have_ball ? 1 : 0,
+    };
     keyball_info_t recv = {0};
-    if (!transaction_rpc_recv(KEYBALL_GET_INFO, sizeof(recv), &recv)) {
+    if (!transaction_rpc_exec(KEYBALL_GET_INFO, sizeof(req), &req, sizeof(recv), &recv)) {
         if (round < TX_GETINFO_MAXTRY) {
             dprintf("keyball_get_info_invoke: missed #%d\n", round);
             return;
@@ -215,10 +239,15 @@ static void keyball_get_info_invoke(void) {
     }
     negotiated = true;
     if (recv.vid == VENDOR_ID && recv.pid == PRODUCT_ID) {
+        that_enable    = true;
         that_have_ball = recv.ballcnt > 0;
     }
     dprintf("keyball_get_info_invoke: negotiated #%d %d\n", round, that_have_ball);
-    matrix_adjust_that();
+    if (is_keyboard_master()) {
+        adjust_board_on_primary();
+    } else {
+        adjust_board_on_secondary();
+    }
 }
 
 static void keyball_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
@@ -281,7 +310,7 @@ void keyboard_post_init_kb(void) {
         transaction_register_rpc(KEYBALL_GET_MOTION, keyball_get_motion_handler);
         transaction_register_rpc(KEYBALL_SET_CPI, keyball_set_cpi_handler);
     }
-    matrix_adjust_this();
+    adjust_board_as_this();
     keyboard_post_init_user();
 }
 
