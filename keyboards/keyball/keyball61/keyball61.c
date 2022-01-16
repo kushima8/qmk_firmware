@@ -65,6 +65,11 @@ static keyball_motion_t that_motion = {0};
 static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
 static bool     cpi_changed = false;
 
+static uint16_t last_keycode;
+static uint8_t  last_row;
+static uint8_t  last_col;
+static report_mouse_t last_mouse = {};
+
 //////////////////////////////////////////////////////////////////////////////
 
 // clang-format off
@@ -294,11 +299,114 @@ static void keyball_set_cpi_invoke(void) {
     cpi_changed = false;
 }
 
+//////////////////////////////////////////////////////////////////////////////
+
 void keyball_set_cpi(uint16_t cpi) {
     if (cpi_value != cpi) {
         cpi_value   = cpi;
         cpi_changed = true;
     }
+}
+
+#ifdef OLED_ENABLE
+
+static const char *format_4d(int8_t d) {
+    static char buf[5] = {0};  // max width (4) + NUL (1)
+    char        lead   = ' ';
+    if (d < 0) {
+        d    = -d;
+        lead = '-';
+    }
+    buf[3] = (d % 10) + '0';
+    d /= 10;
+    if (d == 0) {
+        buf[2] = lead;
+        lead   = ' ';
+    } else {
+        buf[2] = (d % 10) + '0';
+        d /= 10;
+    }
+    if (d == 0) {
+        buf[1] = lead;
+        lead   = ' ';
+    } else {
+        buf[1] = (d % 10) + '0';
+        d /= 10;
+    }
+    buf[0] = lead;
+    return buf;
+}
+
+static char to_1x(uint8_t x) {
+    x &= 0x0f;
+    return x < 10 ? x + '0' : x + 'a' - 10;
+}
+
+#endif
+
+void keyball_oled_render_ballinfo(void) {
+#ifdef OLED_ENABLE
+    // Format: `Ball:{ball#1 x}{ball#1 y}{ball#2 x}{ball#2 y}
+    //
+    // Output example:
+    //
+    //     Ball: -12  34   0   0
+    //
+    oled_write_P(PSTR("Ball:"), false);
+    oled_write(format_4d(last_mouse.x), false);
+    oled_write(format_4d(last_mouse.y), false);
+    oled_write(format_4d(last_mouse.h), false);
+    oled_write(format_4d(last_mouse.v), false);
+#endif
+}
+
+#ifdef OLED_ENABLE
+// clang-format off
+const char PROGMEM code_to_name[] = {
+    'a', 'b', 'c', 'd', 'e', 'f',  'g', 'h', 'i',  'j',
+    'k', 'l', 'm', 'n', 'o', 'p',  'q', 'r', 's',  't',
+    'u', 'v', 'w', 'x', 'y', 'z',  '1', '2', '3',  '4',
+    '5', '6', '7', '8', '9', '0',  'R', 'E', 'B',  'T',
+    '_', '-', '=', '[', ']', '\\', '#', ';', '\'', '`',
+    ',', '.', '/',
+};
+// clang-format on
+#endif
+
+void keyball_oled_render_keyinfo(void) {
+#ifdef OLED_ENABLE
+    // Format: `Key:   R{row}  C{col} K{kc}  '{name}`
+    //
+    // Where `kc` is lower 8 bit of keycode.
+    // Where `name` is readable label for `kc`, valid between 4 and 56.
+    //
+    // It is aligned to fit with output of keyball_oled_render_ballinfo().
+    // For example:
+    //
+    //     Ball:   0   0   0   0
+    //     Key:   R2  C3 K06  'c
+    //
+    char    name    = '\0';
+    uint8_t keycode = last_keycode;
+    if (keycode >= 4 && keycode < 53) {
+        name = pgm_read_byte(code_to_name + keycode - 4);
+    }
+
+    oled_write_P(PSTR("Key:   R"), false);
+    oled_write_char(to_1x(last_row), false);
+    oled_write_P(PSTR("  C"), false);
+    oled_write_char(to_1x(last_col), false);
+    if (keycode) {
+        oled_write_P(PSTR(" K"), false);
+        oled_write_char(to_1x(keycode >> 4), false);
+        oled_write_char(to_1x(keycode), false);
+        // oled_write(format_02x((uint8_t)keycode), false);
+    }
+    if (name) {
+        oled_write_P(PSTR("  '"), false);
+        oled_write_char(name, false);
+    }
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -322,16 +430,17 @@ void housekeeping_task_kb(void) {
     }
 }
 
-#if 0  // for debug
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    static bool first = true;
-    if (first) {
-        first = false;
-#    ifdef CONSOLE_ENABLE
-        uprintf("Keyball Hello #%d\n", 10);
-        uprintf("ball: this=%d that=%d\n", this_have_ball, that_have_ball);
-#    endif
+    last_keycode = keycode;
+    last_row     = record->event.key.row;
+    last_col     = record->event.key.col;
+    if (!process_record_user(keycode, record)) {
+        return false;
     }
     return true;
 }
-#endif
+
+report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
+    last_mouse = pointing_device_task_user(mouse_report);
+    return last_mouse;
+}
