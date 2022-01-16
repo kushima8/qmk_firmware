@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config_common.h"
 
 // USB Device descriptor parameters
-#define VENDOR_ID 0x5957        // "YW" = Yowkees
-#define PRODUCT_ID 0x0100       // dummy ID
-#define DEVICE_VER 0x0001
-#define MANUFACTURER Yowkees
-#define PRODUCT Keyball61
+#define VENDOR_ID           0x5957     // "YW" = Yowkees
+#define PRODUCT_ID          0x0100     // dummy ID
+#define DEVICE_VER          0x0001
+#define MANUFACTURER        Yowkees
+#define PRODUCT             Keyball61
 
 // Key matrix parameters (Keyball61 is duplex matrix)
-#define MATRIX_ROWS         (5 * 2)     // split keyboard
-#define MATRIX_COLS         (4 * 2)     // duplex matrix
+#define MATRIX_ROWS         (5 * 2)  // split keyboard
+#define MATRIX_COLS         (4 * 2)  // duplex matrix
 #define MATRIX_ROW_PINS     { D4, C6, D7, E6, B4 }
 #define MATRIX_COL_PINS     { F4, F5, F6, F7 }
 #define MATRIX_MASKED
@@ -44,7 +44,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SPLIT_TRANSACTION_IDS_KB KEYBALL_GET_INFO, KEYBALL_GET_MOTION, KEYBALL_SET_CPI
 
 // RGB LED settings
-#define RGB_DI_PIN D3
+#define RGB_DI_PIN          D3
 #ifdef RGBLIGHT_ENABLE
-#    define RGBLED_NUM 37
+#    define RGBLED_NUM      74
+#    define RGBLED_SPLIT    { 37, 37 }
+#endif
+#ifdef RGB_MATRIX_ENABLE
+#    define RGB_MATRIX_SPLIT            { 37, 37 }
 #endif
