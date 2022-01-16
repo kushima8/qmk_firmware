@@ -27,15 +27,22 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TAB   , KC_Q     , KC_W     , KC_E     , KC_R     , KC_T     ,                            KC_Y     , KC_U     , KC_I     , KC_O     , KC_P     , KC_BSPC  ,
     KC_LCTL  , KC_A     , KC_S     , KC_D     , KC_F     , KC_G     ,                            KC_H     , KC_J     , KC_K     , KC_L     , KC_SCLN  , KC_ENT   ,
     KC_LSFT  , KC_Z     , KC_X     , KC_C     , KC_V     , KC_B     , KC_LBRC  ,      KC_RBRC  , KC_N     , KC_M     , KC_COMM  , KC_DOT   , KC_SLSH  , KC_RSFT  ,
-    KC_LGUI  , KC_GRV   , KC_EQL   , KC_LALT  , KC_LEFT  , KC_SPC   , KC_RGHT  ,      KC_RALT  , KC_SPC   ,                                  KC_BSLS  , KC_QUOT
+    KC_LGUI  , KC_GRV   , KC_EQL   , KC_LALT  , KC_LEFT  , KC_SPC   , MO(1)    ,      MO(1)    , KC_SPC   ,                                  KC_BSLS  , KC_QUOT
+  ),
+
+  [1] = LAYOUT(
+    RGB_TOG  , _______  , _______  , _______  , _______  , _______  ,                            RGB_M_P  , RGB_M_B  , RGB_M_R  , RGB_M_SW , RGB_M_SN , RGB_M_K  ,
+    RGB_MOD  , RGB_HUI  , RGB_SAI  , RGB_VAI  , _______  , _______  ,                            RGB_M_K  , RGB_M_X  , RGB_M_G  , RGB_M_T  , RGB_M_TW , _______  ,
+    RGB_RMOD , RGB_HUD  , RGB_SAD  , RGB_VAD  , _______  , _______  ,                            _______  , _______  , _______  , _______  , _______  , _______  ,
+    _______  , _______  , _______  , _______  , _______  , _______  , EEP_RST  ,      EEP_RST  , KC_HOME  , KC_PGDN  , KC_PGUP  , KC_END   , _______  , _______  ,
+    RESET    , _______  , KC_LEFT  , KC_DOWN  , KC_UP    , KC_RGHT  , _______  ,      _______  , KC_BSPC  ,                                  _______  , RESET
   ),
 };
 // clang-format on
 
-#if 0
 void keyboard_post_init_user() {
 #ifdef RGBLIGHT_ENABLE
-    // Force RGB lights to show test animation without writing toi EEPROM.
+    // Force RGB lights to show test animation without writing EEPROM.
     rgblight_enable_noeeprom();
     rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 #endif
@@ -50,5 +57,4 @@ void oledkit_render_info_user(void) {
     keyball_oled_render_keyinfo();
 }
 
-#endif
 #endif
