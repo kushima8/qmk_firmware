@@ -105,3 +105,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // clang-format on
 
 #define LAYOUT LAYOUT_right_ball
+
+//////////////////////////////////////////////////////////////////////////////
+// Experimental API
+
+// keyball_oled_render_ballinfo renders ball information to OLED.
+// It uses just 21 columns to show the info.
+void keyball_oled_render_ballinfo(void);
+
+// keyball_oled_render_keyinfo renders last processed key information to OLED.
+// It shows column, row, key code, and key name (if available).
+void keyball_oled_render_keyinfo(void);
