@@ -50,11 +50,17 @@ void keyboard_post_init_user() {
 
 #ifdef OLED_ENABLE
 
-//#include "lib/oledkit/oledkit.h"
+#include "lib/oledkit/oledkit.h"
 
+#if 0
 void oledkit_render_info_user(void) {
     keyball_oled_render_ballinfo();
     keyball_oled_render_keyinfo();
 }
+#endif
 
+bool oled_task_user(void) {
+    oledkit_render_logo_user();
+    return true;
+}
 #endif
