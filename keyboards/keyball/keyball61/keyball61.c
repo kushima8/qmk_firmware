@@ -65,9 +65,9 @@ static keyball_motion_t that_motion = {0};
 static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
 static bool     cpi_changed = false;
 
-static uint16_t last_keycode;
-static uint8_t  last_row;
-static uint8_t  last_col;
+static uint16_t       last_keycode;
+static uint8_t        last_row;
+static uint8_t        last_col;
 static report_mouse_t last_mouse = {};
 
 //////////////////////////////////////////////////////////////////////////////
@@ -97,19 +97,9 @@ static void adjust_rgblight_ranges(void) {
 #endif
 }
 
-static void adjust_board_as_this(void) {
-    if (this_have_ball) {
-        matrix_mask[is_keyboard_left() ? 4 : 9] = 0b11000011;
-    }
-    adjust_rgblight_ranges();
-}
+static void adjust_board_as_this(void) { adjust_rgblight_ranges(); }
 
-static void adjust_board_on_primary(void) {
-    if (that_enable && that_have_ball) {
-        matrix_mask[is_keyboard_left() ? 9 : 4] = 0b11000011;
-    }
-    adjust_rgblight_ranges();
-}
+static void adjust_board_on_primary(void) { adjust_rgblight_ranges(); }
 
 static void adjust_board_on_secondary(void) { adjust_rgblight_ranges(); }
 
