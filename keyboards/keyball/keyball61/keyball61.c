@@ -83,7 +83,7 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b01110111,
     0b01110111,
     0b11110111,
-    0b11110011,
+    0b11110111,
 };
 // clang-format on
 
@@ -122,13 +122,16 @@ static inline uint8_t incU8(uint8_t a) { return a < 0xff ? a + 1 : 0xff; }
 // clip2int8 clips an integer fit into int8_t.
 static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
 
-static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r) {
+static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
     if (m->n == 0) {
         return;
     }
-    // TODO: consider direction of ball.
     r->x = clip2int8(m->y);
     r->y = clip2int8(m->x);
+    if (is_left) {
+        r->x = -r->x;
+        r->y = -r->y;
+    }
     // clear motion
     m->x = 0;
     m->y = 0;
@@ -139,9 +142,10 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r) {
     if (m->n == 0) {
         return;
     }
-    // TODO: consider direction of ball.
+    // TODO: test & consider direction of ball.
     r->h = clip2int8(m->x);
     r->v = clip2int8(m->y);
+    // clear motion
     m->x = 0;
     m->y = 0;
     m->n = 0;
@@ -170,14 +174,14 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master()) {
         if (this_have_ball) {
-            motion_to_mouse_move(&this_motion, &rep);
+            motion_to_mouse_move(&this_motion, &rep, is_keyboard_left());
             if (that_have_ball) {
                 // dual ball
                 motion_to_mouse_scroll(&this_motion, &rep);
             }
         } else if (that_have_ball) {
             // only that ball
-            motion_to_mouse_move(&that_motion, &rep);
+            motion_to_mouse_move(&that_motion, &rep, !is_keyboard_left());
         }
     }
     return rep;
@@ -376,11 +380,7 @@ void keyball_oled_render_keyinfo(void) {
     //     Ball:   0   0   0   0
     //     Key:   R2  C3 K06  'c
     //
-    char    name    = '\0';
     uint8_t keycode = last_keycode;
-    if (keycode >= 4 && keycode < 53) {
-        name = pgm_read_byte(code_to_name + keycode - 4);
-    }
 
     oled_write_P(PSTR("Key:   R"), false);
     oled_write_char(to_1x(last_row), false);
@@ -390,12 +390,15 @@ void keyball_oled_render_keyinfo(void) {
         oled_write_P(PSTR(" K"), false);
         oled_write_char(to_1x(keycode >> 4), false);
         oled_write_char(to_1x(keycode), false);
-        // oled_write(format_02x((uint8_t)keycode), false);
     }
-    if (name) {
-        oled_write_P(PSTR("  '"), false);
-        oled_write_char(name, false);
+    if (keycode >= 4 && keycode < 53) {
+        char name = pgm_read_byte(code_to_name + keycode - 4);
+        if (name) {
+            oled_write_P(PSTR("  '"), false);
+            oled_write_char(name, false);
+        }
     }
+    oled_advance_page(true);
 #endif
 }
 
