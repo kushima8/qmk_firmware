@@ -369,7 +369,7 @@ const char PROGMEM code_to_name[] = {
 
 void keyball_oled_render_keyinfo(void) {
 #ifdef OLED_ENABLE
-    // Format: `Key:   R{row}  C{col} K{kc}  '{name}`
+    // Format: `Key :  R{row}  C{col} K{kc}  '{name}`
     //
     // Where `kc` is lower 8 bit of keycode.
     // Where `name` is readable label for `kc`, valid between 4 and 56.
@@ -377,12 +377,12 @@ void keyball_oled_render_keyinfo(void) {
     // It is aligned to fit with output of keyball_oled_render_ballinfo().
     // For example:
     //
+    //     Key :  R2  C3 K06  'c
     //     Ball:   0   0   0   0
-    //     Key:   R2  C3 K06  'c
     //
     uint8_t keycode = last_keycode;
 
-    oled_write_P(PSTR("Key:   R"), false);
+    oled_write_P(PSTR("Key :  R"), false);
     oled_write_char(to_1x(last_row), false);
     oled_write_P(PSTR("  C"), false);
     oled_write_char(to_1x(last_col), false);
@@ -424,13 +424,22 @@ void housekeeping_task_kb(void) {
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    // store last key cod and reocrd for OLED
     last_keycode = keycode;
     last_row     = record->event.key.row;
     last_col     = record->event.key.col;
-    if (!process_record_user(keycode, record)) {
+
+    // process KC_MS_BTN1~8 by myself
+    // See process_action() in quantum/action.c for details.
+#ifndef MOUSEKEY_ENABLE
+    if (IS_MOUSEKEY_BUTTON(keycode)) {
+        extern void register_button(bool, enum mouse_buttons);
+        register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
         return false;
     }
-    return true;
+#endif
+
+    return process_record_user(keycode, record);
 }
 
 report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
