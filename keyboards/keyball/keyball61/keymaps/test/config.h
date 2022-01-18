@@ -29,8 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define RGBLIGHT_VAL_STEP 12
 
 #    define RGBLIGHT_EFFECT_RGB_TEST  // required for LED test
-#    define RGBLIGHT_ANIMATIONS       // enable most of effects
-//#    define RGBLIGHT_EFFECT_TWINKLE   // not included RGBLIGHT_ANIMATIONS
 #endif
 
 #define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"
