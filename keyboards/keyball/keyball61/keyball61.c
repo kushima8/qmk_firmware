@@ -37,6 +37,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //////////////////////////////////////////////////////////////////////////////
 
+typedef union {
+    uint32_t raw;
+    struct {
+        uint8_t cpi:7;
+    };
+} keyball_config_t;
+
 typedef struct {
     uint16_t vid;
     uint16_t pid;
@@ -97,7 +104,15 @@ static void adjust_rgblight_ranges(void) {
 #endif
 }
 
-static void adjust_board_as_this(void) { adjust_rgblight_ranges(); }
+static void adjust_board_as_this(void) {
+    adjust_rgblight_ranges();
+
+    keyball_config_t c;
+    c.raw = eeconfig_read_kb();
+    if (c.cpi != 0) {
+        pointing_device_set_cpi(c.cpi * 100);
+    }
+}
 
 static void adjust_board_on_primary(void) {
     adjust_rgblight_ranges();
@@ -469,6 +484,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case CPI_RST:
             if (record->event.pressed) {
                 pointing_device_set_cpi(KEYBALL_CPI_DEFAULT);
+            }
+            break;
+        case CPI_SAVE:
+            if (record->event.pressed) {
+                keyball_config_t c = { .cpi = cpi_value / 100 };
+                eeconfig_update_kb(c.raw);
             }
             break;
         case CPI_I100:
