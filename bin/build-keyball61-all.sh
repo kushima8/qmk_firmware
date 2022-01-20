@@ -2,7 +2,7 @@
 
 set -eu
 
-version=0.2.0-alpha.3
+version=0.3.0-alpha.4
 series=keyball
 keyboard=keyball61
 
