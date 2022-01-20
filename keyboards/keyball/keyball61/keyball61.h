@@ -108,6 +108,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define LAYOUT_universal LAYOUT_no_ball
 
 //////////////////////////////////////////////////////////////////////////////
+
+enum keyball_keycodes {
+    CPI_RST = SAFE_RANGE,   // CPI reset to default
+    CPI_I100,               // CPI +100 CPI
+    CPI_D100,               // CPI -100 CPI
+    CPI_I1K,                // CPI +1000 CPI
+    CPI_D1K                 // CPI -1000 CPI
+};
+
+//////////////////////////////////////////////////////////////////////////////
 // Experimental API
 
 // keyball_oled_render_ballinfo renders ball information to OLED.
