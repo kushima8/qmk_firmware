@@ -445,7 +445,7 @@ void housekeeping_task_kb(void) {
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    // store last key cod and reocrd for OLED
+    // store last keycode, row, and col for OLED
     last_keycode = keycode;
     last_row     = record->event.key.row;
     last_col     = record->event.key.col;
@@ -457,11 +457,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         // process KC_MS_BTN1~8 by myself
         // See process_action() in quantum/action.c for details.
-#ifndef MOUSE_BTN_MASK
-        case KC_MS_BTN1 .. KC_MS_BTN8:
-            extern void register_button(bool, enum mouse_buttons);
-            register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
-            break;
+#ifndef MOUSEKEY_ENABLE
+        case KC_MS_BTN1 ... KC_MS_BTN8:
+            {
+                extern void register_button(bool, enum mouse_buttons);
+                register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
+                break;
+            }
 #endif
 
         case CPI_RST:
@@ -497,6 +499,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 }
 
 report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
+    // store mouse report for OLED.
     last_mouse = pointing_device_task_user(mouse_report);
     return last_mouse;
 }
