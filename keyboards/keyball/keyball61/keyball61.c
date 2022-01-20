@@ -213,6 +213,16 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {
     cpi_changed = true;
 }
 
+static void add_cpi(int16_t delta) {
+    int16_t v = cpi_value + delta;
+    if (v < 100) {
+        v = 100;
+    } else if (v > 12000) {
+        v = 12000;
+    }
+    pointing_device_set_cpi(v);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 static void keyball_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
@@ -310,13 +320,6 @@ static void keyball_set_cpi_invoke(void) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-void keyball_set_cpi(uint16_t cpi) {
-    if (cpi_value != cpi) {
-        cpi_value   = cpi;
-        cpi_changed = true;
-    }
-}
-
 #ifdef OLED_ENABLE
 
 static const char *format_4d(int8_t d) {
@@ -366,6 +369,10 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_4d(last_mouse.y), false);
     oled_write(format_4d(last_mouse.h), false);
     oled_write(format_4d(last_mouse.v), false);
+    // CPI
+    oled_write_P(PSTR("CPI :  "), false);
+    oled_write(format_4d(cpi_value / 100), false);
+    oled_write_P(PSTR("00"), false);
 #endif
 }
 
@@ -406,14 +413,13 @@ void keyball_oled_render_keyinfo(void) {
         oled_write_char(to_1x(keycode >> 4), false);
         oled_write_char(to_1x(keycode), false);
     }
-    if (keycode >= 4 && keycode < 53) {
+    if (keycode >= 4 && keycode < 57) {
+        oled_write_P(PSTR("  '"), false);
         char name = pgm_read_byte(code_to_name + keycode - 4);
-        if (name) {
-            oled_write_P(PSTR("  '"), false);
-            oled_write_char(name, false);
-        }
+        oled_write_char(name, false);
+    } else {
+        oled_advance_page(true);
     }
-    oled_advance_page(true);
 #endif
 }
 
@@ -444,17 +450,50 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     last_row     = record->event.key.row;
     last_col     = record->event.key.col;
 
-    // process KC_MS_BTN1~8 by myself
-    // See process_action() in quantum/action.c for details.
-#ifndef MOUSEKEY_ENABLE
-    if (IS_MOUSEKEY_BUTTON(keycode)) {
-        extern void register_button(bool, enum mouse_buttons);
-        register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
+    if (!process_record_user(keycode, record)) {
         return false;
     }
+
+    switch (keycode) {
+        // process KC_MS_BTN1~8 by myself
+        // See process_action() in quantum/action.c for details.
+#ifndef MOUSE_BTN_MASK
+        case KC_MS_BTN1 .. KC_MS_BTN8:
+            extern void register_button(bool, enum mouse_buttons);
+            register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
+            break;
 #endif
 
-    return process_record_user(keycode, record);
+        case CPI_RST:
+            if (record->event.pressed) {
+                pointing_device_set_cpi(KEYBALL_CPI_DEFAULT);
+            }
+            break;
+        case CPI_I100:
+            if (record->event.pressed) {
+                add_cpi(100);
+            }
+            break;
+        case CPI_D100:
+            if (record->event.pressed) {
+                add_cpi(-100);
+            }
+            break;
+        case CPI_I1K:
+            if (record->event.pressed) {
+                add_cpi(1000);
+            }
+            break;
+        case CPI_D1K:
+            if (record->event.pressed) {
+                add_cpi(-1000);
+            }
+            break;
+
+        default:
+            return true;
+    }
+    return false;
 }
 
 report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
