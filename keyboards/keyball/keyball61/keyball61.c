@@ -99,7 +99,22 @@ static void adjust_rgblight_ranges(void) {
 
 static void adjust_board_as_this(void) { adjust_rgblight_ranges(); }
 
-static void adjust_board_on_primary(void) { adjust_rgblight_ranges(); }
+static void adjust_board_on_primary(void) {
+    adjust_rgblight_ranges();
+
+#ifdef VIA_ENABLE
+    // adjust layout options value according to current combination.
+    bool left = is_keyboard_left();
+    uint8_t layouts =
+        (this_have_ball ? (left ? 0x02 : 0x01) : 0x00) |
+        (that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
+    uint32_t curr = via_get_layout_options();
+    uint32_t next = (curr & ~0x3) | layouts;
+    if (next != curr) {
+        via_set_layout_options(next);
+    }
+#endif
+}
 
 static void adjust_board_on_secondary(void) { adjust_rgblight_ranges(); }
 
