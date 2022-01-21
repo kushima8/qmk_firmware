@@ -115,7 +115,12 @@ enum keyball_keycodes {
     CPI_I100,               // CPI +100 CPI
     CPI_D100,               // CPI -100 CPI
     CPI_I1K,                // CPI +1000 CPI
-    CPI_D1K                 // CPI -1000 CPI
+    CPI_D1K,                // CPI -1000 CPI
+
+    // In scroll mode, motion from primary trackball is treated as scroll
+    // wheel.
+    SCRL_TO,                // Toggle scroll mode
+    SCRL_MO,                // Momentary scroll mode
 };
 
 //////////////////////////////////////////////////////////////////////////////

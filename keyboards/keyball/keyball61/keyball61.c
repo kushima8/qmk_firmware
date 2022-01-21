@@ -72,6 +72,8 @@ static keyball_motion_t that_motion = {0};
 static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
 static bool     cpi_changed = false;
 
+static bool scroll_mode = false;
+
 static uint16_t       last_keycode;
 static uint8_t        last_row;
 static uint8_t        last_col;
@@ -168,13 +170,16 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
     m->n = 0;
 }
 
-static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r) {
+static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
     if (m->n == 0) {
         return;
     }
-    // TODO: test & consider direction of ball.
-    r->h = clip2int8(m->x);
-    r->v = clip2int8(m->y);
+    r->h = clip2int8(m->y);
+    r->v = clip2int8(m->x);
+    if (!is_left) {
+        r->h = -r->h;
+        r->v = -r->v;
+    }
     // clear motion
     m->x = 0;
     m->y = 0;
@@ -203,15 +208,24 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     }
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master()) {
+        bool is_left = is_keyboard_left();
         if (this_have_ball) {
-            motion_to_mouse_move(&this_motion, &rep, is_keyboard_left());
+            if (scroll_mode) {
+                motion_to_mouse_scroll(&this_motion, &rep, is_left);
+            } else {
+                motion_to_mouse_move(&this_motion, &rep, is_left);
+            }
+            // dual ball
             if (that_have_ball) {
-                // dual ball
-                motion_to_mouse_scroll(&this_motion, &rep);
+                motion_to_mouse_scroll(&this_motion, &rep, !is_left);
             }
         } else if (that_have_ball) {
             // only that ball
-            motion_to_mouse_move(&that_motion, &rep, !is_keyboard_left());
+            if (scroll_mode) {
+                motion_to_mouse_scroll(&that_motion, &rep, !is_left);
+            } else {
+                motion_to_mouse_move(&that_motion, &rep, !is_left);
+            }
         }
     }
     return rep;
@@ -387,7 +401,8 @@ void keyball_oled_render_ballinfo(void) {
     // CPI
     oled_write_P(PSTR("CPI :  "), false);
     oled_write(format_4d(cpi_value / 100), false);
-    oled_write_P(PSTR("00"), false);
+    oled_write_P(PSTR("00  S"), false);
+    oled_write_char(scroll_mode ? '1' : '0', false);
 #endif
 }
 
@@ -511,6 +526,15 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 add_cpi(-1000);
             }
+            break;
+
+        case SCRL_TO:
+            if (record->event.pressed) {
+                scroll_mode = !scroll_mode;
+            }
+            break;
+        case SCRL_MO:
+            scroll_mode = record->event.pressed;
             break;
 
         default:
