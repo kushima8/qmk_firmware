@@ -48,7 +48,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef RGBLIGHT_ENABLE
 #    define RGBLED_NUM      74
 #    define RGBLED_SPLIT    { 37, 37 }
+#    ifndef RGBLIGHT_LIMIT_VAL
+#        define RGBLIGHT_LIMIT_VAL  120 // limitated for power consumption
+#    endif
+#    ifndef RGBLIGHT_VAL_STEP
+#        define RGBLIGHT_VAL_STEP   12
+#    endif
+#    ifndef RGBLIGHT_HUE_STEP
+#        define RGBLIGHT_HUE_STEP   17
+#    endif
+#    ifndef RGBLIGHT_SAT_STEP
+#        define RGBLIGHT_SAT_STEP   17
+#    endif
 #endif
 #ifdef RGB_MATRIX_ENABLE
-#    define RGB_MATRIX_SPLIT            { 37, 37 }
+#    define RGB_MATRIX_SPLIT    { 37, 37 }
 #endif
+
+#ifndef OLED_FONT_H
+#    define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"
+#endif
+
+#if !defined(LAYER_STATE_8BIT) && !defined(LAYER_STATE_16BIT) && !defined(LAYER_STATE_32BIT)
+#    define LAYER_STATE_8BIT
+#endif
+
+// To squeeze firmware size
+#undef LOCKING_SUPPORT_ENABLE
+#undef LOCKING_RESYNC_ENABLE
+#define NO_ACTION_MACRO
+#define NO_ACTION_FUNCTION

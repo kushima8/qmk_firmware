@@ -8,17 +8,14 @@ BOOTLOADER = caterina
 LTO_ENABLE = yes
 
 # Build Options
-BOOTMAGIC_ENABLE = no       # Virtual DIP switch configuration
-MOUSEKEY_ENABLE = no        # Mouse keys
+#
+BOOTMAGIC_ENABLE = no       # Enable Bootmagic Lite
 EXTRAKEY_ENABLE = no        # Audio control and System control
 CONSOLE_ENABLE = no         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
-NKRO_ENABLE = no            # Nkey Rollover - if this doesn't work, see here: https://github.com/tmk/tmk_keyboard/wiki/FAQ#nkro-doesnt-work
+NKRO_ENABLE = no            # Enable N-Key Rollover
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
-AUDIO_ENABLE = no           # Audio output on port C6
-UNICODE_ENABLE = no         # Unicode
-BLUETOOTH_ENABLE = no       # Enable Bluetooth with the Adafruit EZ-Key HID
-SWAP_HANDS_ENABLE = no      # Enable one-hand typing
+AUDIO_ENABLE = no           # Audio output
 
 # Keyball61 is duplex matrix, uses custom matrix.
 CUSTOM_MATRIX = lite
@@ -27,7 +24,7 @@ SRC += matrix.c
 # Keyball61 is split keyboard.
 SPLIT_KEYBOARD = yes
 
-# To support trackball.
+# Optical sensor driver for trackball.
 POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = custom
 SRC += drivers/pmw3360/pmw3360.c
@@ -48,3 +45,7 @@ SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 # To support OLED
 OLED_ENABLE = no                # Please Enable this in each keymaps.
 SRC += lib/oledkit/oledkit.c    # OLED utility for Keyball series.
+
+# Disable other features to squeeze firmware size
+SPACE_CADET_ENABLE = no
+MAGIC_ENABLE = no
