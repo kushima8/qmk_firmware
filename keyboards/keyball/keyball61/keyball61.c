@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////////
 
 #define KEYBALL_CPI_DEFAULT 500
+#define KEYBALL_SCROLL_DIV_DEFAULT 4
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +41,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 typedef union {
     uint32_t raw;
     struct {
-        uint8_t cpi:7;
+        uint8_t cpi : 7;
+        uint8_t sdiv : 3;
     };
 } keyball_config_t;
 
@@ -71,7 +73,8 @@ static keyball_motion_t that_motion = {0};
 static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
 static bool     cpi_changed = false;
 
-static bool scroll_mode = false;
+static bool    scroll_mode = false;
+static uint8_t scroll_div  = 0;
 
 static uint16_t       last_keycode;
 static uint8_t        last_row;
@@ -113,6 +116,7 @@ static void adjust_board_as_this(void) {
     if (c.cpi != 0) {
         pointing_device_set_cpi(c.cpi * 100);
     }
+    scroll_div = c.sdiv;
 }
 
 static void adjust_board_on_primary(void) {
@@ -120,12 +124,10 @@ static void adjust_board_on_primary(void) {
 
 #ifdef VIA_ENABLE
     // adjust layout options value according to current combination.
-    bool left = is_keyboard_left();
-    uint8_t layouts =
-        (this_have_ball ? (left ? 0x02 : 0x01) : 0x00) |
-        (that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
-    uint32_t curr = via_get_layout_options();
-    uint32_t next = (curr & ~0x3) | layouts;
+    bool     left    = is_keyboard_left();
+    uint8_t  layouts = (this_have_ball ? (left ? 0x02 : 0x01) : 0x00) | (that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
+    uint32_t curr    = via_get_layout_options();
+    uint32_t next    = (curr & ~0x3) | layouts;
     if (next != curr) {
         via_set_layout_options(next);
     }
@@ -166,15 +168,17 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
 }
 
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
-    r->h = clip2int8(m->y);
-    r->v = clip2int8(m->x);
+    int16_t x = m->x >> scroll_div;
+    m->x -= x << scroll_div;
+    int16_t y = m->y >> scroll_div;
+    m->y -= y << scroll_div;
+    r->h = clip2int8(y);
+    r->v = clip2int8(x);
     if (!is_left) {
         r->h = -r->h;
         r->v = -r->v;
     }
     // clear motion
-    m->x = 0;
-    m->y = 0;
 }
 
 void pointing_device_driver_init(void) {
@@ -379,7 +383,8 @@ static char to_1x(uint8_t x) {
 
 void keyball_oled_render_ballinfo(void) {
 #ifdef OLED_ENABLE
-    // Format: `Ball:{ball#1 x}{ball#1 y}{ball#2 x}{ball#2 y}
+    // Format: `Ball:{mouse x}{mouse y}{mouse h}{mouse v}`
+    //         `CPI :  {CPI} S{SCROLL_MODE} D{SCROLL_DIV}`
     //
     // Output example:
     //
@@ -395,6 +400,8 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_4d(cpi_value / 100), false);
     oled_write_P(PSTR("00  S"), false);
     oled_write_char(scroll_mode ? '1' : '0', false);
+    oled_write_P(PSTR("  D"), false);
+    oled_write_char('0' + scroll_div, false);
 #endif
 }
 
@@ -480,25 +487,29 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         // process KC_MS_BTN1~8 by myself
         // See process_action() in quantum/action.c for details.
 #ifndef MOUSEKEY_ENABLE
-        case KC_MS_BTN1 ... KC_MS_BTN8:
-            {
-                extern void register_button(bool, enum mouse_buttons);
-                register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
-                break;
-            }
+        case KC_MS_BTN1 ... KC_MS_BTN8: {
+            extern void register_button(bool, enum mouse_buttons);
+            register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
+            break;
+        }
 #endif
 
-        case CPI_RST:
+        case KBC_RST:
             if (record->event.pressed) {
                 pointing_device_set_cpi(KEYBALL_CPI_DEFAULT);
+                scroll_div = KEYBALL_SCROLL_DIV_DEFAULT;
             }
             break;
-        case CPI_SAVE:
+        case KBC_SAVE:
             if (record->event.pressed) {
-                keyball_config_t c = { .cpi = cpi_value / 100 };
+                keyball_config_t c = {
+                    .cpi = cpi_value / 100,
+                    .sdiv = scroll_div,
+                };
                 eeconfig_update_kb(c.raw);
             }
             break;
+
         case CPI_I100:
             if (record->event.pressed) {
                 add_cpi(100);
@@ -528,6 +539,16 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case SCRL_MO:
             scroll_mode = record->event.pressed;
             break;
+        case SCRL_DVI:
+            if (record->event.pressed && scroll_div < 7) {
+                scroll_div++;
+            }
+            break;
+        case SCRL_DVD:
+            if (record->event.pressed && scroll_div > 0) {
+                scroll_div--;
+            }
+            break;
 
         default:
             return true;
@@ -539,4 +560,13 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
     // store mouse report for OLED.
     last_mouse = pointing_device_task_user(mouse_report);
     return last_mouse;
+}
+
+void eeconfig_init_kb(void) {
+    keyball_config_t c = {
+        .cpi = 0,
+        .sdiv = KEYBALL_SCROLL_DIV_DEFAULT,
+    };
+    eeconfig_update_kb(c.raw);
+    eeconfig_init_user();
 }
