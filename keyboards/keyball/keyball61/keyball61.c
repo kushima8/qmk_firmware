@@ -180,6 +180,14 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
     }
 }
 
+static void motion_to_mouse(keyball_motion_t *m, report_mouse_t *r, bool is_left, bool as_scroll) {
+    if (as_scroll) {
+        motion_to_mouse_scroll(m, r, is_left);
+    } else {
+        motion_to_mouse_move(m, r, is_left);
+    }
+}
+
 void pointing_device_driver_init(void) {
     this_have_ball = pmw3360_init();
     if (this_have_ball) {
@@ -203,22 +211,10 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     if (is_keyboard_master()) {
         bool is_left = is_keyboard_left();
         if (this_have_ball) {
-            if (scroll_mode) {
-                motion_to_mouse_scroll(&this_motion, &rep, is_left);
-            } else {
-                motion_to_mouse_move(&this_motion, &rep, is_left);
-            }
-            // dual ball
-            if (that_have_ball) {
-                motion_to_mouse_scroll(&this_motion, &rep, !is_left);
-            }
-        } else if (that_have_ball) {
-            // only that ball
-            if (scroll_mode) {
-                motion_to_mouse_scroll(&that_motion, &rep, !is_left);
-            } else {
-                motion_to_mouse_move(&that_motion, &rep, !is_left);
-            }
+            motion_to_mouse(&this_motion, &rep, is_left, scroll_mode);
+        }
+        if (that_have_ball) {
+            motion_to_mouse(&that_motion, &rep, !is_left, scroll_mode ^ this_have_ball);
         }
     }
     return rep;
