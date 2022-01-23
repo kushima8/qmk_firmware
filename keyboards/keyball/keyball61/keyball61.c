@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //////////////////////////////////////////////////////////////////////////////
 
-#define KEYBALL_CPI_DEFAULT 500
+#define KEYBALL_CPI_DEFAULT 4  // 4: 500 CPI
 #define KEYBALL_SCROLL_DIV_DEFAULT 4
 
 //////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ typedef struct {
     int16_t y;
 } keyball_motion_t;
 
-typedef uint16_t keyball_cpi_t;
+typedef uint8_t keyball_cpi_t;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -70,8 +70,8 @@ static bool that_have_ball = false;
 static keyball_motion_t this_motion = {0};
 static keyball_motion_t that_motion = {0};
 
-static uint16_t cpi_value   = KEYBALL_CPI_DEFAULT;
-static bool     cpi_changed = false;
+static uint8_t cpi_value   = KEYBALL_CPI_DEFAULT;
+static bool    cpi_changed = false;
 
 static bool    scroll_mode = false;
 static uint8_t scroll_div  = 0;
@@ -114,7 +114,7 @@ static void adjust_board_as_this(void) {
     keyball_config_t c;
     c.raw = eeconfig_read_kb();
     if (c.cpi != 0) {
-        pointing_device_set_cpi(c.cpi * 100);
+        pointing_device_set_cpi(c.cpi);
     }
     scroll_div = c.sdiv;
 }
@@ -178,13 +178,12 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
         r->h = -r->h;
         r->v = -r->v;
     }
-    // clear motion
 }
 
 void pointing_device_driver_init(void) {
     this_have_ball = pmw3360_init();
     if (this_have_ball) {
-        pmw3360_cpi_set(KEYBALL_CPI_DEFAULT);
+        pmw3360_reg_write(pmw3360_Config1, KEYBALL_CPI_DEFAULT);
         pmw3360_reg_write(pmw3360_Motion_Burst, 0);
     }
 }
@@ -236,12 +235,12 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {
     cpi_changed = true;
 }
 
-static void add_cpi(int16_t delta) {
+static void add_cpi(int8_t delta) {
     int16_t v = cpi_value + delta;
-    if (v < 100) {
-        v = 100;
-    } else if (v > 12000) {
-        v = 12000;
+    if (v < 0) {
+        v = 0;
+    } else if (v > pmw3360_MAXCPI) {
+        v = pmw3360_MAXCPI;
     }
     pointing_device_set_cpi(v);
 }
@@ -397,7 +396,7 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_4d(last_mouse.v), false);
     // CPI
     oled_write_P(PSTR("CPI :  "), false);
-    oled_write(format_4d(cpi_value / 100), false);
+    oled_write(format_4d(cpi_value + 1), false);
     oled_write_P(PSTR("00  S"), false);
     oled_write_char(scroll_mode ? '1' : '0', false);
     oled_write_P(PSTR("  D"), false);
@@ -503,7 +502,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case KBC_SAVE:
             if (record->event.pressed) {
                 keyball_config_t c = {
-                    .cpi = cpi_value / 100,
+                    .cpi  = cpi_value,
                     .sdiv = scroll_div,
                 };
                 eeconfig_update_kb(c.raw);
@@ -512,22 +511,22 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case CPI_I100:
             if (record->event.pressed) {
-                add_cpi(100);
+                add_cpi(1);
             }
             break;
         case CPI_D100:
             if (record->event.pressed) {
-                add_cpi(-100);
+                add_cpi(-1);
             }
             break;
         case CPI_I1K:
             if (record->event.pressed) {
-                add_cpi(1000);
+                add_cpi(10);
             }
             break;
         case CPI_D1K:
             if (record->event.pressed) {
-                add_cpi(-1000);
+                add_cpi(-10);
             }
             break;
 
@@ -564,7 +563,7 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
 
 void eeconfig_init_kb(void) {
     keyball_config_t c = {
-        .cpi = 0,
+        .cpi  = 0,
         .sdiv = KEYBALL_SCROLL_DIV_DEFAULT,
     };
     eeconfig_update_kb(c.raw);
