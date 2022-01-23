@@ -55,7 +55,6 @@ typedef uint8_t keyball_motion_id_t;
 typedef struct {
     int16_t x;
     int16_t y;
-    uint8_t n;  // accumulative scan count after last consume.
 } keyball_motion_t;
 
 typedef uint16_t keyball_cpi_t;
@@ -155,9 +154,6 @@ static inline uint8_t incU8(uint8_t a) { return a < 0xff ? a + 1 : 0xff; }
 static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
 
 static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
-    if (m->n == 0) {
-        return;
-    }
     r->x = clip2int8(m->y);
     r->y = clip2int8(m->x);
     if (is_left) {
@@ -167,13 +163,9 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
     // clear motion
     m->x = 0;
     m->y = 0;
-    m->n = 0;
 }
 
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
-    if (m->n == 0) {
-        return;
-    }
     r->h = clip2int8(m->y);
     r->v = clip2int8(m->x);
     if (!is_left) {
@@ -183,7 +175,6 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
     // clear motion
     m->x = 0;
     m->y = 0;
-    m->n = 0;
 }
 
 void pointing_device_driver_init(void) {
@@ -202,7 +193,6 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
             ATOMIC_BLOCK_FORCEON {
                 this_motion.x = add16(this_motion.x, d.x);
                 this_motion.y = add16(this_motion.y, d.y);
-                this_motion.n = incU8(this_motion.n);
             }
         }
     }
@@ -309,19 +299,21 @@ static void keyball_get_motion_handler(uint8_t in_buflen, const void *in_data, u
         // clear motion
         this_motion.x = 0;
         this_motion.y = 0;
-        this_motion.n = 0;
     }
 }
 
 static void keyball_get_motion_invoke(void) {
     static uint32_t last_sync = 0;
-    if (!that_have_ball || that_motion.n != 0 || timer_elapsed32(last_sync) < TX_GETMOTION_INTERVAL) {
+    if (!that_have_ball || timer_elapsed32(last_sync) < TX_GETMOTION_INTERVAL) {
         return;
     }
     keyball_motion_id_t req  = 0;
     keyball_motion_t    recv = {0};
     if (transaction_rpc_exec(KEYBALL_GET_MOTION, sizeof(req), &req, sizeof(recv), &recv)) {
-        ATOMIC_BLOCK_FORCEON { that_motion = recv; }
+        ATOMIC_BLOCK_FORCEON {
+            that_motion.x = add16(that_motion.x, recv.x);
+            that_motion.y = add16(that_motion.y, recv.y);
+        }
     } else {
         dprintf("keyball_get_motion_invoke: failed");
     }
