@@ -42,7 +42,7 @@ typedef union {
     uint32_t raw;
     struct {
         uint8_t cpi : 7;
-        uint8_t sdiv : 3;
+        uint8_t sdiv : 3;  // scroll divider
     };
 } keyball_config_t;
 
@@ -67,11 +67,11 @@ static bool this_have_ball = false;
 static bool that_enable    = false;
 static bool that_have_ball = false;
 
-static keyball_motion_t this_motion = {0};
-static keyball_motion_t that_motion = {0};
-
 static uint8_t cpi_value   = KEYBALL_CPI_DEFAULT;
 static bool    cpi_changed = false;
+
+static keyball_motion_t this_motion = {0};
+static keyball_motion_t that_motion = {0};
 
 static bool    scroll_mode = false;
 static uint8_t scroll_div  = 0;
@@ -379,7 +379,7 @@ static char to_1x(uint8_t x) {
 void keyball_oled_render_ballinfo(void) {
 #ifdef OLED_ENABLE
     // Format: `Ball:{mouse x}{mouse y}{mouse h}{mouse v}`
-    //         `CPI :  {CPI} S{SCROLL_MODE} D{SCROLL_DIV}`
+    //         `    CPI{CPI} S{SCROLL_MODE} D{SCROLL_DIV}`
     //
     // Output example:
     //
@@ -391,8 +391,8 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_4d(last_mouse.h), false);
     oled_write(format_4d(last_mouse.v), false);
     // CPI
-    oled_write_P(PSTR("CPI :  "), false);
-    oled_write(format_4d(cpi_value + 1), false);
+    oled_write_P(PSTR("     CPI"), false);
+    oled_write(format_4d(cpi_value + 1) + 1, false);
     oled_write_P(PSTR("00  S"), false);
     oled_write_char(scroll_mode ? '1' : '0', false);
     oled_write_P(PSTR("  D"), false);
