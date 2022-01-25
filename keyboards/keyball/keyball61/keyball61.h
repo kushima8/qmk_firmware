@@ -107,32 +107,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define LAYOUT LAYOUT_right_ball
 #define LAYOUT_universal LAYOUT_no_ball
-
-//////////////////////////////////////////////////////////////////////////////
-
-enum keyball_keycodes {
-    KBC_RST = SAFE_RANGE,   // Keyball configuration: reset to default
-    KBC_SAVE,               // Keyball configuration: save to EEPROM
-
-    CPI_I100,               // CPI +100 CPI
-    CPI_D100,               // CPI -100 CPI
-    CPI_I1K,                // CPI +1000 CPI
-    CPI_D1K,                // CPI -1000 CPI
-
-    // In scroll mode, motion from primary trackball is treated as scroll
-    // wheel.
-    SCRL_TO,                // Toggle scroll mode
-    SCRL_MO,                // Momentary scroll mode
-    SCRL_DVI,               // Increment scroll divider
-    SCRL_DVD,               // Decrement scroll divider
-};
-
-//////////////////////////////////////////////////////////////////////////////
-// Experimental API
-
-// keyball_get_scroll_mode returns current scroll ode of trackball.
-bool keyball_get_scroll_mode(void);
-
-// keyball_set_scroll_mode enables/disables scroll mode of trackball.
-// When scroll mode enabled, rotating trackball reports scrolling events.
-void keyball_set_scroll_mode(bool mode);
