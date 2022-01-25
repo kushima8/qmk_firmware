@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////////
 
 #ifndef KEYBALL_CPI_DEFAULT
-#    define KEYBALL_CPI_DEFAULT 4  // 4: 500 CPI
+#    define KEYBALL_CPI_DEFAULT 500
 #endif
 
 #ifndef KEYBALL_SCROLL_DIV_DEFAULT
@@ -36,20 +36,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////////
 
 enum keyball_keycodes {
-    KBC_RST = SAFE_RANGE,   // Keyball configuration: reset to default
-    KBC_SAVE,               // Keyball configuration: save to EEPROM
+    KBC_RST = SAFE_RANGE,  // Keyball configuration: reset to default
+    KBC_SAVE,              // Keyball configuration: save to EEPROM
 
-    CPI_I100,               // CPI +100 CPI
-    CPI_D100,               // CPI -100 CPI
-    CPI_I1K,                // CPI +1000 CPI
-    CPI_D1K,                // CPI -1000 CPI
+    CPI_I100,  // CPI +100 CPI
+    CPI_D100,  // CPI -100 CPI
+    CPI_I1K,   // CPI +1000 CPI
+    CPI_D1K,   // CPI -1000 CPI
 
     // In scroll mode, motion from primary trackball is treated as scroll
     // wheel.
-    SCRL_TO,                // Toggle scroll mode
-    SCRL_MO,                // Momentary scroll mode
-    SCRL_DVI,               // Increment scroll divider
-    SCRL_DVD,               // Decrement scroll divider
+    SCRL_TO,   // Toggle scroll mode
+    SCRL_MO,   // Momentary scroll mode
+    SCRL_DVI,  // Increment scroll divider
+    SCRL_DVD,  // Decrement scroll divider
 
     KEYBALL_SAFE_RANGE,
 };
@@ -121,3 +121,9 @@ bool keyball_get_scroll_mode(void);
 
 // TODO: document
 void keyball_set_scroll_mode(bool mode);
+
+// TODO: document
+uint8_t keyball_get_cpi(void);
+
+// TODO: document
+void keyball_set_cpi(uint8_t v);

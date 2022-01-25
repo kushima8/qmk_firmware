@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keyball.h"
 #include "drivers/pmw3360/pmw3360.h"
 
+const uint8_t CPI_DEFAULT = KEYBALL_CPI_DEFAULT / 100;
+const uint8_t CPI_MAX     = pmw3360_MAXCPI + 1;
+
 keyball_t keyball = {
     .this_have_ball = false,
     .that_enable    = false,
@@ -42,27 +45,7 @@ keyball_t keyball = {
 __attribute__((weak)) void keyball_on_adjust_layout(keyball_adjust_t v) {}
 
 //////////////////////////////////////////////////////////////////////////////
-// Pointing device driver
-
-void pointing_device_driver_init(void) {
-    keyball.this_have_ball = pmw3360_init();
-    if (keyball.this_have_ball) {
-        // keyball.cpi_value = KEYBALL_CPI_DEFAULT;
-        pmw3360_reg_write(pmw3360_Config1, KEYBALL_CPI_DEFAULT);
-        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
-    }
-}
-
-uint16_t pointing_device_driver_get_cpi(void) { return keyball.cpi_value; }
-
-void pointing_device_driver_set_cpi(uint16_t cpi) {
-    if (keyball.this_have_ball) {
-        pmw3360_cpi_set(cpi);
-        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
-    }
-    keyball.cpi_value   = cpi;
-    keyball.cpi_changed = true;
-}
+// Static utilities
 
 // add16 adds two int16_t with clipping.
 static int16_t add16(int16_t a, int16_t b) {
@@ -77,6 +60,61 @@ static int16_t add16(int16_t a, int16_t b) {
 
 // clip2int8 clips an integer fit into int8_t.
 static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
+
+static const char *format_4d(int8_t d) {
+    static char buf[5] = {0};  // max width (4) + NUL (1)
+    char        lead   = ' ';
+    if (d < 0) {
+        d    = -d;
+        lead = '-';
+    }
+    buf[3] = (d % 10) + '0';
+    d /= 10;
+    if (d == 0) {
+        buf[2] = lead;
+        lead   = ' ';
+    } else {
+        buf[2] = (d % 10) + '0';
+        d /= 10;
+    }
+    if (d == 0) {
+        buf[1] = lead;
+        lead   = ' ';
+    } else {
+        buf[1] = (d % 10) + '0';
+        d /= 10;
+    }
+    buf[0] = lead;
+    return buf;
+}
+
+static char to_1x(uint8_t x) {
+    x &= 0x0f;
+    return x < 10 ? x + '0' : x + 'a' - 10;
+}
+
+static void add_cpi(int8_t delta) {
+    int16_t v = keyball_get_cpi() + delta;
+    if (v < 1) {
+        v = 1;
+    }
+    keyball_set_cpi(v);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Pointing device driver
+
+void pointing_device_driver_init(void) {
+    keyball.this_have_ball = pmw3360_init();
+    if (keyball.this_have_ball) {
+        pmw3360_cpi_set(CPI_DEFAULT - 1);
+        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+    }
+}
+
+uint16_t pointing_device_driver_get_cpi(void) { return keyball_get_cpi(); }
+
+void pointing_device_driver_set_cpi(uint16_t cpi) { keyball_set_cpi(cpi); }
 
 static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
     r->x = clip2int8(m->y);
@@ -137,7 +175,7 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
 //////////////////////////////////////////////////////////////////////////////
 // Split RPC
 
-static void keyball_rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     keyball_info_t *that = (keyball_info_t *)in_data;
     if (that->vid == VENDOR_ID && that->pid == PRODUCT_ID) {
         keyball.that_enable    = true;
@@ -152,7 +190,7 @@ static void keyball_rpc_get_info_handler(uint8_t in_buflen, const void *in_data,
     keyball_on_adjust_layout(KEYBALL_ADJUST_SECONDARY);
 }
 
-static void keyball_rpc_get_info_invoke(void) {
+static void rpc_get_info_invoke(void) {
     static bool     negotiated = false;
     static uint32_t last_sync  = 0;
     static int      round      = 0;
@@ -169,7 +207,7 @@ static void keyball_rpc_get_info_invoke(void) {
     keyball_info_t recv = {0};
     if (!transaction_rpc_exec(KEYBALL_GET_INFO, sizeof(req), &req, sizeof(recv), &recv)) {
         if (round < KEYBALL_TX_GETINFO_MAXTRY) {
-            dprintf("keyball_rpc_get_info_invoke: missed #%d\n", round);
+            dprintf("keyball:rpc_get_info_invoke: missed #%d\n", round);
             return;
         }
     }
@@ -178,7 +216,7 @@ static void keyball_rpc_get_info_invoke(void) {
         keyball.that_enable    = true;
         keyball.that_have_ball = recv.ballcnt > 0;
     }
-    dprintf("keyball_rpc_get_info_invoke: negotiated #%d %d\n", round, keyball.that_have_ball);
+    dprintf("keyball:rpc_get_info_invoke: negotiated #%d %d\n", round, keyball.that_have_ball);
 
     // split keyboard negotiation completed.
 
@@ -195,7 +233,7 @@ static void keyball_rpc_get_info_invoke(void) {
     keyball_on_adjust_layout(KEYBALL_ADJUST_PRIMARY);
 }
 
-static void keyball_rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+static void rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     if (keyball.this_have_ball && *((keyball_motion_id_t *)in_data) == 0) {
         *(keyball_motion_t *)out_data = keyball.this_motion;
         // clear motion
@@ -204,7 +242,7 @@ static void keyball_rpc_get_motion_handler(uint8_t in_buflen, const void *in_dat
     }
 }
 
-static void keyball_rpc_get_motion_invoke(void) {
+static void rpc_get_motion_invoke(void) {
     static uint32_t last_sync = 0;
     if (!keyball.that_have_ball || timer_elapsed32(last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
         return;
@@ -217,20 +255,19 @@ static void keyball_rpc_get_motion_invoke(void) {
             keyball.that_motion.y = add16(keyball.that_motion.y, recv.y);
         }
     } else {
-        dprintf("keyball_rpc_get_motion_invoke: failed");
+        dprintf("keyball:rpc_get_motion_invoke: failed");
     }
     last_sync = timer_read32();
     return;
 }
 
-static void keyball_rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     if (keyball.this_have_ball) {
-        pmw3360_cpi_set(*(keyball_cpi_t *)in_data);
-        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+        keyball_set_cpi(*(keyball_cpi_t *)in_data);
     }
 }
 
-static void keyball_rpc_set_cpi_invoke(void) {
+static void rpc_set_cpi_invoke(void) {
     if (!keyball.that_have_ball || !keyball.cpi_changed) {
         return;
     }
@@ -245,39 +282,6 @@ static void keyball_rpc_set_cpi_invoke(void) {
 // OLED utility
 
 #ifdef OLED_ENABLE
-
-static const char *format_4d(int8_t d) {
-    static char buf[5] = {0};  // max width (4) + NUL (1)
-    char        lead   = ' ';
-    if (d < 0) {
-        d    = -d;
-        lead = '-';
-    }
-    buf[3] = (d % 10) + '0';
-    d /= 10;
-    if (d == 0) {
-        buf[2] = lead;
-        lead   = ' ';
-    } else {
-        buf[2] = (d % 10) + '0';
-        d /= 10;
-    }
-    if (d == 0) {
-        buf[1] = lead;
-        lead   = ' ';
-    } else {
-        buf[1] = (d % 10) + '0';
-        d /= 10;
-    }
-    buf[0] = lead;
-    return buf;
-}
-
-static char to_1x(uint8_t x) {
-    x &= 0x0f;
-    return x < 10 ? x + '0' : x + 'a' - 10;
-}
-
 // clang-format off
 const char PROGMEM code_to_name[] = {
     'a', 'b', 'c', 'd', 'e', 'f',  'g', 'h', 'i',  'j',
@@ -288,7 +292,6 @@ const char PROGMEM code_to_name[] = {
     ',', '.', '/',
 };
 // clang-format on
-
 #endif
 
 void keyball_oled_render_ballinfo(void) {
@@ -307,7 +310,7 @@ void keyball_oled_render_ballinfo(void) {
     oled_write(format_4d(keyball.last_mouse.v), false);
     // CPI
     oled_write_P(PSTR("     CPI"), false);
-    oled_write(format_4d(keyball.cpi_value + 1) + 1, false);
+    oled_write(format_4d(keyball_get_cpi()) + 1, false);
     oled_write_P(PSTR("00  S"), false);
     oled_write_char(keyball.scroll_mode ? '1' : '0', false);
     oled_write_P(PSTR("  D"), false);
@@ -355,21 +358,34 @@ bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
 void keyball_set_scroll_mode(bool mode) { keyball.scroll_mode = mode; }
 
+uint8_t keyball_get_cpi(void) { return keyball.cpi_value == 0 ? CPI_DEFAULT : keyball.cpi_value; }
+
+void keyball_set_cpi(uint8_t cpi) {
+    if (cpi > CPI_MAX) {
+        cpi = CPI_MAX;
+    }
+    keyball.cpi_value   = cpi;
+    keyball.cpi_changed = true;
+    if (keyball.this_have_ball) {
+        pmw3360_cpi_set(cpi == 0 ? CPI_DEFAULT - 1 : cpi - 1);
+        pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 void keyboard_post_init_kb(void) {
     // register transaction handlers on secondary.
     if (!is_keyboard_master()) {
-        transaction_register_rpc(KEYBALL_GET_INFO, keyball_rpc_get_info_handler);
-        transaction_register_rpc(KEYBALL_GET_MOTION, keyball_rpc_get_motion_handler);
-        transaction_register_rpc(KEYBALL_SET_CPI, keyball_rpc_set_cpi_handler);
+        transaction_register_rpc(KEYBALL_GET_INFO, rpc_get_info_handler);
+        transaction_register_rpc(KEYBALL_GET_MOTION, rpc_get_motion_handler);
+        transaction_register_rpc(KEYBALL_SET_CPI, rpc_set_cpi_handler);
     }
 
     // read keyball configuration from EEPROM
     keyball_config_t c = {.raw = eeconfig_read_kb()};
-    // TODO: 100 DPI never set on startup.
     if (c.cpi != 0) {
-        pointing_device_set_cpi(c.cpi);
+        keyball_set_cpi(c.cpi);
     }
     keyball.scroll_div = c.sdiv;
 
@@ -388,9 +404,9 @@ void eeconfig_init_kb(void) {
 
 void housekeeping_task_kb(void) {
     if (is_keyboard_master()) {
-        keyball_rpc_get_info_invoke();
-        keyball_rpc_get_motion_invoke();
-        keyball_rpc_set_cpi_invoke();
+        rpc_get_info_invoke();
+        rpc_get_motion_invoke();
+        rpc_set_cpi_invoke();
     }
 }
 
@@ -400,19 +416,9 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
     return keyball.last_mouse;
 }
 
-static void add_cpi(int8_t delta) {
-    int16_t v = keyball.cpi_value + delta;
-    if (v < 0) {
-        v = 0;
-    } else if (v > pmw3360_MAXCPI) {
-        v = pmw3360_MAXCPI;
-    }
-    pointing_device_set_cpi(v);
-}
-
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // store last keycode, row, and col for OLED
-    keyball.last_kc = keycode;
+    keyball.last_kc  = keycode;
     keyball.last_pos = record->event.key;
 
     if (!process_record_user(keycode, record)) {
@@ -432,7 +438,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case KBC_RST:
             if (record->event.pressed) {
-                pointing_device_set_cpi(KEYBALL_CPI_DEFAULT);
+                keyball_set_cpi(0);
                 keyball.scroll_div = KEYBALL_SCROLL_DIV_DEFAULT;
             }
             break;
