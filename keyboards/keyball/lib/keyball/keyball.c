@@ -130,12 +130,11 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     }
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master()) {
-        bool is_left = is_keyboard_left();
         if (keyball.this_have_ball) {
-            motion_to_mouse(&keyball.this_motion, &rep, is_left, keyball.scroll_mode);
+            motion_to_mouse(&keyball.this_motion, &rep, is_keyboard_left(), keyball.scroll_mode);
         }
         if (keyball.that_have_ball) {
-            motion_to_mouse(&keyball.that_motion, &rep, !is_left, keyball.scroll_mode ^ keyball.this_have_ball);
+            motion_to_mouse(&keyball.that_motion, &rep, !is_keyboard_left(), keyball.scroll_mode ^ keyball.this_have_ball);
         }
     }
     return rep;
@@ -191,8 +190,7 @@ static void keyball_rpc_get_info_invoke(void) {
 
 #ifdef VIA_ENABLE
     // adjust VIA layout options according to current combination.
-    bool     left    = is_keyboard_left();
-    uint8_t  layouts = (keyball.this_have_ball ? (left ? 0x02 : 0x01) : 0x00) | (keyball.that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
+    uint8_t  layouts = (keyball.this_have_ball ? (is_keyboard_left() ? 0x02 : 0x01) : 0x00) | (keyball.that_have_ball ? (is_keyboard_left() ? 0x01 : 0x02) : 0x00);
     uint32_t curr    = via_get_layout_options();
     uint32_t next    = (curr & ~0x3) | layouts;
     if (next != curr) {
