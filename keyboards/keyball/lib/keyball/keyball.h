@@ -80,3 +80,13 @@ typedef struct {
 //////////////////////////////////////////////////////////////////////////////
 
 extern keyball_t keyball;
+
+//////////////////////////////////////////////////////////////////////////////
+
+// keyball_oled_render_ballinfo renders ball information to OLED.
+// It uses just 21 columns to show the info.
+void keyball_oled_render_ballinfo(void);
+
+// keyball_oled_render_keyinfo renders last processed key information to OLED.
+// It shows column, row, key code, and key name (if available).
+void keyball_oled_render_keyinfo(void);

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "quantum.h"
+#include "lib/keyball/keyball.h"
 
 // clang-format off
 
@@ -135,11 +136,3 @@ bool keyball_get_scroll_mode(void);
 // keyball_set_scroll_mode enables/disables scroll mode of trackball.
 // When scroll mode enabled, rotating trackball reports scrolling events.
 void keyball_set_scroll_mode(bool mode);
-
-// keyball_oled_render_ballinfo renders ball information to OLED.
-// It uses just 21 columns to show the info.
-void keyball_oled_render_ballinfo(void);
-
-// keyball_oled_render_keyinfo renders last processed key information to OLED.
-// It shows column, row, key code, and key name (if available).
-void keyball_oled_render_keyinfo(void);
