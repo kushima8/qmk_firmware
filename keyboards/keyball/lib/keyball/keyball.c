@@ -30,11 +30,11 @@ keyball_t keyball = {
     .this_motion = {0},
     .that_motion = {0},
 
-    .cpi_value = 0,
+    .cpi_value   = 0,
     .cpi_changed = false,
 
     .scroll_mode = false,
-    .scroll_div = 0,
+    .scroll_div  = 0,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ __attribute__((weak)) void keyball_adjust_as_secondary(void) {}
 void pointing_device_driver_init(void) {
     keyball.this_have_ball = pmw3360_init();
     if (keyball.this_have_ball) {
-        //keyball.cpi_value = KEYBALL_CPI_DEFAULT;
+        // keyball.cpi_value = KEYBALL_CPI_DEFAULT;
         pmw3360_reg_write(pmw3360_Config1, KEYBALL_CPI_DEFAULT);
         pmw3360_reg_write(pmw3360_Motion_Burst, 0);
     }
@@ -155,7 +155,7 @@ static void keyball_rpc_get_info_handler(uint8_t in_buflen, const void *in_data,
         .pid     = PRODUCT_ID,
         .ballcnt = keyball.this_have_ball ? 1 : 0,
     };
-    *(keyball_info_t*)out_data = info;
+    *(keyball_info_t *)out_data = info;
     keyball_adjust_as_secondary();
 }
 
@@ -186,6 +186,20 @@ static void keyball_rpc_get_info_invoke(void) {
         keyball.that_have_ball = recv.ballcnt > 0;
     }
     dprintf("keyball_rpc_get_info_invoke: negotiated #%d %d\n", round, keyball.that_have_ball);
+
+    // split keyboard negotiation completed.
+
+#ifdef VIA_ENABLE
+    // adjust VIA layout options according to current combination.
+    bool     left    = is_keyboard_left();
+    uint8_t  layouts = (keyball.this_have_ball ? (left ? 0x02 : 0x01) : 0x00) | (keyball.that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
+    uint32_t curr    = via_get_layout_options();
+    uint32_t next    = (curr & ~0x3) | layouts;
+    if (next != curr) {
+        via_set_layout_options(next);
+    }
+#endif
+
     keyball_adjust_as_primary();
 }
 
@@ -347,9 +361,7 @@ void keyball_oled_render_keyinfo(void) {
 
 bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
-void keyball_set_scroll_mode(bool mode) {
-    keyball.scroll_mode = mode;
-}
+void keyball_set_scroll_mode(bool mode) { keyball.scroll_mode = mode; }
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -360,6 +372,15 @@ void keyboard_post_init_kb(void) {
         transaction_register_rpc(KEYBALL_GET_MOTION, keyball_rpc_get_motion_handler);
         transaction_register_rpc(KEYBALL_SET_CPI, keyball_rpc_set_cpi_handler);
     }
+
+    // read keyball configuration from EEPROM
+    keyball_config_t c = {.raw = eeconfig_read_kb()};
+    // FIXME: 100 DPI never set on startup.
+    if (c.cpi != 0) {
+        pointing_device_set_cpi(c.cpi);
+    }
+    keyball.scroll_div = c.sdiv;
+
     keyball_post_init_kb();
     keyboard_post_init_user();
 }

@@ -53,31 +53,11 @@ static void adjust_rgblight_ranges(void) {
 }
 
 void keyball_post_init_kb(void) {
-    // adjust the board as this side.
     adjust_rgblight_ranges();
-
-    keyball_config_t c;
-    c.raw = eeconfig_read_kb();
-    // FIXME: 100 DPI never set on startup.
-    if (c.cpi != 0) {
-        pointing_device_set_cpi(c.cpi);
-    }
-    keyball.scroll_div = c.sdiv;
 }
 
 void keyball_adjust_as_primary(void) {
     adjust_rgblight_ranges();
-
-#ifdef VIA_ENABLE
-    // adjust layout options value according to current combination.
-    bool     left    = is_keyboard_left();
-    uint8_t  layouts = (keyball.this_have_ball ? (left ? 0x02 : 0x01) : 0x00) | (keyball.that_have_ball ? (left ? 0x01 : 0x02) : 0x00);
-    uint32_t curr    = via_get_layout_options();
-    uint32_t next    = (curr & ~0x3) | layouts;
-    if (next != curr) {
-        via_set_layout_options(next);
-    }
-#endif
 }
 
 void keyball_adjust_as_secondary(void) { adjust_rgblight_ranges(); }
