@@ -186,11 +186,7 @@ static void keyball_rpc_get_info_invoke(void) {
         keyball.that_have_ball = recv.ballcnt > 0;
     }
     dprintf("keyball_rpc_get_info_invoke: negotiated #%d %d\n", round, keyball.that_have_ball);
-    if (is_keyboard_master()) {
-        keyball_adjust_as_primary();
-    } else {
-        keyball_adjust_as_secondary();
-    }
+    keyball_adjust_as_primary();
 }
 
 static void keyball_rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
