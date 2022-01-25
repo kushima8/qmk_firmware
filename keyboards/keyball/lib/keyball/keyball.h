@@ -35,6 +35,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //////////////////////////////////////////////////////////////////////////////
 
+enum keyball_keycodes {
+    KBC_RST = SAFE_RANGE,   // Keyball configuration: reset to default
+    KBC_SAVE,               // Keyball configuration: save to EEPROM
+
+    CPI_I100,               // CPI +100 CPI
+    CPI_D100,               // CPI -100 CPI
+    CPI_I1K,                // CPI +1000 CPI
+    CPI_D1K,                // CPI -1000 CPI
+
+    // In scroll mode, motion from primary trackball is treated as scroll
+    // wheel.
+    SCRL_TO,                // Toggle scroll mode
+    SCRL_MO,                // Momentary scroll mode
+    SCRL_DVI,               // Increment scroll divider
+    SCRL_DVD,               // Decrement scroll divider
+
+    KEYBALL_SAFE_RANGE,
+};
+
 typedef union {
     uint32_t raw;
     struct {
@@ -72,10 +91,16 @@ typedef struct {
     bool    scroll_mode;
     uint8_t scroll_div;
 
-    uint16_t last_kc;
-    keypos_t last_pos;
+    uint16_t       last_kc;
+    keypos_t       last_pos;
     report_mouse_t last_mouse;
 } keyball_t;
+
+typedef enum {
+    KEYBALL_ADJUST_PENDING   = 0,
+    KEYBALL_ADJUST_PRIMARY   = 1,
+    KEYBALL_ADJUST_SECONDARY = 2,
+} keyball_adjust_t;
 
 //////////////////////////////////////////////////////////////////////////////
 
