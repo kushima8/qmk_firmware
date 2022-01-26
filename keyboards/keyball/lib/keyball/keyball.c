@@ -21,8 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keyball.h"
 #include "drivers/pmw3360/pmw3360.h"
 
-const uint8_t CPI_DEFAULT = KEYBALL_CPI_DEFAULT / 100;
-const uint8_t CPI_MAX     = pmw3360_MAXCPI + 1;
+const uint8_t CPI_DEFAULT    = KEYBALL_CPI_DEFAULT / 100;
+const uint8_t CPI_MAX        = pmw3360_MAXCPI + 1;
+const uint8_t SCROLL_DIV_MAX = 7;
 
 keyball_t keyball = {
     .this_have_ball = false,
@@ -95,10 +96,12 @@ static char to_1x(uint8_t x) {
 
 static void add_cpi(int8_t delta) {
     int16_t v = keyball_get_cpi() + delta;
-    if (v < 1) {
-        v = 1;
-    }
-    keyball_set_cpi(v);
+    keyball_set_cpi(v < 1 ? 1 : v);
+}
+
+static void add_scroll_div(int8_t delta) {
+    int8_t v = keyball_get_scroll_div() + delta;
+    keyball_set_scroll_div(v < 1 ? 1 : v);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -129,10 +132,11 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
 }
 
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
-    int16_t x = m->x >> keyball.scroll_div;
-    m->x -= x << keyball.scroll_div;
-    int16_t y = m->y >> keyball.scroll_div;
-    m->y -= y << keyball.scroll_div;
+    uint8_t div = keyball_get_scroll_div() - 1;
+    int16_t x   = m->x >> div;
+    m->x -= x << div;
+    int16_t y = m->y >> div;
+    m->y -= y << div;
     r->h = clip2int8(y);
     r->v = clip2int8(x);
     if (!is_left) {
@@ -314,7 +318,7 @@ void keyball_oled_render_ballinfo(void) {
     oled_write_P(PSTR("00  S"), false);
     oled_write_char(keyball.scroll_mode ? '1' : '0', false);
     oled_write_P(PSTR("  D"), false);
-    oled_write_char('0' + keyball.scroll_div, false);
+    oled_write_char('0' + keyball_get_scroll_div(), false);
 #endif
 }
 
@@ -358,6 +362,10 @@ bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
 void keyball_set_scroll_mode(bool mode) { keyball.scroll_mode = mode; }
 
+uint8_t keyball_get_scroll_div(void) { return keyball.scroll_div == 0 ? KEYBALL_SCROLL_DIV_DEFAULT : keyball.scroll_div; }
+
+void keyball_set_scroll_div(uint8_t div) { keyball.scroll_div = div > SCROLL_DIV_MAX ? SCROLL_DIV_MAX : div; }
+
 uint8_t keyball_get_cpi(void) { return keyball.cpi_value == 0 ? CPI_DEFAULT : keyball.cpi_value; }
 
 void keyball_set_cpi(uint8_t cpi) {
@@ -383,23 +391,16 @@ void keyboard_post_init_kb(void) {
     }
 
     // read keyball configuration from EEPROM
-    keyball_config_t c = {.raw = eeconfig_read_kb()};
-    if (c.cpi != 0) {
-        keyball_set_cpi(c.cpi);
+    if (eeconfig_is_enabled()) {
+        keyball_config_t c = {.raw = eeconfig_read_kb()};
+        if (c.cpi != 0) {
+            keyball_set_cpi(c.cpi);
+        }
+        keyball_set_scroll_div(c.sdiv);
     }
-    keyball.scroll_div = c.sdiv;
 
     keyball_on_adjust_layout(KEYBALL_ADJUST_PENDING);
     keyboard_post_init_user();
-}
-
-void eeconfig_init_kb(void) {
-    keyball_config_t c = {
-        .cpi  = 0,
-        .sdiv = KEYBALL_SCROLL_DIV_DEFAULT,
-    };
-    eeconfig_update_kb(c.raw);
-    eeconfig_init_user();
 }
 
 void housekeeping_task_kb(void) {
@@ -439,7 +440,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         case KBC_RST:
             if (record->event.pressed) {
                 keyball_set_cpi(0);
-                keyball.scroll_div = KEYBALL_SCROLL_DIV_DEFAULT;
+                keyball_set_scroll_div(0);
             }
             break;
         case KBC_SAVE:
@@ -482,13 +483,13 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             keyball.scroll_mode = record->event.pressed;
             break;
         case SCRL_DVI:
-            if (record->event.pressed && keyball.scroll_div < 7) {
-                keyball.scroll_div++;
+            if (record->event.pressed) {
+                add_scroll_div(1);
             }
             break;
         case SCRL_DVD:
-            if (record->event.pressed && keyball.scroll_div > 0) {
-                keyball.scroll_div--;
+            if (record->event.pressed) {
+                add_scroll_div(-1);
             }
             break;
 

@@ -123,7 +123,13 @@ bool keyball_get_scroll_mode(void);
 void keyball_set_scroll_mode(bool mode);
 
 // TODO: document
+uint8_t keyball_get_scroll_div(void);
+
+// TODO: document
+void keyball_set_scroll_div(uint8_t div);
+
+// TODO: document
 uint8_t keyball_get_cpi(void);
 
 // TODO: document
-void keyball_set_cpi(uint8_t v);
+void keyball_set_cpi(uint8_t cpi);
