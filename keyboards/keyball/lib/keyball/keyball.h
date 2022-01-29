@@ -118,18 +118,18 @@ extern keyball_t keyball;
 
 //////////////////////////////////////////////////////////////////////////////
 
-// keyball_oled_render_ballinfo renders ball information to OLED.
-// It uses just 21 columns to show the info.
+/// keyball_oled_render_ballinfo renders ball information to OLED.
+/// It uses just 21 columns to show the info.
 void keyball_oled_render_ballinfo(void);
 
-// keyball_oled_render_keyinfo renders last processed key information to OLED.
-// It shows column, row, key code, and key name (if available).
+/// keyball_oled_render_keyinfo renders last processed key information to OLED.
+/// It shows column, row, key code, and key name (if available).
 void keyball_oled_render_keyinfo(void);
 
-// TODO: document
+/// keyball_get_scroll_mode gets current scroll mode.
 bool keyball_get_scroll_mode(void);
 
-// TODO: document
+/// keyball_set_scroll_mode modify scroll mode.
 void keyball_set_scroll_mode(bool mode);
 
 // TODO: document
