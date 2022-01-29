@@ -75,8 +75,7 @@ void keyball_on_adjust_layout(keyball_adjust_t v) {
     if (v == KEYBALL_ADJUST_PRIMARY) {
         // adjust matrix mask
         bool is_left = is_keyboard_left();
-        matrix_mask[(is_left ? 3 : 7) + (keyball.this_have_ball ? 0 : 1)] = 0b0111111;
-
-        matrix_mask[(is_left ? 7 : 3) + (keyball.that_have_ball ? 0 : 1)] = 0b0111111;
+        matrix_mask[(is_left ? 2 : 6) + (keyball.this_have_ball ? 0 : 1)] = 0b0111111;
+        matrix_mask[(is_left ? 6 : 2) + (keyball.that_have_ball ? 0 : 1)] = 0b0111111;
     }
 }
