@@ -18,9 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
-#include "pointing_device.h"
-#include "lib/oledkit/oledkit.h"
-
 enum keymap_layers {
     _QWERTY,
     _LOWER,
@@ -90,24 +87,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_BALL] = LAYOUT_right_ball(
   //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-        RESET, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+      RGB_TOG, _______, _______, _______, _______, _______,                      RGB_M_P, RGB_M_B, RGB_M_R,RGB_M_SW,RGB_M_SN, RGB_M_K,
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-      RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, XXXXXXX, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+      RGB_MOD, RGB_HUI, RGB_SAI, RGB_VAI, _______, _______,                      RGB_M_X, RGB_M_G, RGB_M_T,RGB_M_TW, _______, _______,
   //|--------+--------+--------+--------+--------+--------'                    |--------+--------+--------+--------+--------+--------|
-      RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, XXXXXXX,                               XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+     RGB_RMOD, RGB_HUD, RGB_SAD, RGB_VAD, _______,                               _______, CPI_D1K,CPI_D100,CPI_I100, CPI_I1K,KBC_SAVE,
   //|--------+--------+--------+--------+--------+-------+--------.            `--------+--------+--------+--------+--------+--------|
-      XXXXXXX, XXXXXXX,    XXXXXXX,    XXXXXXX,   XXXXXXX, XXXXXXX,                XXXXXXX, XXXXXXX,        XXXXXXX, XXXXXXX, XXXXXXX
+        RESET, EEP_RST,    _______,    _______,   _______, _______,                _______,SCRL_DVD,       SCRL_DVI, _______, KBC_RST
   //`--------+--------'  `--------'  `--------' `--------+--------'              `--------+--------'      `--------+--------+--------'
   ),
 
 };
 // clang-format on
-
-void keyboard_post_init_user() {
-#ifdef RGBLIGHT_ENABLE
-    rgblight_disable_noeeprom();
-#endif
-}
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
@@ -123,7 +114,12 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
 #ifdef OLED_ENABLE
 
+#    include "lib/oledkit/oledkit.h"
+
 void oledkit_render_info_user(void) {
+    keyball_oled_render_keyinfo();
+    keyball_oled_render_ballinfo();
+
     const char *n;
     switch (get_highest_layer(layer_state)) {
         case _QWERTY:
@@ -144,9 +140,5 @@ void oledkit_render_info_user(void) {
     }
     oled_write_P(PSTR("Layer: "), false);
     oled_write_ln_P(n, false);
-
-    keyball_oled_render_ballinfo();
-    keyball_oled_render_keyinfo();
 }
-
 #endif
