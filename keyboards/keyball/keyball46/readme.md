@@ -13,3 +13,7 @@ Make example for this keyboard (after setting up your build environment):
     make keyball/keyball46:default
 
 See the [build environment setup](https://docs.qmk.fm/#/getting_started_build_tools) and the [make instructions](https://docs.qmk.fm/#/getting_started_make_guide) for more information. Brand new to QMK? Start with our [Complete Newbs Guide](https://docs.qmk.fm/#/newbs).
+
+## Changes
+
+* Keyball46 firmware V2 has some incompatibles with V1. See [document](./docs/diff_from_v1.md) for details.
