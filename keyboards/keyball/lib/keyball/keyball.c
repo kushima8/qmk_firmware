@@ -212,10 +212,11 @@ static void rpc_get_info_invoke(void) {
     static bool     negotiated = false;
     static uint32_t last_sync  = 0;
     static int      round      = 0;
-    if (negotiated || timer_elapsed32(last_sync) < KEYBALL_TX_GETINFO_INTERVAL) {
+    uint32_t        now        = timer_read32();
+    if (negotiated || TIMER_DIFF_32(now, last_sync) < KEYBALL_TX_GETINFO_INTERVAL) {
         return;
     }
-    last_sync = timer_read32();
+    last_sync = now;
     round++;
     keyball_info_t req = {
         .vid     = VENDOR_ID,
@@ -262,7 +263,8 @@ static void rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8
 
 static void rpc_get_motion_invoke(void) {
     static uint32_t last_sync = 0;
-    if (!keyball.that_have_ball || timer_elapsed32(last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
+    uint32_t        now       = timer_read32();
+    if (!keyball.that_have_ball || TIMER_DIFF_32(now, last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
         return;
     }
     keyball_motion_id_t req  = 0;
@@ -275,7 +277,7 @@ static void rpc_get_motion_invoke(void) {
     } else {
         dprintf("keyball:rpc_get_motion_invoke: failed");
     }
-    last_sync = timer_read32();
+    last_sync = now;
     return;
 }
 
