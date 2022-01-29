@@ -38,21 +38,6 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
 
 //////////////////////////////////////////////////////////////////////////////
 
-#if 0
-static void adjust_matrix_mask_primary(void) {
-    int base = is_keyboard_left() ? 0 : 4;
-    matrix_mask[base + 2] = 0b0111111;
-    matrix_mask[base + 3] = 0b0011111;
-}
-
-static void adjust_matrix_mask_secondary(void) {
-    int base = is_keyboard_left() ? 4 : 0;
-    matrix_mask[base + 2] = 0b0111111;
-    matrix_mask[base + 3] = 0b0011111;
-    keyball_adjust_trackball_handness();
-}
-#endif
-
 static uint8_t peek_matrix_intersection(pin_t out_pin, pin_t in_pin) {
     extern void matrix_io_delay(void);
     setPinInputHigh(in_pin);
