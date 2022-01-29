@@ -51,7 +51,7 @@ void pmw3360_cpi_set(uint8_t cpi) {
     pmw3360_reg_write(pmw3360_Config1, cpi);
 }
 
-static uint32_t pmw3360_timer = 0;
+static uint32_t pmw3360_timer      = 0;
 static uint32_t pmw3360_scan_count = 0;
 static uint32_t pmw3360_last_count = 0;
 
@@ -59,12 +59,12 @@ void pmw3360_scan_perf_task(void) {
     pmw3360_scan_count++;
     uint32_t now = timer_read32();
     if (TIMER_DIFF_32(now, pmw3360_timer) > 1000) {
-#    if defined(CONSOLE_ENABLE)
+#if defined(CONSOLE_ENABLE)
         dprintf("pmw3360 scan frequency: %lu\n", pmw3360_scan_count);
-#    endif
+#endif
         pmw3360_last_count = pmw3360_scan_count;
         pmw3360_scan_count = 0;
-        pmw3360_timer = now;
+        pmw3360_timer      = now;
     }
 }
 
