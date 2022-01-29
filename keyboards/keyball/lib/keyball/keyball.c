@@ -381,6 +381,7 @@ void keyball_oled_render_keyinfo(void) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Public API functions
 
 bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
@@ -405,6 +406,7 @@ void keyball_set_cpi(uint8_t cpi) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Keyboard hooks
 
 void keyboard_post_init_kb(void) {
     // register transaction handlers on secondary.
