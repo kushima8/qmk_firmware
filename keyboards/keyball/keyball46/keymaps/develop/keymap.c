@@ -48,3 +48,9 @@ void oledkit_render_info_user(void) {
     keyball_oled_render_ballinfo();
 }
 #endif
+
+void keyboard_post_init_user(void) {
+#if defined(DEBUG_PMW3360_SCAN_RATE) && defined(CONSOLE_ENABLE)
+    debug_enable = true;
+#endif
+}
