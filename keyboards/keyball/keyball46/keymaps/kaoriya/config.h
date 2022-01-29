@@ -20,15 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define LAYER_STATE_8BIT
-
 #ifdef RGBLIGHT_ENABLE
-#    define RGBLIGHT_LIMIT_VAL 120
-#    define RGBLIGHT_HUE_STEP 10
-#    define RGBLIGHT_SAT_STEP 17
-#    define RGBLIGHT_VAL_STEP 17
-
-#    define RGBLIGHT_ANIMATIONS
+#    define RGBLIGHT_EFFECT_BREATHING
+#    define RGBLIGHT_EFFECT_RAINBOW_MOOD
+#    define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+#    define RGBLIGHT_EFFECT_SNAKE
+#    define RGBLIGHT_EFFECT_KNIGHT
+#    define RGBLIGHT_EFFECT_CHRISTMAS
+#    define RGBLIGHT_EFFECT_STATIC_GRADIENT
+#    define RGBLIGHT_EFFECT_RGB_TEST
+#    define RGBLIGHT_EFFECT_ALTERNATING
+#    define RGBLIGHT_EFFECT_TWINKLE
 #endif
 
-#define OLED_FONT_H "keyboards/keyball/lib/glcdfont.c"
+#undef PRODUCT_ID
+#define PRODUCT_ID 0x0005
