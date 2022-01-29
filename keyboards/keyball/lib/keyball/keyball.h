@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 //////////////////////////////////////////////////////////////////////////////
+// Configurations
 
 #ifndef KEYBALL_CPI_DEFAULT
 #    define KEYBALL_CPI_DEFAULT 500
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// Constants
 
 #define KEYBALL_TX_GETINFO_INTERVAL 500
 #define KEYBALL_TX_GETINFO_MAXTRY 10
@@ -44,6 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// Types
 
 enum keyball_keycodes {
     KBC_RST = SAFE_RANGE,  // Keyball configuration: reset to default
@@ -113,10 +116,12 @@ typedef enum {
 } keyball_adjust_t;
 
 //////////////////////////////////////////////////////////////////////////////
+// Exported values (touch carefully)
 
 extern keyball_t keyball;
 
 //////////////////////////////////////////////////////////////////////////////
+// Public API functions
 
 /// keyball_oled_render_ballinfo renders ball information to OLED.
 /// It uses just 21 columns to show the info.
