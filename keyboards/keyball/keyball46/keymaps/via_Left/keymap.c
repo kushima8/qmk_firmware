@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
-#include "pointing_device.h"
-#include "lib/oledkit/oledkit.h"
-
 enum keymap_layers {
     _QWERTY,
     _LOWER,
@@ -103,20 +100,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // clang-format on
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    switch (get_highest_layer(state)) {
-        case _BALL:
-            keyball_set_scroll_mode(true);
-            break;
-        default:
-            keyball_set_scroll_mode(false);
-            break;
-    }
+    // Auto enable scroll mode when the highest layer is 3
+    keyball_set_scroll_mode(get_highest_layer(state) == _BALL);
     return state;
 }
 
 #ifdef OLED_ENABLE
 
+#    include "lib/oledkit/oledkit.h"
+
 void oledkit_render_info_user(void) {
+    keyball_oled_render_keyinfo();
+    keyball_oled_render_ballinfo();
+
     const char *n;
     switch (get_highest_layer(layer_state)) {
         case _QWERTY:
@@ -137,9 +133,5 @@ void oledkit_render_info_user(void) {
     }
     oled_write_P(PSTR("Layer: "), false);
     oled_write_ln_P(n, false);
-
-    keyball_oled_render_ballinfo();
-    keyball_oled_render_keyinfo();
 }
-
 #endif
