@@ -180,6 +180,16 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     }
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master()) {
+#if defined(KEYBALL_REPORTMOUSE_INTERVAL) && KEYBALL_REPORTMOUSE_INTERVAL > 0
+        // throttling mouse report rate.
+        static uint32_t last_report = 0;
+        uint32_t        now         = timer_read32();
+        if (TIMER_DIFF_32(now, last_report) < KEYBALL_REPORTMOUSE_INTERVAL) {
+            return rep;
+        }
+        last_report = now;
+#endif
+        // modify mouse report by PMW3360 motion.
         if (keyball.this_have_ball) {
             motion_to_mouse(&keyball.this_motion, &rep, is_keyboard_left(), keyball.scroll_mode);
         }
@@ -274,8 +284,6 @@ static void rpc_get_motion_invoke(void) {
             keyball.that_motion.x = add16(keyball.that_motion.x, recv.x);
             keyball.that_motion.y = add16(keyball.that_motion.y, recv.y);
         }
-    } else {
-        dprintf("keyball:rpc_get_motion_invoke: failed");
     }
     last_sync = now;
     return;

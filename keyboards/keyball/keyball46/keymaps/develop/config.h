@@ -32,4 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define RGBLIGHT_EFFECT_TWINKLE
 #endif
 
+// PMW3360 performance counter. Require CONSOLE_ENABLE too.
 //#define DEBUG_PMW3360_SCAN_RATE
+
+// Disable mouse report rate throttling.
+//#define KEYBALL_REPORTMOUSE_INTERVAL 0
