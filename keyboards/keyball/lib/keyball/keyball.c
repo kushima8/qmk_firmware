@@ -120,7 +120,7 @@ uint16_t pointing_device_driver_get_cpi(void) { return keyball_get_cpi(); }
 void pointing_device_driver_set_cpi(uint16_t cpi) { keyball_set_cpi(cpi); }
 
 static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
-#if KEYBALL_MODEL == 61
+#if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
     r->x = clip2int8(m->y);
     r->y = clip2int8(m->x);
     if (is_left) {
@@ -144,7 +144,7 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
     m->x -= x << div;
     int16_t y = m->y >> div;
     m->y -= y << div;
-#if KEYBALL_MODEL == 61
+#if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
     r->h = clip2int8(y);
     r->v = clip2int8(x);
     if (!is_left) {

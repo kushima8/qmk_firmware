@@ -43,6 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define KEYBALL_MODEL 46
 #elif (PRODUCT_ID & 0xff00) == 0x0100
 #    define KEYBALL_MODEL 61
+#elif (PRODUCT_ID & 0xff00) == 0x0200
+#    define KEYBALL_MODEL 39
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
