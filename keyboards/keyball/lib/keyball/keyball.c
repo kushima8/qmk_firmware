@@ -196,6 +196,9 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
         if (keyball.that_have_ball) {
             motion_to_mouse(&keyball.that_motion, &rep, !is_keyboard_left(), keyball.scroll_mode ^ keyball.this_have_ball);
         }
+
+        // store mouse report for OLED.
+        keyball.last_mouse = rep;
     }
     return rep;
 }
@@ -435,12 +438,6 @@ void housekeeping_task_kb(void) {
         rpc_get_motion_invoke();
         rpc_set_cpi_invoke();
     }
-}
-
-report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
-    // store mouse report for OLED.
-    keyball.last_mouse = pointing_device_task_user(mouse_report);
-    return keyball.last_mouse;
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
