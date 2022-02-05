@@ -5,8 +5,8 @@ An experimental 22 keys macro pad with a rotary switch.
 * Keyboard Maintainer: [MURAOKA Taro](https://github.com/koron)
 * Hardware Supported: YUIOP22RS rev.1
 * Hardware Availability:
-    * [Schematic](https://github.com/koron/yuiop/tree/master/yuiop22rs)
-    * [Gerber files](https://github.com/koron/yuiop/tree/master/gerber/yuiop22rs-r1-jlcpcb-r1)
+    * [Schematic](https://github.com/koron/yuiop/tree/main/yuiop22rs)
+    * [Gerber files](https://github.com/koron/yuiop/tree/main/gerber/yuiop22rs-r1-jlcpcb-r1)
 
 Make example for this keyboard (after setting up your build environment):
 
