@@ -4,7 +4,7 @@ An experimental 60 keys Happy Hacking compatible layout keyboard.
 
 * Keyboard Maintainer: [MURAOKA Taro](https://github.com/koron)
 * Hardware Supported: YUIOP60HH rev.5
-* Hardware Availability: https://github.com/koron/yuiop/tree/master/yuiop60hh/main5
+* Hardware Availability: https://github.com/koron/yuiop/tree/main/yuiop60hh/main5
 
 Make example for this keyboard (after setting up your build environment):
 
