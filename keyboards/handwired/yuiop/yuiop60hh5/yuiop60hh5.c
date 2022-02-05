@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 
+// clang-format off
 matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b111111111111111,
     0b101111111111111,
@@ -22,26 +23,25 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b110111111111101,
     0b000110001000110,
 };
+// clang-format on
 
 //////////////////////////////////////////////////////////////////////////////
 
 #ifdef LED_ARRAY_STATE
 
-#include <string.h>
-#include "ws2812.h"
+#    include <string.h>
+#    include "ws2812.h"
 
-static bool led_states_dirty;
+static bool     led_states_dirty;
 static LED_TYPE led_states[3];
 
 static void LAS_set(int n, uint8_t r, uint8_t g, uint8_t b) {
-    LED_TYPE next = { .r = r, .g = g, .b = b };
-    led_states[n] = next;
+    LED_TYPE next    = {.r = r, .g = g, .b = b};
+    led_states[n]    = next;
     led_states_dirty = true;
 }
 
-static void LAS_clear(int n) {
-    LAS_set(n, 0, 0, 0);
-}
+static void LAS_clear(int n) { LAS_set(n, 0, 0, 0); }
 
 static void LAS_update(int n, uint8_t r, uint8_t g, uint8_t b, bool enable) {
     if (enable) {

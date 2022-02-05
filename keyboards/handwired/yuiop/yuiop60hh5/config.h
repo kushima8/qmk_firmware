@@ -18,19 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config_common.h"
 
 // USB Device descriptor parameter
-#define VENDOR_ID       0x7890
-#define PRODUCT_ID      0x000a
-#define DEVICE_VER      0x0001
-#define MANUFACTURER    koron
+#define VENDOR_ID 0x7890
+#define PRODUCT_ID 0x000a
+#define DEVICE_VER 0x0001
+#define MANUFACTURER koron
 
-#define PRODUCT         YUIOP60HH rev.5
-#define DESCRIPTION     Experimental Keyboard
+#define PRODUCT YUIOP60HH5
+#define DESCRIPTION Experimental Keyboard
 
 // Key matrix size and pins
 #define MATRIX_ROWS 5
 #define MATRIX_COLS 15
-#define MATRIX_ROW_PINS { F1, F4, F5, F6, F7 }
-#define MATRIX_COL_PINS { B4, B5, B6, C6, C7, B0, B1, B2, D1, D2, D3, D5, D4, D6, D7 }
+#define MATRIX_ROW_PINS \
+    { F1, F4, F5, F6, F7 }
+#define MATRIX_COL_PINS \
+    { B4, B5, B6, C6, C7, B0, B1, B2, D1, D2, D3, D5, D4, D6, D7 }
 #define DIODE_DIRECTION COL2ROW
 #define MATRIX_MASKED
 #define DEBOUNCE 5
@@ -48,18 +50,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // RGB LED settings
 #define RGB_DI_PIN B3
 #ifdef RGBLIGHT_ENABLE
-#  define RGBLED_NUM 5
-#  define RGBLIGHT_ANIMATIONS
-#  define RGBLIGHT_LIMIT_VAL 255
-#  define RGBLIGHT_HUE_STEP 17
-#  define RGBLIGHT_SAT_STEP 17
-#  define RGBLIGHT_VAL_STEP 17
+#    define RGBLED_NUM 3
+#    define RGBLIGHT_ANIMATIONS
+#    define RGBLIGHT_LIMIT_VAL 255
+#    define RGBLIGHT_HUE_STEP 17
+#    define RGBLIGHT_SAT_STEP 17
+#    define RGBLIGHT_VAL_STEP 17
 #endif
 
 // RGB matrix settings
 #ifdef RGB_MATRIX_ENABLE
-# define DRIVER_LED_TOTAL 5
-# define RGB_MATRIX_KEYPRESSES
-# define RGB_MATRIX_FRAMEBUFFER_EFFECTS
-# define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
+#    define DRIVER_LED_TOTAL 3
+#    define RGB_MATRIX_KEYPRESSES
+#    define RGB_MATRIX_FRAMEBUFFER_EFFECTS
+#    define RGB_MATRIX_MAXIMUM_BRIGHTNESS 255
 #endif
