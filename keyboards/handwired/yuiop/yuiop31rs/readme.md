@@ -5,9 +5,9 @@ An experimental 31 keys macro pad with a rotary switch.
 * Keyboard Maintainer: [MURAOKA Taro](https://github.com/koron)
 * Hardware Supported: YUIOP31RS rev.1
 * Hardware Availability:
-    * [Schematic](https://github.com/koron/yuiop/tree/master/yuiop31rs)
-    * [Gerber files: main board](https://github.com/koron/yuiop/tree/master/yuiop31rs/gerbers/main-jlcpcb-r1)
-    * [Gerber files: top plate](https://github.com/koron/yuiop/tree/master/yuiop31rs/gerbers/topplate-jlcpcb-r1)
+    * [Schematic](https://github.com/koron/yuiop/tree/main/yuiop31rs)
+    * [Gerber files: main board](https://github.com/koron/yuiop/tree/main/yuiop31rs/gerbers/main-jlcpcb-r1)
+    * [Gerber files: top plate](https://github.com/koron/yuiop/tree/main/yuiop31rs/gerbers/topplate-jlcpcb-r1)
 
 Make example for this keyboard (after setting up your build environment):
 
