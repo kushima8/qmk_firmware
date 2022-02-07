@@ -472,24 +472,30 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+#ifndef MOUSEKEY_ENABLE
         // process KC_MS_BTN1~8 by myself
         // See process_action() in quantum/action.c for details.
-#ifndef MOUSEKEY_ENABLE
         case KC_MS_BTN1 ... KC_MS_BTN8: {
             extern void register_button(bool, enum mouse_buttons);
             register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
-            break;
-        }
+            return false;
 #endif
 
+        case SCRL_MO:
+            keyball_set_scroll_mode(record->event.pressed);
+            return false;
+        }
+    }
+
+    // process events which works on pressed only.
+    if (record->event.pressed) {
+        switch (keycode) {
         case KBC_RST:
-            if (record->event.pressed) {
-                keyball_set_cpi(0);
-                keyball_set_scroll_div(0);
-            }
+            keyball_set_cpi(0);
+            keyball_set_scroll_div(0);
             break;
         case KBC_SAVE:
-            if (record->event.pressed) {
+            {
                 keyball_config_t c = {
                     .cpi  = keyball.cpi_value,
                     .sdiv = keyball.scroll_div,
@@ -499,47 +505,32 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             break;
 
         case CPI_I100:
-            if (record->event.pressed) {
-                add_cpi(1);
-            }
+            add_cpi(1);
             break;
         case CPI_D100:
-            if (record->event.pressed) {
-                add_cpi(-1);
-            }
+            add_cpi(-1);
             break;
         case CPI_I1K:
-            if (record->event.pressed) {
-                add_cpi(10);
-            }
+            add_cpi(10);
             break;
         case CPI_D1K:
-            if (record->event.pressed) {
-                add_cpi(-10);
-            }
+            add_cpi(-10);
             break;
 
         case SCRL_TO:
-            if (record->event.pressed) {
-                keyball_set_scroll_mode(!keyball.scroll_mode);
-            }
-            break;
-        case SCRL_MO:
-            keyball_set_scroll_mode(record->event.pressed);
+            keyball_set_scroll_mode(!keyball.scroll_mode);
             break;
         case SCRL_DVI:
-            if (record->event.pressed) {
-                add_scroll_div(1);
-            }
+            add_scroll_div(1);
             break;
         case SCRL_DVD:
-            if (record->event.pressed) {
-                add_scroll_div(-1);
-            }
+            add_scroll_div(-1);
             break;
 
         default:
             return true;
+        }
     }
+
     return false;
 }
