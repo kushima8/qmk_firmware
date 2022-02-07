@@ -290,7 +290,7 @@ static void rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8
 static void rpc_get_motion_invoke(void) {
     static uint32_t last_sync = 0;
     uint32_t        now       = timer_read32();
-    if (!keyball.that_have_ball || TIMER_DIFF_32(now, last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
+    if (TIMER_DIFF_32(now, last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
         return;
     }
     keyball_motion_id_t req  = 0;
@@ -312,7 +312,7 @@ static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t 
 }
 
 static void rpc_set_cpi_invoke(void) {
-    if (!keyball.that_have_ball || !keyball.cpi_changed) {
+    if (!keyball.cpi_changed) {
         return;
     }
     keyball_cpi_t req = keyball.cpi_value;
@@ -457,8 +457,10 @@ void keyboard_post_init_kb(void) {
 void housekeeping_task_kb(void) {
     if (is_keyboard_master()) {
         rpc_get_info_invoke();
-        rpc_get_motion_invoke();
-        rpc_set_cpi_invoke();
+        if (keyball.that_have_ball) {
+            rpc_get_motion_invoke();
+            rpc_set_cpi_invoke();
+        }
     }
 }
 
