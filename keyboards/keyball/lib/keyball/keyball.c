@@ -167,16 +167,8 @@ static void motion_to_mouse(keyball_motion_t *m, report_mouse_t *r, bool is_left
     }
 }
 
-static inline bool should_add_motion(uint32_t now) {
-#if defined(KEYBALL_SCROLLBALL_INHIVITOR) && KEYBALL_SCROLLBALL_INHIVITOR > 0
-    if (TIMER_DIFF_32(now, keyball.scroll_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
-        return false;
-    }
-#endif
-    return true;
-}
-
-static inline bool should_report(uint32_t now) {
+static inline bool should_report(void) {
+    uint32_t now = timer_read32();
 #if defined(KEYBALL_REPORTMOUSE_INTERVAL) && KEYBALL_REPORTMOUSE_INTERVAL > 0
     // throttling mouse report rate.
     static uint32_t last = 0;
@@ -185,15 +177,22 @@ static inline bool should_report(uint32_t now) {
     }
     last = now;
 #endif
+#if defined(KEYBALL_SCROLLBALL_INHIVITOR) && KEYBALL_SCROLLBALL_INHIVITOR > 0
+    if (TIMER_DIFF_32(now, keyball.scroll_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
+        keyball.this_motion.x = 0;
+        keyball.this_motion.y = 0;
+        keyball.that_motion.x = 0;
+        keyball.that_motion.y = 0;
+    }
+#endif
     return true;
 }
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
-    uint32_t now = timer_read32();
     // fetch from optical sensor.
     if (keyball.this_have_ball) {
         pmw3360_motion_t d = {0};
-        if (pmw3360_motion_burst(&d) && should_add_motion(now)) {
+        if (pmw3360_motion_burst(&d)) {
             ATOMIC_BLOCK_FORCEON {
                 keyball.this_motion.x = add16(keyball.this_motion.x, d.x);
                 keyball.this_motion.y = add16(keyball.this_motion.y, d.y);
@@ -201,7 +200,7 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
         }
     }
     // report mouse event, if keyboard is primary.
-    if (is_keyboard_master() && should_report(now)) {
+    if (is_keyboard_master() && should_report()) {
         // modify mouse report by PMW3360 motion.
         motion_to_mouse(&keyball.this_motion, &rep, is_keyboard_left(), keyball.scroll_mode);
         motion_to_mouse(&keyball.that_motion, &rep, !is_keyboard_left(), keyball.scroll_mode ^ keyball.this_have_ball);
@@ -397,10 +396,6 @@ bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
         keyball.scroll_changed = timer_read32();
-        keyball.this_motion.x  = 0;
-        keyball.this_motion.y  = 0;
-        keyball.that_motion.x  = 0;
-        keyball.that_motion.y  = 0;
     }
     keyball.scroll_mode = mode;
 }
