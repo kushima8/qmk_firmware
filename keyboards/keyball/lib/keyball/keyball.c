@@ -291,10 +291,8 @@ static void rpc_get_motion_invoke(void) {
     keyball_motion_id_t req  = 0;
     keyball_motion_t    recv = {0};
     if (transaction_rpc_exec(KEYBALL_GET_MOTION, sizeof(req), &req, sizeof(recv), &recv)) {
-        ATOMIC_BLOCK_FORCEON {
-            keyball.that_motion.x = add16(keyball.that_motion.x, recv.x);
-            keyball.that_motion.y = add16(keyball.that_motion.y, recv.y);
-        }
+        keyball.that_motion.x = add16(keyball.that_motion.x, recv.x);
+        keyball.that_motion.y = add16(keyball.that_motion.y, recv.y);
     }
     last_sync = now;
     return;
