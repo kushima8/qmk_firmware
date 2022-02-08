@@ -82,9 +82,7 @@ typedef union {
 } keyball_config_t;
 
 typedef struct {
-    uint16_t vid;
-    uint16_t pid;
-    uint8_t  ballcnt;  // count of balls: support only 0 or 1, for now
+    uint8_t ballcnt;  // count of balls: support only 0 or 1, for now
 } keyball_info_t;
 
 typedef uint8_t keyball_motion_id_t;
