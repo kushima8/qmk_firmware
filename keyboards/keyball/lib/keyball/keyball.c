@@ -214,11 +214,6 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
 // Split RPC
 
 static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    keyball_info_t *that = (keyball_info_t *)in_data;
-    if (that->vid == VENDOR_ID && that->pid == PRODUCT_ID) {
-        keyball.that_enable    = true;
-        keyball.that_have_ball = that->ballcnt > 0;
-    }
     keyball_info_t info = {
         .vid     = VENDOR_ID,
         .pid     = PRODUCT_ID,
@@ -238,13 +233,8 @@ static void rpc_get_info_invoke(void) {
     }
     last_sync = now;
     round++;
-    keyball_info_t req = {
-        .vid     = VENDOR_ID,
-        .pid     = PRODUCT_ID,
-        .ballcnt = keyball.this_have_ball ? 1 : 0,
-    };
     keyball_info_t recv = {0};
-    if (!transaction_rpc_exec(KEYBALL_GET_INFO, sizeof(req), &req, sizeof(recv), &recv)) {
+    if (!transaction_rpc_exec(KEYBALL_GET_INFO, 0, NULL, sizeof(recv), &recv)) {
         if (round < KEYBALL_TX_GETINFO_MAXTRY) {
             dprintf("keyball:rpc_get_info_invoke: missed #%d\n", round);
             return;
