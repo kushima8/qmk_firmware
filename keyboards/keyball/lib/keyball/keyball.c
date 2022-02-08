@@ -444,9 +444,7 @@ void keyboard_post_init_kb(void) {
     // read keyball configuration from EEPROM
     if (eeconfig_is_enabled()) {
         keyball_config_t c = {.raw = eeconfig_read_kb()};
-        if (c.cpi != 0) {
-            keyball_set_cpi(c.cpi);
-        }
+        keyball_set_cpi(c.cpi);
         keyball_set_scroll_div(c.sdiv);
     }
 
