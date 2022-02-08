@@ -259,12 +259,10 @@ static void rpc_get_info_invoke(void) {
 }
 
 static void rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    if (keyball.this_have_ball && *((keyball_motion_id_t *)in_data) == 0) {
-        *(keyball_motion_t *)out_data = keyball.this_motion;
-        // clear motion
-        keyball.this_motion.x = 0;
-        keyball.this_motion.y = 0;
-    }
+    *(keyball_motion_t *)out_data = keyball.this_motion;
+    // clear motion
+    keyball.this_motion.x = 0;
+    keyball.this_motion.y = 0;
 }
 
 static void rpc_get_motion_invoke(void) {
@@ -273,9 +271,8 @@ static void rpc_get_motion_invoke(void) {
     if (TIMER_DIFF_32(now, last_sync) < KEYBALL_TX_GETMOTION_INTERVAL) {
         return;
     }
-    keyball_motion_id_t req  = 0;
-    keyball_motion_t    recv = {0};
-    if (transaction_rpc_exec(KEYBALL_GET_MOTION, sizeof(req), &req, sizeof(recv), &recv)) {
+    keyball_motion_t recv = {0};
+    if (transaction_rpc_exec(KEYBALL_GET_MOTION, 0, NULL, sizeof(recv), &recv)) {
         keyball.that_motion.x = add16(keyball.that_motion.x, recv.x);
         keyball.that_motion.y = add16(keyball.that_motion.y, recv.y);
     }
@@ -283,11 +280,7 @@ static void rpc_get_motion_invoke(void) {
     return;
 }
 
-static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    if (keyball.this_have_ball) {
-        keyball_set_cpi(*(keyball_cpi_t *)in_data);
-    }
-}
+static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) { keyball_set_cpi(*(keyball_cpi_t *)in_data); }
 
 static void rpc_set_cpi_invoke(void) {
     if (!keyball.cpi_changed) {

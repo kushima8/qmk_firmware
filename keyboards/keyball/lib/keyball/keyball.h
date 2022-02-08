@@ -85,8 +85,6 @@ typedef struct {
     uint8_t ballcnt;  // count of balls: support only 0 or 1, for now
 } keyball_info_t;
 
-typedef uint8_t keyball_motion_id_t;
-
 typedef struct {
     int16_t x;
     int16_t y;
