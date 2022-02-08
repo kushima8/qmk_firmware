@@ -215,8 +215,6 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
 
 static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     keyball_info_t info = {
-        .vid     = VENDOR_ID,
-        .pid     = PRODUCT_ID,
         .ballcnt = keyball.this_have_ball ? 1 : 0,
     };
     *(keyball_info_t *)out_data = info;
@@ -240,11 +238,9 @@ static void rpc_get_info_invoke(void) {
             return;
         }
     }
-    negotiated = true;
-    if (recv.vid == VENDOR_ID && recv.pid == PRODUCT_ID) {
-        keyball.that_enable    = true;
-        keyball.that_have_ball = recv.ballcnt > 0;
-    }
+    negotiated             = true;
+    keyball.that_enable    = true;
+    keyball.that_have_ball = recv.ballcnt > 0;
     dprintf("keyball:rpc_get_info_invoke: negotiated #%d %d\n", round, keyball.that_have_ball);
 
     // split keyboard negotiation completed.
@@ -459,54 +455,52 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 #endif
 
-        case SCRL_MO:
-            keyball_set_scroll_mode(record->event.pressed);
-            return false;
+            case SCRL_MO:
+                keyball_set_scroll_mode(record->event.pressed);
+                return false;
         }
     }
 
     // process events which works on pressed only.
     if (record->event.pressed) {
         switch (keycode) {
-        case KBC_RST:
-            keyball_set_cpi(0);
-            keyball_set_scroll_div(0);
-            break;
-        case KBC_SAVE:
-            {
+            case KBC_RST:
+                keyball_set_cpi(0);
+                keyball_set_scroll_div(0);
+                break;
+            case KBC_SAVE: {
                 keyball_config_t c = {
                     .cpi  = keyball.cpi_value,
                     .sdiv = keyball.scroll_div,
                 };
                 eeconfig_update_kb(c.raw);
-            }
-            break;
+            } break;
 
-        case CPI_I100:
-            add_cpi(1);
-            break;
-        case CPI_D100:
-            add_cpi(-1);
-            break;
-        case CPI_I1K:
-            add_cpi(10);
-            break;
-        case CPI_D1K:
-            add_cpi(-10);
-            break;
+            case CPI_I100:
+                add_cpi(1);
+                break;
+            case CPI_D100:
+                add_cpi(-1);
+                break;
+            case CPI_I1K:
+                add_cpi(10);
+                break;
+            case CPI_D1K:
+                add_cpi(-10);
+                break;
 
-        case SCRL_TO:
-            keyball_set_scroll_mode(!keyball.scroll_mode);
-            break;
-        case SCRL_DVI:
-            add_scroll_div(1);
-            break;
-        case SCRL_DVD:
-            add_scroll_div(-1);
-            break;
+            case SCRL_TO:
+                keyball_set_scroll_mode(!keyball.scroll_mode);
+                break;
+            case SCRL_DVI:
+                add_scroll_div(1);
+                break;
+            case SCRL_DVD:
+                add_scroll_div(-1);
+                break;
 
-        default:
-            return true;
+            default:
+                return true;
         }
         return false;
     }
