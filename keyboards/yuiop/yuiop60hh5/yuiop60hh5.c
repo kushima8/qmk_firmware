@@ -71,7 +71,7 @@ bool led_update_kb(led_t led_state) {
         return false;
     }
     LAS_update(0, 0xff, 0x00, 0x00, led_state.caps_lock);
-    LAS_update(1, 0xcc, 0x00, 0xcc, led_state.scroll_lock);
+    LAS_update(1, 0x00, 0xff, 0x00, led_state.scroll_lock);
     LAS_update(2, 0x00, 0x00, 0xff, led_state.num_lock);
     led_states_commit();
     return true;
