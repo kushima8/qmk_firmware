@@ -106,6 +106,8 @@ typedef struct {
     bool     scroll_mode;
     uint8_t  scroll_div;
     uint32_t scroll_changed;
+    uint8_t  scroll_dir;
+    uint32_t scroll_last;
 
     uint16_t       last_kc;
     keypos_t       last_pos;
