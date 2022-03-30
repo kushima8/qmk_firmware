@@ -147,6 +147,9 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
     m->y = 0;
 }
 
+static int16_t ax = 0;
+static int16_t ay = 0;
+
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
     uint8_t div = keyball_get_scroll_div() - 1;
     int16_t x   = m->x >> div;
@@ -166,6 +169,52 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
 #else
 #    error("unknown Keyball model")
 #endif
+
+    ax += x >= 0 ? x : -x;
+    ay += y >= 0 ? y : -y;
+    if (ax > 100 || ay > 100) {
+        ax >>= 1;
+        ay >>= 1;
+    }
+    switch (keyball.scroll_dir) {
+        case 0:
+            if (ax > ay * 2) {
+                keyball.scroll_dir = 1;
+            } else if (ay > ax * 2) {
+                keyball.scroll_dir = 2;
+            }
+            break;
+        case 1:
+            if (ay > ax) {
+                keyball.scroll_dir = 3;
+            }
+            break;
+        case 2:
+            if (ax > ay) {
+                keyball.scroll_dir = 3;
+            }
+            break;
+    }
+    switch (keyball.scroll_dir) {
+        case 0:
+            r->h = 0;
+            r->v = 0;
+        case 1:
+            r->h = 0;
+            break;
+        case 2:
+            r->v = 0;
+            break;
+    }
+
+    uint32_t now = timer_read32();
+    if (x != 0 || y != 0) {
+        keyball.scroll_last = now;
+    } else if (TIMER_DIFF_32(now, keyball.scroll_last) >= 100) {
+        keyball.scroll_dir = 0;
+        ax = 0;
+        ay = 0;
+    }
 }
 
 static void motion_to_mouse(keyball_motion_t *m, report_mouse_t *r, bool is_left, bool as_scroll) {
