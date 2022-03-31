@@ -158,8 +158,8 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
     m->y -= y << div;
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
     r->h = clip2int8(y);
-    r->v = clip2int8(x);
-    if (!is_left) {
+    r->v = -clip2int8(x);
+    if (is_left) {
         r->h = -r->h;
         r->v = -r->v;
     }
