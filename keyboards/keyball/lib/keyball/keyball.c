@@ -149,54 +149,56 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
 
 static inline int16_t abs16(int16_t v) { return v < 0 ? -v : v; }
 
-static int16_t cum = 0;
-
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
+    // consume motion of trackball.
     uint8_t div = keyball_get_scroll_div() - 1;
     int16_t x = m->x >> div;
     m->x -= x << div;
     int16_t y = m->y >> div;
     m->y -= y << div;
 
+    // scroll snap.
     uint32_t now = timer_read32();
-    int absX = abs16(x);
-    int absY = abs16(y);
+    int16_t absX = abs16(x);
+    int16_t absY = abs16(y);
     if (absX != 0 || absY != 0) {
-        keyball.scroll_last = now;
-    } else if (TIMER_DIFF_32(now, keyball.scroll_last) >= 100) {
-        keyball.scroll_dir = 0;
+        keyball.scroll_snap_last = now;
+    } else if (TIMER_DIFF_32(now, keyball.scroll_snap_last) >= KEYBALL_SCROLLSNAP_RESET_TIMER) {
+        keyball.scroll_snap_dir = 0;
+        keyball.scroll_snap_cum = 0;
         return;
     }
-
-    switch (keyball.scroll_dir) {
+    switch (keyball.scroll_snap_dir) {
         case 0:
             if (absX > absY * 2) {
-                keyball.scroll_dir = 1;
+                keyball.scroll_snap_dir = 1;
+                y = 0;
             } else if (absY > absX * 2) {
-                keyball.scroll_dir = 2;
+                keyball.scroll_snap_dir = 2;
+                x = 0;
             } else {
                 return;
             }
-            cum = 0;
             break;
         case 1:
-            cum = add16(cum, y);
-            if (cum > 15) {
-                keyball.scroll_dir = 3;
+            keyball.scroll_snap_cum += y;
+            if (keyball.scroll_snap_cum > KEYBALL_SCROLLSNAP_UNLOCK_THRESHOLD) {
+                keyball.scroll_snap_dir = 3;
             } else {
                 y = 0;
             }
             break;
         case 2:
-            cum = add16(cum, x);
-            if (cum > 15) {
-                keyball.scroll_dir = 3;
+            keyball.scroll_snap_cum += x;
+            if (keyball.scroll_snap_cum > KEYBALL_SCROLLSNAP_UNLOCK_THRESHOLD) {
+                keyball.scroll_snap_dir = 3;
             } else {
                 x = 0;
             }
             break;
     }
 
+    // apply to mouse report.
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
     r->h = clip2int8(y);
     r->v = -clip2int8(x);
@@ -231,7 +233,7 @@ static inline bool should_report(void) {
     last = now;
 #endif
 #if defined(KEYBALL_SCROLLBALL_INHIVITOR) && KEYBALL_SCROLLBALL_INHIVITOR > 0
-    if (TIMER_DIFF_32(now, keyball.scroll_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
+    if (TIMER_DIFF_32(now, keyball.scroll_mode_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
         keyball.this_motion.x = 0;
         keyball.this_motion.y = 0;
         keyball.that_motion.x = 0;
@@ -427,7 +429,7 @@ bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
-        keyball.scroll_changed = timer_read32();
+        keyball.scroll_mode_changed = timer_read32();
     }
     keyball.scroll_mode = mode;
 }

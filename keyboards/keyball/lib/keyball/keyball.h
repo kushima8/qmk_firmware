@@ -36,6 +36,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define KEYBALL_SCROLLBALL_INHIVITOR 50
 #endif
 
+#ifndef KEYBALL_SCROLLSNAP_RESET_TIMER
+#    define KEYBALL_SCROLLSNAP_RESET_TIMER 100
+#endif
+
+#ifndef KEYBALL_SCROLLSNAP_UNLOCK_THRESHOLD
+#    define KEYBALL_SCROLLSNAP_UNLOCK_THRESHOLD 15
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Constants
 
@@ -104,10 +113,11 @@ typedef struct {
     bool    cpi_changed;
 
     bool     scroll_mode;
+    uint32_t scroll_mode_changed;
     uint8_t  scroll_div;
-    uint32_t scroll_changed;
-    uint8_t  scroll_dir;
-    uint32_t scroll_last;
+    uint32_t scroll_snap_last;
+    uint8_t  scroll_snap_dir;
+    int16_t  scroll_snap_cum;
 
     uint16_t       last_kc;
     keypos_t       last_pos;
