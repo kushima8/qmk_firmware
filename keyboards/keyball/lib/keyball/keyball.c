@@ -180,16 +180,16 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
             cum = 0;
             break;
         case 1:
-            cum += y;
-            if (cum > 7) {
+            cum = add16(cum, y);
+            if (cum > 15) {
                 keyball.scroll_dir = 3;
             } else {
                 y = 0;
             }
             break;
         case 2:
-            cum += x;
-            if (cum > 7) {
+            cum = add16(cum, x);
+            if (cum > 15) {
                 keyball.scroll_dir = 3;
             } else {
                 x = 0;
