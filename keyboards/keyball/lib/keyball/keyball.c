@@ -147,16 +147,40 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
     m->y = 0;
 }
 
+static inline int16_t abs16(int16_t v) { return v < 0 ? -v : v; }
+
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
+    // consume motion of trackball.
     uint8_t div = keyball_get_scroll_div() - 1;
-    int16_t x   = m->x >> div;
+    int16_t x = m->x >> div;
     m->x -= x << div;
     int16_t y = m->y >> div;
     m->y -= y << div;
+
+#if KEYBALL_SCROLLSNAP_ENABLE
+    // scroll snap.
+    uint32_t now = timer_read32();
+    if (x != 0 || y != 0) {
+        keyball.scroll_snap_last = now;
+    } else if (TIMER_DIFF_32(now, keyball.scroll_snap_last) >= KEYBALL_SCROLLSNAP_RESET_TIMER) {
+        keyball.scroll_snap_tension.x = 0;
+        keyball.scroll_snap_tension.y = 0;
+    }
+    if (abs16(keyball.scroll_snap_tension.x) < KEYBALL_SCROLLSNAP_TENSION_THRESHOLD) {
+        keyball.scroll_snap_tension.x += x;
+        x = 0;
+    }
+    if (abs16(keyball.scroll_snap_tension.y) < KEYBALL_SCROLLSNAP_TENSION_THRESHOLD) {
+        keyball.scroll_snap_tension.y += y;
+        y = 0;
+    }
+#endif
+
+    // apply to mouse report.
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
     r->h = clip2int8(y);
-    r->v = clip2int8(x);
-    if (!is_left) {
+    r->v = -clip2int8(x);
+    if (is_left) {
         r->h = -r->h;
         r->v = -r->v;
     }
@@ -187,7 +211,7 @@ static inline bool should_report(void) {
     last = now;
 #endif
 #if defined(KEYBALL_SCROLLBALL_INHIVITOR) && KEYBALL_SCROLLBALL_INHIVITOR > 0
-    if (TIMER_DIFF_32(now, keyball.scroll_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
+    if (TIMER_DIFF_32(now, keyball.scroll_mode_changed) < KEYBALL_SCROLLBALL_INHIVITOR) {
         keyball.this_motion.x = 0;
         keyball.this_motion.y = 0;
         keyball.that_motion.x = 0;
@@ -383,7 +407,7 @@ bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
 
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
-        keyball.scroll_changed = timer_read32();
+        keyball.scroll_mode_changed = timer_read32();
     }
     keyball.scroll_mode = mode;
 }
