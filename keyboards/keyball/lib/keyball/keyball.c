@@ -157,6 +157,7 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
     int16_t y = m->y >> div;
     m->y -= y << div;
 
+#if KEYBALL_SCROLLSNAP_ENABLE
     // scroll snap.
     uint32_t now = timer_read32();
     int16_t absX = abs16(x);
@@ -197,6 +198,7 @@ static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool 
             }
             break;
     }
+#endif
 
     // apply to mouse report.
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39

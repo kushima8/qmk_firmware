@@ -36,6 +36,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define KEYBALL_SCROLLBALL_INHIVITOR 50
 #endif
 
+#ifndef KEYBALL_SCROLLSNAP_ENABLE
+#    define KEYBALL_SCROLLSNAP_ENABLE 1
+#endif
+
 #ifndef KEYBALL_SCROLLSNAP_RESET_TIMER
 #    define KEYBALL_SCROLLSNAP_RESET_TIMER 100
 #endif
