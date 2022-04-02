@@ -60,10 +60,12 @@ static int16_t add16(int16_t a, int16_t b) {
 }
 
 // clip2int8 clips an integer fit into int8_t.
-static inline int8_t clip2int8(int16_t v) { return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v; }
+static inline int8_t clip2int8(int16_t v) {
+    return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v;
+}
 
 static const char *format_4d(int8_t d) {
-    static char buf[5] = {0};  // max width (4) + NUL (1)
+    static char buf[5] = {0}; // max width (4) + NUL (1)
     char        lead   = ' ';
     if (d < 0) {
         d    = -d;
@@ -124,9 +126,13 @@ void pointing_device_driver_init(void) {
     }
 }
 
-uint16_t pointing_device_driver_get_cpi(void) { return keyball_get_cpi(); }
+uint16_t pointing_device_driver_get_cpi(void) {
+    return keyball_get_cpi();
+}
 
-void pointing_device_driver_set_cpi(uint16_t cpi) { keyball_set_cpi(cpi); }
+void pointing_device_driver_set_cpi(uint16_t cpi) {
+    keyball_set_cpi(cpi);
+}
 
 static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
 #if KEYBALL_MODEL == 61 || KEYBALL_MODEL == 39
@@ -147,12 +153,14 @@ static void motion_to_mouse_move(keyball_motion_t *m, report_mouse_t *r, bool is
     m->y = 0;
 }
 
-static inline int16_t abs16(int16_t v) { return v < 0 ? -v : v; }
+static inline int16_t abs16(int16_t v) {
+    return v < 0 ? -v : v;
+}
 
 static void motion_to_mouse_scroll(keyball_motion_t *m, report_mouse_t *r, bool is_left) {
     // consume motion of trackball.
     uint8_t div = keyball_get_scroll_div() - 1;
-    int16_t x = m->x >> div;
+    int16_t x   = m->x >> div;
     m->x -= x << div;
     int16_t y = m->y >> div;
     m->y -= y << div;
@@ -313,7 +321,9 @@ static void rpc_get_motion_invoke(void) {
     return;
 }
 
-static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) { keyball_set_cpi(*(keyball_cpi_t *)in_data); }
+static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+    keyball_set_cpi(*(keyball_cpi_t *)in_data);
+}
 
 static void rpc_set_cpi_invoke(void) {
     if (!keyball.cpi_changed) {
@@ -403,7 +413,9 @@ void keyball_oled_render_keyinfo(void) {
 //////////////////////////////////////////////////////////////////////////////
 // Public API functions
 
-bool keyball_get_scroll_mode(void) { return keyball.scroll_mode; }
+bool keyball_get_scroll_mode(void) {
+    return keyball.scroll_mode;
+}
 
 void keyball_set_scroll_mode(bool mode) {
     if (mode != keyball.scroll_mode) {
@@ -412,11 +424,17 @@ void keyball_set_scroll_mode(bool mode) {
     keyball.scroll_mode = mode;
 }
 
-uint8_t keyball_get_scroll_div(void) { return keyball.scroll_div == 0 ? KEYBALL_SCROLL_DIV_DEFAULT : keyball.scroll_div; }
+uint8_t keyball_get_scroll_div(void) {
+    return keyball.scroll_div == 0 ? KEYBALL_SCROLL_DIV_DEFAULT : keyball.scroll_div;
+}
 
-void keyball_set_scroll_div(uint8_t div) { keyball.scroll_div = div > SCROLL_DIV_MAX ? SCROLL_DIV_MAX : div; }
+void keyball_set_scroll_div(uint8_t div) {
+    keyball.scroll_div = div > SCROLL_DIV_MAX ? SCROLL_DIV_MAX : div;
+}
 
-uint8_t keyball_get_cpi(void) { return keyball.cpi_value == 0 ? CPI_DEFAULT : keyball.cpi_value; }
+uint8_t keyball_get_cpi(void) {
+    return keyball.cpi_value == 0 ? CPI_DEFAULT : keyball.cpi_value;
+}
 
 void keyball_set_cpi(uint8_t cpi) {
     if (cpi > CPI_MAX) {
