@@ -27,12 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef SPLIT_KEYBOARD
 #    define PINNUM_ROW (MATRIX_ROWS / 2)
+#    define ROWS_PER_HAND (MATRIX_ROWS / 2)
 #else
 #    define PINNUM_ROW (MATRIX_ROWS)
+#    define ROWS_PER_HAND (MATRIX_ROWS)
 #endif
 #define PINNUM_COL (MATRIX_COLS / 2)
 
-#define ROWS_PER_HAND (MATRIX_ROWS / 2)
 #define MATRIXSIZE_PER_HAND (ROWS_PER_HAND * sizeof(matrix_row_t))
 
 static pin_t row_pins[PINNUM_ROW] = MATRIX_ROW_PINS;
