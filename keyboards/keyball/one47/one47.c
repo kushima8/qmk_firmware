@@ -30,3 +30,20 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
     0b011111111111,
 };
 // clang-format on
+
+static uint8_t peek_matrix_intersection(pin_t out_pin, pin_t in_pin) {
+    extern void matrix_io_delay(void);
+    setPinInputHigh(in_pin);
+    setPinOutput(out_pin);
+    writePinLow(out_pin);
+    wait_us(1);
+    uint8_t pin_state = readPin(in_pin);
+    setPinInputHigh(out_pin);
+    matrix_io_delay();
+    return pin_state;
+}
+
+// ball on left side.
+bool is_keyboard_left(void) {
+    return !peek_matrix_intersection(B4, F7);
+}
