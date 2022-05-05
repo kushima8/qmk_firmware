@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #include "lib/keyball/keyball.h"
+#include "lib/duplexmatrix/duplexmatrix.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +44,32 @@ static uint8_t peek_matrix_intersection(pin_t out_pin, pin_t in_pin) {
     return pin_state;
 }
 
+static uint16_t bitrev12(uint16_t bits) {
+    return bitrev16(bits) >> 4;
+}
+
+static uint16_t bitrev11(uint16_t bits) {
+    return bitrev16(bits) >> 5;
+}
+
+static bool isLeftBall = false;
+
 // ball on left side.
 bool is_keyboard_left(void) {
-    return !peek_matrix_intersection(B4, F7);
+    return isLeftBall;
+}
+
+void keyboard_pre_init_kb(void) {
+    isLeftBall = !peek_matrix_intersection(B4, F7);
+    keyboard_pre_init_user();
+}
+
+void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
+    if (isLeftBall) {
+        out_matrix[0] = bitrev12(out_matrix[0]);
+        out_matrix[1] = bitrev12(out_matrix[1]);
+        out_matrix[2] = bitrev12(out_matrix[2]);
+        // FIXME:
+        out_matrix[3] = bitrev11(out_matrix[3]);
+    }
 }
