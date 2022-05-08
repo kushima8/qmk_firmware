@@ -85,3 +85,13 @@ void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
         out_matrix[3] = row3_order(out_matrix[3]);
     }
 }
+
+void keyball_on_adjust_layout(keyball_adjust_t v) {
+#ifdef VIA_ENABLE
+    uint32_t curr = via_get_layout_options();
+    uint32_t next = (curr & ~0x01) | (isLeftBall ? 0x01 : 0x00);
+    if (next != curr) {
+        via_set_layout_options(next);
+    }
+#endif
+}
