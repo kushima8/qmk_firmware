@@ -46,12 +46,16 @@ static bool nicola_enable = false;
 static bool nicola_left = false;
 static bool nicola_right = false;
 
+#if 0
+static bool nicola_passthrough = false;
+#endif
+
 static void nicola_on(void) {
     LED_TYPE v = {.r = 0xff, .g = 0xff, .b=0xff};
     indicator[2] = v;
     ws2812_setleds(indicator, 3);
 
-    tap_code(KC_LANG1);
+    tap_code(KC_LANG1); // enable IME
 }
 
 static void nicola_off(void) {
@@ -59,7 +63,7 @@ static void nicola_off(void) {
     indicator[2] = v;
     ws2812_setleds(indicator, 3);
 
-    tap_code(KC_LANG2);
+    tap_code(KC_LANG2); // disable IME
 }
 
 static void nicola_send_string(bool pressed, const char *normal, const char *left, const char *right) {
@@ -141,6 +145,17 @@ static bool nicola_process(uint16_t keycode, keyrecord_t *record) {
         case KC_SLSH: /*TODO*/ break;
 
         default:
+#if 0
+            if (pressed) {
+                if (nicola_left) {
+                    register_mods(MOD_BIT(KC_LEFT_ALT));
+                }
+                if (nicola_right) {
+                    register_mods(MOD_BIT(KC_RIGHT_ALT));
+                }
+                nicola_passthrough = true;
+            }
+#endif
             return true;
     }
     return false;
@@ -159,3 +174,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
     return true;
 }
+
+#if 0
+void post_process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (nicola_passthrough) {
+        nicola_passthrough = false;
+        if (nicola_left) {
+            unregister_mods(MOD_BIT(KC_LEFT_ALT));
+        }
+        if (nicola_right) {
+            unregister_mods(MOD_BIT(KC_RIGHT_ALT));
+        }
+    }
+}
+#endif
