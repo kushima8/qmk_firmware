@@ -41,10 +41,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
-static LED_TYPE indicator[3] = {0};
 static bool nicola_enable = false;
 static bool nicola_left = false;
 static bool nicola_right = false;
+
+static LED_TYPE indicator[3] = {0};
+
 
 #if 0
 static bool nicola_passthrough = false;
@@ -92,57 +94,91 @@ static bool nicola_process(uint16_t keycode, keyrecord_t *record) {
     }
     switch (keycode) {
 
-        // left hand
+#if 0
+        case KC_1:
+            nicola_send_string(pressed, "1", "?", NULL); break;
+        case KC_2:
+            nicola_send_string(pressed, "2", "/", NULL); break;
+        case KC_3:
+            nicola_send_string(pressed, "3", "~", NULL); break;
+        case KC_4:
+            nicola_send_string(pressed, "4", "[", NULL); break;
+        case KC_5:
+            nicola_send_string(pressed, "5", "]", NULL); break;
+        case KC_6:
+            nicola_send_string(pressed, "6", NULL, "["); break;
+        case KC_7:
+            nicola_send_string(pressed, "7", NULL, "]"); break;
+        case KC_8:
+            nicola_send_string(pressed, "8", NULL, "("); break;
+        case KC_9:
+            nicola_send_string(pressed, "9", NULL, ")"); break;
+        case KC_0:
+            nicola_send_string(pressed, "0", NULL, "["); break;
+#endif
 
-        case KC_1: /*TODO*/ break;
-        case KC_2: /*TODO*/ break;
-        case KC_3: /*TODO*/ break;
-        case KC_4: /*TODO*/ break;
-        case KC_5: /*TODO*/ break;
+        case KC_Q:
+            nicola_send_string(pressed, ".", "xa", NULL); break;
+        case KC_W:
+            nicola_send_string(pressed, "ka", "e", "ga"); break;
+        case KC_E:
+            nicola_send_string(pressed, "ta", "ri", "da"); break;
+        case KC_R:
+            nicola_send_string(pressed, "ko", "xya", "go"); break;
+        case KC_T:
+            nicola_send_string(pressed, "sa", "re", "za"); break;
+        case KC_Y:
+            nicola_send_string(pressed, "ra", "pa", "yo"); break;
+        case KC_U:
+            nicola_send_string(pressed, "ti", "di", "ni"); break;
+        case KC_I:
+            nicola_send_string(pressed, "ku", "gu", "ru"); break;
+        case KC_O:
+            nicola_send_string(pressed, "tu", "du", "ma"); break;
+        case KC_P:
+            nicola_send_string(pressed, ",", "pi", "xe"); break;
 
-        case KC_Q: /*TODO*/ break;
-        case KC_W: /*TODO*/ break;
-        case KC_E: /*TODO*/ break;
-        case KC_R: /*TODO*/ break;
-        case KC_T: /*TODO*/ break;
+        case KC_A:
+            nicola_send_string(pressed, "u", "wo", NULL); break;
+        case KC_S:
+            nicola_send_string(pressed, "si", "a", "ji"); break;
+        case KC_D:
+            nicola_send_string(pressed, "te", "na", "de"); break;
+        case KC_F:
+            nicola_send_string(pressed, "ke", "xyu", "ge"); break;
+        case KC_G:
+            nicola_send_string(pressed, "se", "mo", "ze"); break;
+        case KC_H:
+            nicola_send_string(pressed, "ha", "ba", "mi"); break;
+        case KC_J:
+            nicola_send_string(pressed, "to", "do", "o"); break;
+        case KC_K:
+            nicola_send_string(pressed, "ki", "gi", "no"); break;
+        case KC_L:
+            nicola_send_string(pressed, "i", "po", "xyo"); break;
+        case KC_SCLN:
+            nicola_send_string(pressed, "nn", NULL, "xtu"); break;
 
-        case KC_A: nicola_send_string(pressed, "u", "wo", NULL); break;
-        case KC_S: nicola_send_string(pressed, "si", "a", "ji"); break;
-        case KC_D: nicola_send_string(pressed, "te", "na", "de"); break;
-        case KC_F: nicola_send_string(pressed, "ke", "xyu", "ge"); break;
-        case KC_G: nicola_send_string(pressed, "se", "mo", "ze"); break;
-
-        case KC_Z: /*TODO*/ break;
-        case KC_X: /*TODO*/ break;
-        case KC_C: /*TODO*/ break;
-        case KC_V: /*TODO*/ break;
-        case KC_B: /*TODO*/ break;
-
-        // right hand
-
-        case KC_6: /*TODO*/ break;
-        case KC_7: /*TODO*/ break;
-        case KC_8: /*TODO*/ break;
-        case KC_9: /*TODO*/ break;
-        case KC_0: /*TODO*/ break;
-
-        case KC_Y: /*TODO*/ break;
-        case KC_U: /*TODO*/ break;
-        case KC_I: /*TODO*/ break;
-        case KC_O: /*TODO*/ break;
-        case KC_P: /*TODO*/ break;
-
-        case KC_H: /*TODO*/ break;
-        case KC_J: /*TODO*/ break;
-        case KC_K: /*TODO*/ break;
-        case KC_L: /*TODO*/ break;
-        case KC_SCLN: /*TODO*/ break;
-
-        case KC_N: /*TODO*/ break;
-        case KC_M: /*TODO*/ break;
-        case KC_COMM: /*TODO*/ break;
-        case KC_DOT: /*TODO*/ break;
-        case KC_SLSH: /*TODO*/ break;
+        case KC_Z:
+            nicola_send_string(pressed, ".", "xu", NULL); break;
+        case KC_X:
+            nicola_send_string(pressed, "hi", "-", "bi"); break;
+        case KC_C:
+            nicola_send_string(pressed, "su", "ro", "zu"); break;
+        case KC_V:
+            nicola_send_string(pressed, "hu", "ya", "bu"); break;
+        case KC_B:
+            nicola_send_string(pressed, "he", "xi", "be"); break;
+        case KC_N:
+            nicola_send_string(pressed, "me", "pu", "nu"); break;
+        case KC_M:
+            nicola_send_string(pressed, "so", "zo", "yu"); break;
+        case KC_COMM:
+            nicola_send_string(pressed, "ne", "pe", "mu"); break;
+        case KC_DOT:
+            nicola_send_string(pressed, "ho", "bo", "wa"); break;
+        case KC_SLSH:
+            nicola_send_string(pressed, "/", NULL, "xo"); break;
 
         default:
 #if 0
