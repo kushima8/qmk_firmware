@@ -36,6 +36,7 @@ void keyboard_post_init_user(void) {
 
 #ifdef RGBLIGHT_ENABLE
     rgblight_enable_noeeprom();
+    rgblight_sethsv_noeeprom(0, 0, 255);
     rgblight_mode_noeeprom(RGBLIGHT_MODE_RGB_TEST);
 #endif
 }
