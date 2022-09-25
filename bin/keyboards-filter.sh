@@ -8,5 +8,6 @@ exec sed \
   -e '\!^yuiop!p' \
   -e '\!^keyball!p' \
   -e '\!^re64!p' \
+  -e '\!^silverbullet44!p' \
   -e '\!^uzu42!p' \
   -e 'd' "$@"

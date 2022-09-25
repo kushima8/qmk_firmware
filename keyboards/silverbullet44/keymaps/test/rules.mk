@@ -1,0 +1,5 @@
+RGBLIGHT_ENABLE = yes
+
+OLED_ENABLE = no
+
+AUDIO_ENABLE = no
