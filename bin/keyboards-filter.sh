@@ -10,4 +10,5 @@ exec sed \
   -e '\!^re64!p' \
   -e '\!^silverbullet44!p' \
   -e '\!^uzu42!p' \
+  -e '\!^yushakobo/navpad/10/rev1!p' \
   -e 'd' "$@"
