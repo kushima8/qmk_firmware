@@ -56,7 +56,7 @@ void keyboard_post_init_user() {
     rgblight_enable_noeeprom();
     rgblight_sethsv_noeeprom(0, 0, 0);
 #endif
-    keyball_set_cpi(20);
+    keyball_set_cpi(15);
     keyball_set_scroll_div(5);
 }
 
