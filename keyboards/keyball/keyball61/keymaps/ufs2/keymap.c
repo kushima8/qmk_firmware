@@ -26,7 +26,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_1     , KC_2     , KC_3     , KC_4     , KC_5     , KC_ESC   ,
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_Q     , _______  , S(KC_W)  , KC_I     , KC_U     , KC_TAB   ,
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  S(KC_A)  , KC_BTN1  , KC_BTN2  , S(KC_D)  , KC_Z     , KC_ENT   ,
-    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_SPC   , _______  , KC_M     , S(KC_S)  , _______  , _______  , _______  ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_SPC   , _______  , KC_M     , S(KC_S)  , SCRL_MO  , _______  , _______  ,
     _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            _______  , TG(1)    , _______  , _______  , _______  , _______  , KC_F3
   ),
 
@@ -57,7 +57,7 @@ void keyboard_post_init_user() {
     rgblight_sethsv_noeeprom(0, 0, 0);
 #endif
     keyball_set_cpi(15);
-    keyball_set_scroll_div(5);
+    keyball_set_scroll_div(6);
 }
 
 #ifdef OLED_ENABLE
