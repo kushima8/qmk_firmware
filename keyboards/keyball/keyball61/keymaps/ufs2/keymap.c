@@ -24,17 +24,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_universal(
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_1     , KC_2     , KC_3     , KC_4     , KC_5     , KC_ESC   ,
-    _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_Z     , KC_U     , KC_W     , KC_I     , KC_F3    , KC_TAB   ,
-    _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_A     ,C(KC_BTN1), KC_BTN2  , KC_D     , KC_LBRC  , KC_RBRC  ,
-    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_LSFT  , KC_ENT   , KC_M     , KC_S     , KC_Q     , KC_MINS  , KC_EQL   ,
-    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_SPC   , KC_BTN1  , _______  , _______  , _______  , KC_PGDN  , KC_PGUP
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_Q     , KC_U     , S(KC_W)  , KC_I     , KC_F3    , KC_TAB   ,
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  S(KC_A)  , KC_BTN1  , KC_BTN2  , S(KC_D)  , _______  , KC_ENT   ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            TG(1)    , KC_Z     , KC_M     , S(KC_S)  , _______  , _______  , _______  ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_SPC   , KC_BTN1  , _______  , _______  , _______  , _______  , _______
+  ),
+
+  [1] = LAYOUT_universal(
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  _______  , _______  , _______  , _______  , _______  , _______  ,
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  _______  , _______  , _______  , _______  , _______  , _______  ,
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  _______  ,C(KC_BTN1), _______  , _______  , KC_LBRC  , KC_RBRC  ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            _______  , _______  , _______  , _______  , _______  , KC_MINS  , KC_EQL   ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            _______  , _______  , _______  , _______  , _______  , KC_PGDN  , KC_PGUP
   ),
 };
 // clang-format on
-//
+
+#ifdef RGBLIGHT_ENABLE
+layer_state_t layer_state_set_user(layer_state_t state) {
+    if (!layer_state_cmp(state, 1)) {
+        rgblight_sethsv_noeeprom(0, 0, 0);
+    } else {
+        rgblight_sethsv_noeeprom(132, 255, 255);
+    }
+    return state;
+}
+#endif
+
 void keyboard_post_init_user() {
 #ifdef RGBLIGHT_ENABLE
-    rgblight_disable_noeeprom();
+    rgblight_enable_noeeprom();
+    rgblight_sethsv_noeeprom(0, 0, 0);
 #endif
     keyball_set_cpi(20);
     keyball_set_scroll_div(5);
