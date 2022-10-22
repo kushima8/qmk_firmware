@@ -25,8 +25,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_universal(
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_1     , KC_2     , KC_3     , KC_4     , KC_5     , KC_ESC   ,
     _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_Z     , KC_U     , KC_W     , KC_I     , KC_F3    , KC_TAB   ,
-    _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_S     ,C(KC_BTN1), KC_BTN2  , KC_D     , KC_LBRC  , KC_RBRC  ,
-    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_LSFT  , KC_ENT   , KC_M     , KC_A     , KC_Q     , KC_MINS  , KC_EQL   ,
+    _______  , _______  , _______  , _______  , _______  , _______  ,                                  KC_A     ,C(KC_BTN1), KC_BTN2  , KC_D     , KC_LBRC  , KC_RBRC  ,
+    _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_LSFT  , KC_ENT   , KC_M     , KC_S     , KC_Q     , KC_MINS  , KC_EQL   ,
     _______  , _______  , _______  , _______  , _______  , _______  , _______  ,            KC_SPC   , KC_BTN1  , _______  , _______  , _______  , KC_PGDN  , KC_PGUP
   ),
 };
@@ -36,7 +36,7 @@ void keyboard_post_init_user() {
 #ifdef RGBLIGHT_ENABLE
     rgblight_disable_noeeprom();
 #endif
-    keyball_set_cpi(19);
+    keyball_set_cpi(20);
     keyball_set_scroll_div(5);
 }
 

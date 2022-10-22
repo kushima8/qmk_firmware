@@ -386,7 +386,7 @@ void keyball_oled_render_keyinfo(void) {
     //     Key :  R2  C3 K06  'c
     //     Ball:   0   0   0   0
     //
-    uint8_t keycode = keyball.last_kc;
+    uint16_t keycode = keyball.last_kc;
 
     oled_write_P(PSTR("Key :  R"), false);
     oled_write_char(to_1x(keyball.last_pos.row), false);
@@ -394,6 +394,10 @@ void keyball_oled_render_keyinfo(void) {
     oled_write_char(to_1x(keyball.last_pos.col), false);
     if (keycode) {
         oled_write_P(PSTR(" K"), false);
+        if (keycode > 0xff) {
+            oled_write_char(to_1x(keycode >> 12), false);
+            oled_write_char(to_1x(keycode >> 8), false);
+        }
         oled_write_char(to_1x(keycode >> 4), false);
         oled_write_char(to_1x(keycode), false);
     }
@@ -490,6 +494,11 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
         return false;
     }
 
+    // strip QK_MODS part.
+    if (keycode >= QK_MODS && keycode <= QK_MODS_MAX) {
+        keycode &= 0xff;
+    }
+
     switch (keycode) {
 #ifndef MOUSEKEY_ENABLE
         // process KC_MS_BTN1~8 by myself
@@ -498,12 +507,12 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             extern void register_button(bool, enum mouse_buttons);
             register_button(record->event.pressed, MOUSE_BTN_MASK(keycode - KC_MS_BTN1));
             return false;
+        }
 #endif
 
-            case SCRL_MO:
-                keyball_set_scroll_mode(record->event.pressed);
-                return false;
-        }
+        case SCRL_MO:
+            keyball_set_scroll_mode(record->event.pressed);
+            return false;
     }
 
     // process events which works on pressed only.
