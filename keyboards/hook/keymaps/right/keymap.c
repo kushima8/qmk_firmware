@@ -13,52 +13,53 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdio.h>
 #include QMK_KEYBOARD_H
-#include "keymap_jp.h"
+#include "keymap_japanese.h"
 
 // Defines names for use in layer keycodes and the keymap
 enum layer_names {
-     _BASE,
-     _FN,
+     _1st,
      _2nd,
-     _3rd
+     _3rd,
+     _4th
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-     [_BASE] = LAYOUT(
+     [_1st] = LAYOUT(
      // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------.
-        KC_ESC   ,JP_ZKHK ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,KC_Y    ,KC_SPC  ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,JP_AT   ,JP_LBRC ,KC_RGUI ,KC_BSPC ,KC_1    ,KC_2    ,KC_3    ,KC_0    ,JP_MINS ,JP_CIRC ,KC_Z    ,
+          JP_CIRC,JP_MINS ,KC_0    ,KC_3    ,KC_2    ,KC_1    ,KC_BSPC ,KC_RGUI ,JP_LBRC ,JP_AT   ,KC_P    ,KC_O    ,KC_I    ,KC_U    ,KC_SPC  ,KC_Y    ,KC_T    ,KC_R    ,KC_E    ,KC_W    ,KC_Q    ,JP_ZKHK ,KC_ESC  ,KC_A    ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TAB   ,KC_LSFT ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,KC_H    ,KC_SPC  ,KC_J    ,KC_K    ,KC_L    ,JP_SCLN ,JP_COLN ,JP_RBRC ,KC_RSFT ,KC_ENT  ,KC_4    ,KC_5    ,KC_6    ,KC_A    ,KC_UP   ,KC_B    ,
+          KC_B   ,KC_UP   ,KC_A    ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_CAPS  ,KC_LCTRL,KC_LALT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,KC_SPC  ,KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,JP_BSLS ,KC_Z    ,KC_RCTRL,KC_7    ,KC_8    ,KC_9    ,KC_LEFT ,KC_DOWN ,KC_RIGHT
-     // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
-     ),
-     [_FN] = LAYOUT(
-     // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------.
-        KC_ESC   ,JP_ZKHK ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,KC_Y    ,KC_SPC  ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,JP_AT   ,JP_LBRC ,KC_RGUI ,KC_BSPC ,KC_1    ,KC_2    ,KC_3    ,KC_0    ,JP_MINS ,JP_CIRC ,KC_Z    ,
-     // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TAB   ,KC_LSFT ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,KC_H    ,KC_SPC  ,KC_J    ,KC_K    ,KC_L    ,JP_SCLN ,JP_COLN ,JP_RBRC ,KC_RSFT ,KC_ENT  ,KC_4    ,KC_5    ,KC_6    ,KC_A    ,KC_UP   ,KC_B    ,
-     // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_CAPS  ,KC_LCTRL,KC_LALT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,KC_SPC  ,KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,JP_BSLS ,KC_Z    ,KC_RCTRL,KC_7    ,KC_8    ,KC_9    ,KC_LEFT ,KC_DOWN ,KC_RIGHT
+         KC_RIGHT,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,KC_Z    ,JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
      ),
      [_2nd] = LAYOUT(
      // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------.
-        KC_ESC   ,JP_ZKHK ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,KC_Y    ,KC_SPC  ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,JP_AT   ,JP_LBRC ,KC_RGUI ,KC_BSPC ,KC_1    ,KC_2    ,KC_3    ,KC_0    ,JP_MINS ,JP_CIRC ,KC_Z    ,
+          JP_CIRC,JP_MINS ,KC_0    ,KC_3    ,KC_2    ,KC_1    ,KC_BSPC ,KC_RGUI ,JP_LBRC ,JP_AT   ,KC_P    ,KC_O    ,KC_I    ,KC_U    ,KC_SPC  ,KC_Y    ,KC_T    ,KC_R    ,KC_E    ,KC_W    ,KC_Q    ,JP_ZKHK ,KC_ESC  ,KC_B    ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TAB   ,KC_LSFT ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,KC_H    ,KC_SPC  ,KC_J    ,KC_K    ,KC_L    ,JP_SCLN ,JP_COLN ,JP_RBRC ,KC_RSFT ,KC_ENT  ,KC_4    ,KC_5    ,KC_6    ,KC_A    ,KC_UP   ,KC_B    ,
+          KC_B   ,KC_UP   ,KC_A    ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_CAPS  ,KC_LCTRL,KC_LALT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,KC_SPC  ,KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,JP_BSLS ,KC_Z    ,KC_RCTRL,KC_7    ,KC_8    ,KC_9    ,KC_LEFT ,KC_DOWN ,KC_RIGHT
+         KC_RIGHT,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,KC_Z    ,JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
      ),
      [_3rd] = LAYOUT(
      // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------.
-        KC_ESC   ,JP_ZKHK ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,KC_Y    ,KC_SPC  ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,JP_AT   ,JP_LBRC ,KC_RGUI ,KC_BSPC ,KC_1    ,KC_2    ,KC_3    ,KC_0    ,JP_MINS ,JP_CIRC ,KC_Z    ,
+          JP_CIRC,JP_MINS ,KC_0    ,KC_3    ,KC_2    ,KC_1    ,KC_BSPC ,KC_RGUI ,JP_LBRC ,JP_AT   ,KC_P    ,KC_O    ,KC_I    ,KC_U    ,KC_SPC  ,KC_Y    ,KC_T    ,KC_R    ,KC_E    ,KC_W    ,KC_Q    ,JP_ZKHK ,KC_ESC  ,KC_C    ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TAB   ,KC_LSFT ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,KC_H    ,KC_SPC  ,KC_J    ,KC_K    ,KC_L    ,JP_SCLN ,JP_COLN ,JP_RBRC ,KC_RSFT ,KC_ENT  ,KC_4    ,KC_5    ,KC_6    ,KC_A    ,KC_UP   ,KC_B    ,
+          KC_B   ,KC_UP   ,KC_A    ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_CAPS  ,KC_LCTRL,KC_LALT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,KC_SPC  ,KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,JP_BSLS ,KC_Z    ,KC_RCTRL,KC_7    ,KC_8    ,KC_9    ,KC_LEFT ,KC_DOWN ,KC_RIGHT
+         KC_RIGHT,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,KC_Z    ,JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
+     // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
+     ),
+     [_4th] = LAYOUT(
+     // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------.
+          JP_CIRC,JP_MINS ,KC_0    ,KC_3    ,KC_2    ,KC_1    ,KC_BSPC ,KC_RGUI ,JP_LBRC ,JP_AT   ,KC_P    ,KC_O    ,KC_I    ,KC_U    ,KC_SPC  ,KC_Y    ,KC_T    ,KC_R    ,KC_E    ,KC_W    ,KC_Q    ,JP_ZKHK ,KC_ESC  ,KC_D    ,
+     // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
+          KC_B   ,KC_UP   ,KC_A    ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
+     // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
+         KC_RIGHT,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,KC_Z    ,JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
      )
 };
@@ -106,7 +107,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 
 #endif
 
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
 
 static void render_logo(void) {
     static const char PROGMEM qmk_logo[] = {
@@ -122,11 +123,17 @@ static void print_status_narrow(void) {
     oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("LAYER"), false);
     switch (get_highest_layer(layer_state)) {
-        case _BASE:
-            oled_write_ln_P(PSTR("BAS"), false);
+        case _1st:
+            oled_write_ln_P(PSTR("1st"), false);
             break;
-        case _FN:
-            oled_write_ln_P(PSTR("FN"), false);
+        case _2nd:
+            oled_write_ln_P(PSTR("2nd"), false);
+            break;
+        case _3rd:
+            oled_write_ln_P(PSTR("3rd"), false);
+            break;
+        case _4th:
+            oled_write_ln_P(PSTR("4th"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);
@@ -136,7 +143,7 @@ static void print_status_narrow(void) {
         oled_write_ln_P(PSTR(""), false);
         oled_write_ln_P(PSTR("LED"), false);
         oled_write_ln_P(PSTR(""), false);
-        static char rgbMode[6] = {0};
+        char rgbMode[6] = {0};
         snprintf(rgbMode, sizeof(rgbMode), "M:%-3d", rgblight_get_mode());
         oled_write(rgbMode, false);
         static char rgbHue[6] = {0};
@@ -147,7 +154,7 @@ static void print_status_narrow(void) {
         oled_write(rgbSat, false);
         static char rgbVal[6] = {0};
         snprintf(rgbVal, sizeof(rgbVal), "V:%-3d", rgblight_get_val());
-        oled_write(rgbVal, false);
+            oled_write(rgbVal, false);
     #endif
 }
 
@@ -158,12 +165,13 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
 
-void oled_task_user(void) {
+bool oled_task_user(void) {
     if (is_keyboard_master()) {
         print_status_narrow();
     } else {
         render_logo();
     }
+    return false;
 }
 
 #endif
