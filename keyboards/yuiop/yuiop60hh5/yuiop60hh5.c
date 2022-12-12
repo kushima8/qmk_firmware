@@ -32,49 +32,66 @@ matrix_row_t matrix_mask[MATRIX_ROWS] = {
 #    include <string.h>
 #    include "ws2812.h"
 
-static bool     led_states_dirty;
-static LED_TYPE led_states[3];
+#    ifndef LAS_LAYER_LED_VALUE
+#        define LAS_LAYER_LED_VALUE 64
+#    endif
 
-static void LAS_set(int n, uint8_t r, uint8_t g, uint8_t b) {
-    LED_TYPE next    = {.r = r, .g = g, .b = b};
-    led_states[n]    = next;
-    led_states_dirty = true;
+typedef struct {
+    bool  layers[3];
+    led_t locks;
+} las_state_t;
+
+void las_led_set(LED_TYPE *led, uint8_t r, uint8_t g, uint8_t b) {
+    LED_TYPE v = { .r = r, .g = g, .b = b };
+    *led = v;
 }
 
-static void LAS_clear(int n) { LAS_set(n, 0, 0, 0); }
-
-static void LAS_update(int n, uint8_t r, uint8_t g, uint8_t b, bool enable) {
-    if (enable) {
-        LAS_set(n, r, g, b);
-    } else {
-        LAS_clear(n);
-    }
+void las_init(void) {
+    LED_TYPE leds[3] = {0};
+    ws2812_setleds(leds, 3);
 }
 
-static void led_states_commit(void) {
-    if (!led_states_dirty) {
+static las_state_t las = {0};
+
+void las_layer_state_set(layer_state_t state) {
+    las.layers[0] = layer_state_cmp(state, 1);
+    las.layers[1] = layer_state_cmp(state, 2);
+    las.layers[2] = layer_state_cmp(state, 3);
+}
+
+void las_led_update(led_t led_state) {
+    las.locks = led_state;
+}
+
+void las_housekeeping(void) {
+    static las_state_t prev = {0};
+    if (memcmp(&las, &prev, sizeof(las)) == 0) {
         return;
     }
-    ws2812_setleds(led_states, 3);
-}
-
-static void led_array_state_init(void) {
-    for (int i = 0; i < 3; i++) {
-        LAS_clear(i);
+    prev = las;
+    LED_TYPE leds[3] = {0};
+    // apply layers state
+    if (las.layers[0]) {
+        las_led_set(&leds[0], LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE);
     }
-    led_states_commit();
-}
-
-bool led_update_kb(led_t led_state) {
-    bool res = led_update_user(led_state);
-    if (!res) {
-        return false;
+    if (las.layers[1]) {
+        las_led_set(&leds[1], LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE);
     }
-    LAS_update(0, 0xff, 0x00, 0x00, led_state.caps_lock);
-    LAS_update(1, 0x00, 0xff, 0x00, led_state.scroll_lock);
-    LAS_update(2, 0x00, 0x00, 0xff, led_state.num_lock);
-    led_states_commit();
-    return true;
+    if (las.layers[2]) {
+        las_led_set(&leds[2], LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE, LAS_LAYER_LED_VALUE);
+    }
+    // apply locks state
+    if (las.locks.caps_lock) {
+        leds[0].r = 0xff;
+    }
+    if (las.locks.scroll_lock) {
+        leds[1].g = 0xff;
+    }
+    if (las.locks.num_lock) {
+        leds[2].b = 0xff;
+    }
+    // update WS2812 array
+    ws2812_setleds(leds, 3);
 }
 
 #endif
@@ -83,7 +100,31 @@ bool led_update_kb(led_t led_state) {
 
 void keyboard_post_init_kb(void) {
 #ifdef LED_ARRAY_STATE
-    led_array_state_init();
+    las_init();
 #endif
     keyboard_post_init_user();
+}
+
+layer_state_t layer_state_set_kb(layer_state_t state) {
+#ifdef LED_ARRAY_STATE
+    las_layer_state_set(state);
+#endif
+    return state;
+}
+
+bool led_update_kb(led_t led_state) {
+    bool res = led_update_user(led_state);
+    if (!res) {
+        return false;
+    }
+#ifdef LED_ARRAY_STATE
+    las_led_update(led_state);
+#endif
+    return true;
+}
+
+void housekeeping_task_kb(void) {
+#ifdef LED_ARRAY_STATE
+    las_housekeeping();
+#endif
 }
