@@ -15,6 +15,14 @@
  */
 #include <stdio.h>
 #include QMK_KEYBOARD_H
+#include "eeprom.h"
+
+#if defined(RGBLIGHT_ENABLE)
+    #include "rgblight.h"
+#elif defined(RGB_MATRIX_ENABLE)
+    #include "rgb_matrix.h"
+    extern rgb_config_t rgb_matrix_config;
+#endif
 
 // Defines names for use in layer keycodes and the keymap
 enum layer_names {
@@ -174,3 +182,17 @@ bool oled_task_user(void) {
 }
 
 #endif
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    uint8_t layer = get_highest_layer(state);
+
+    if (layer < DYNAMIC_KEYMAP_LAYER_COUNT) {
+        #if defined(RGBLIGHT_ENABLE)
+                rgblight_update_dword(eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer)));
+        #elif defined(RGB_MATRIX_ENABLE)
+                rgb_matrix_config.raw = eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer));
+        #endif
+    }
+
+    return state;
+}

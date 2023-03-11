@@ -30,6 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MATRIX_ROWS 12
 #define MATRIX_COLS 6
 
+// VIA config
+#define VIA_CUSTOM_LIGHTING_ENABLE
+#define VIA_RGBLIGHT_USER_ADDR (EECONFIG_SIZE)
+#define VIA_EEPROM_MAGIC_ADDR (VIA_RGBLIGHT_USER_ADDR + DYNAMIC_KEYMAP_LAYER_COUNT * 4)  // Layer * 4bytes(RGB Light config)
+
 /*
  * Keyboard Matrix Assignments
  *
