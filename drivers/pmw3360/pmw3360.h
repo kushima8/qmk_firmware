@@ -1,16 +1,13 @@
 /*
 Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -24,8 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Configurations
 
 #ifndef PMW3360_NCS_PIN
-#    define PMW3360_NCS_PIN B6
+#    define PMW3360_NCS_PIN F7
 #endif
+
+/// DEBUG_PMW3360_SCAN_RATE enables scan performance counter.
+/// It records scan count in a last second and enables pmw3360_scan_rate_get().
+/// Additionally, it will be logged automatically when defined CONSOLE_ENABLE
+/// and `debug_enable = true`.
+//#define DEBUG_PMW3360_SCAN_RATE
 
 //////////////////////////////////////////////////////////////////////////////
 // Top level API
@@ -49,11 +52,15 @@ bool pmw3360_motion_read(pmw3360_motion_t *d);
 /// just before.
 bool pmw3360_motion_burst(pmw3360_motion_t *d);
 
-// TODO: document
-uint16_t pmw3360_cpi_get(void);
+/// pmw3360_scan_rate_get gets count of scan in a last second.
+/// This works only when DEBUG_PMW3360_SCAN_RATE is defined.
+uint32_t pmw3360_scan_rate_get(void);
 
 // TODO: document
-void pmw3360_cpi_set(uint16_t cpi);
+uint8_t pmw3360_cpi_get(void);
+
+// TODO: document
+void pmw3360_cpi_set(uint8_t cpi);
 
 //////////////////////////////////////////////////////////////////////////////
 // Register operations
@@ -117,8 +124,7 @@ typedef enum {
 } pmw3360_reg_t;
 
 enum {
-    pmw3360_MINCPI = 100,
-    pmw3360_MAXCPI = 12000,
+    pmw3360_MAXCPI = 0x77, // = 119: 12000 CPI
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -126,8 +132,14 @@ enum {
 
 bool pmw3360_spi_start(void);
 
-void inline pmw3360_spi_stop(void) { spi_stop(); }
+void inline pmw3360_spi_stop(void) {
+    spi_stop();
+}
 
-spi_status_t inline pmw3360_spi_write(uint8_t data) { return spi_write(data); }
+spi_status_t inline pmw3360_spi_write(uint8_t data) {
+    return spi_write(data);
+}
 
-spi_status_t inline pmw3360_spi_read(void) { return spi_read(); }
+spi_status_t inline pmw3360_spi_read(void) {
+    return spi_read();
+}

@@ -1,16 +1,13 @@
 /*
 Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -20,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define PMW3360_SPI_MODE 3
 #define PMW3360_SPI_DIVISOR (F_CPU / PMW3360_CLOCKS)
-#define PMW3360_CLOCKS 70000000
+#define PMW3360_CLOCKS 2000000
 
-bool pmw3360_spi_start(void) { return spi_start(PMW3360_NCS_PIN, false, PMW3360_SPI_MODE, PMW3360_SPI_DIVISOR); }
+bool pmw3360_spi_start(void) {
+    return spi_start(PMW3360_NCS_PIN, false, PMW3360_SPI_MODE, PMW3360_SPI_DIVISOR);
+}
 
 uint8_t pmw3360_reg_read(uint8_t addr) {
     pmw3360_spi_start();
@@ -42,21 +41,42 @@ void pmw3360_reg_write(uint8_t addr, uint8_t data) {
     wait_us(180);
 }
 
-uint16_t pmw3360_cpi_get(void) {
-    uint8_t cpi8 = pmw3360_reg_read(pmw3360_Config1);
-    return ((uint16_t)cpi8 + 1) * 100;
+uint8_t pmw3360_cpi_get(void) {
+    return pmw3360_reg_read(pmw3360_Config1);
 }
 
-void pmw3360_cpi_set(uint16_t cpi) {
-    if (cpi < pmw3360_MINCPI) {
-        cpi = pmw3360_MINCPI;
-    } else if (cpi > pmw3360_MAXCPI) {
+void pmw3360_cpi_set(uint8_t cpi) {
+    if (cpi > pmw3360_MAXCPI) {
         cpi = pmw3360_MAXCPI;
     }
-    pmw3360_reg_write(pmw3360_Config1, (uint8_t)((cpi / 100) - 1));
+    pmw3360_reg_write(pmw3360_Config1, cpi);
+}
+
+static uint32_t pmw3360_timer      = 0;
+static uint32_t pmw3360_scan_count = 0;
+static uint32_t pmw3360_last_count = 0;
+
+void pmw3360_scan_perf_task(void) {
+    pmw3360_scan_count++;
+    uint32_t now = timer_read32();
+    if (TIMER_DIFF_32(now, pmw3360_timer) > 1000) {
+#if defined(CONSOLE_ENABLE)
+        dprintf("pmw3360 scan frequency: %lu\n", pmw3360_scan_count);
+#endif
+        pmw3360_last_count = pmw3360_scan_count;
+        pmw3360_scan_count = 0;
+        pmw3360_timer      = now;
+    }
+}
+
+uint32_t pmw3360_scan_rate_get(void) {
+    return pmw3360_last_count;
 }
 
 bool pmw3360_motion_read(pmw3360_motion_t *d) {
+#ifdef DEBUG_PMW3360_SCAN_RATE
+    pmw3360_scan_perf_task();
+#endif
     uint8_t mot = pmw3360_reg_read(pmw3360_Motion);
     if ((mot & 0x88) != 0x80) {
         return false;
@@ -69,6 +89,9 @@ bool pmw3360_motion_read(pmw3360_motion_t *d) {
 }
 
 bool pmw3360_motion_burst(pmw3360_motion_t *d) {
+#ifdef DEBUG_PMW3360_SCAN_RATE
+    pmw3360_scan_perf_task();
+#endif
     pmw3360_spi_start();
     spi_write(pmw3360_Motion_Burst);
     wait_us(35);
