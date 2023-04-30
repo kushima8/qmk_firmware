@@ -20,44 +20,25 @@
 
 #define DIODE_DIRECTION COL2ROW
 
-// VIA config
-#define VIA_CUSTOM_LIGHTING_ENABLE
-#define VIA_RGBLIGHT_USER_ADDR (EECONFIG_SIZE)
-#define VIA_EEPROM_MAGIC_ADDR (VIA_RGBLIGHT_USER_ADDR + DYNAMIC_KEYMAP_LAYER_COUNT * 4)  // Layer * 4bytes(RGB Light config)
-
-
-#define SPLIT_TRANSACTION_IDS_KB REEX_GET_INFO, REEX_GET_MOTION, REEX_SET_CPI
-
 // RGB LED settings
 #define RGB_DI_PIN          D3
 #ifdef RGBLIGHT_ENABLE
 #    define RGBLED_NUM      4
-#    ifndef RGBLIGHT_LIMIT_VAL
-#        define RGBLIGHT_LIMIT_VAL  100 // limitated for power consumption
-#    endif
-#    ifndef RGBLIGHT_VAL_STEP
-#        define RGBLIGHT_VAL_STEP   12
-#    endif
-#    ifndef RGBLIGHT_HUE_STEP
-#        define RGBLIGHT_HUE_STEP   17
-#    endif
-#    ifndef RGBLIGHT_SAT_STEP
-#        define RGBLIGHT_SAT_STEP   17
-#    endif
+#    define RGBLIGHT_LIMIT_VAL  100 // limitated for power consumption
 #endif
 
-
-#if !defined(LAYER_STATE_8BIT) && !defined(LAYER_STATE_16BIT) && !defined(LAYER_STATE_32BIT)
-#    define LAYER_STATE_8BIT
-#endif
-
-// To squeeze firmware size
-#undef LOCKING_SUPPORT_ENABLE
-#undef LOCKING_RESYNC_ENABLE
 
 #ifdef RGBLIGHT_ENABLE
-#    define RGBLIGHT_EFFECT_BREATHING
-#    define RGBLIGHT_EFFECT_RGB_TEST
+    #define RGBLIGHT_EFFECT_BREATHING
+    #define RGBLIGHT_EFFECT_RAINBOW_MOOD
+    #define RGBLIGHT_EFFECT_RAINBOW_SWIRL
+    #define RGBLIGHT_EFFECT_SNAKE
+    #define RGBLIGHT_EFFECT_KNIGHT
+    #define RGBLIGHT_EFFECT_CHRISTMAS
+    #define RGBLIGHT_EFFECT_STATIC_GRADIENT
+    #define RGBLIGHT_EFFECT_RGB_TEST
+    #define RGBLIGHT_EFFECT_ALTERNATING
+    #define RGBLIGHT_EFFECT_TWINKLE
 #endif
 
 #define TAP_CODE_DELAY 5
