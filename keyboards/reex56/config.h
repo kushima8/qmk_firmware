@@ -41,7 +41,7 @@
 #        define RGBLIGHT_LIMIT_VAL  100 // limitated for power consumption
 #    endif
 #    ifndef RGBLIGHT_VAL_STEP
-#        define RGBLIGHT_VAL_STEP   12
+#        define RGBLIGHT_VAL_STEP   10
 #    endif
 #    ifndef RGBLIGHT_HUE_STEP
 #        define RGBLIGHT_HUE_STEP   17
