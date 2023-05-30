@@ -1,5 +1,6 @@
 /*
 Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
+Copyright 2023 kushima8
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

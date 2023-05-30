@@ -1,3 +1,20 @@
+/*
+Copyright 2023 kushima8
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include QMK_KEYBOARD_H
 #include "quantum.h"
 #include <stdio.h>
@@ -9,6 +26,8 @@ enum custom_keycodes {
     KC_MY_BTN1 = 0x8000,
     KC_MY_BTN2,
     KC_MY_BTN3,
+    KC_MY_BTN4,
+    KC_MY_BTN5,
     KC_MY_SCR,
     KC_TC_INC,
     KC_TC_DEC,
@@ -100,17 +119,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
     [3] = LAYOUT(
-    // ,--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------.
-        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
-    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
-        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
-    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
-        KC_TRNS ,KC_TRNS   ,KC_MY_BTN1,KC_MY_BTN2,KC_MY_SCR ,KC_TRNS ,         KC_TRNS ,KC_MY_SCR ,KC_MY_BTN1,KC_MY_BTN2,KC_TRNS   ,KC_TRNS ,
-    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
-        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
-    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
-        KC_TRNS ,KC_TRNS   ,KC_TRNS                         ,KC_TRNS ,         KC_TRNS                       ,KC_TRNS   ,KC_TRNS   ,KC_TRNS
-    // `--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------'
+    // ,--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------.
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,         KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,         KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_MY_BTN1,KC_MY_BTN2,KC_MY_SCR ,KC_MY_BTN4,         KC_MY_BTN4,KC_MY_SCR ,KC_MY_BTN1,KC_MY_BTN2,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_MY_BTN5,         KC_MY_BTN5,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS                         ,KC_TRNS   ,         KC_TRNS                         ,KC_TRNS   ,KC_TRNS   ,KC_TRNS
+    // `--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------'
     )
 };
 // clang-format on
@@ -181,6 +200,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case KC_MY_BTN1:
         case KC_MY_BTN2:
         case KC_MY_BTN3:
+        case KC_MY_BTN4:
+        case KC_MY_BTN5:
         {
             report_mouse_t currentReport = pointing_device_get_report();
 
