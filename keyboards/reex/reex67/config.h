@@ -55,7 +55,7 @@
 #endif
 
 #ifndef OLED_FONT_H
-#    define OLED_FONT_H "keyboards/reex67/lib/glcdfont.c"
+#    define OLED_FONT_H "keyboards/reex/lib/glcdfont.c"
 #endif
 
 #if !defined(LAYER_STATE_8BIT) && !defined(LAYER_STATE_16BIT) && !defined(LAYER_STATE_32BIT)

@@ -3,8 +3,9 @@
 #include <stdio.h>
 
 #define FN  MO(1)
-#define MOUSE  MO(2)
-#define BALL  MO(3)
+#define BALL  MO(2)
+#define MOUSE  MO(3)
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
@@ -17,7 +18,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_RSFT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,         KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,SFT_T(KC_ENT),
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,FN      ,KC_LALT                   ,MOUSE   ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,BALL
+        KC_LCTL ,BALL    ,KC_LALT                   ,MOUSE   ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,FN
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
     ),
     [1] = LAYOUT(
@@ -33,19 +34,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
-    [2] = LAYOUT(
-    // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_WBAK ,KC_BTN1 ,KC_BTN2 ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_WFWD ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
-    // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
-    )
     [3] = LAYOUT(
     // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
@@ -55,6 +43,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KBC_RST ,SCRL_MO ,CPI_I100,CPI_I1K ,SCRL_DVI,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KBC_SAVE,SCRL_TO ,CPI_D100,CPI_D1K ,SCRL_DVD,KC_TRNS ,
+    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
+        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
+    // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
+    ),
+    [3] = LAYOUT(
+    // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
+    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
+    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_BTN4 ,KC_BTN1 ,KC_BTN2 ,KC_BTN3 ,KC_TRNS ,KC_TRNS ,
+    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_BTN5 ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
@@ -71,3 +72,4 @@ void oledkit_render_info_user(void) {
     reex_oled_render_ballinfo();
 }
 #endif
+

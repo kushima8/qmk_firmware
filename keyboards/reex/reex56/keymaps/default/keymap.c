@@ -3,16 +3,17 @@
 #include <stdio.h>
 
 #define FN  MO(1)
+#define BALL  MO(2)
 
 enum custom_keycodes {
-    KC_MY_BTN1 = SAFE_RANGE,
+    KC_MY_BTN1 = 0x8000,
     KC_MY_BTN2,
     KC_MY_BTN3,
     KC_MY_SCR,
-    KC_TO_CLICKABLE_INC,
-    KC_TO_CLICKABLE_DEC,
-    KC_SCROLL_DIR_V,
-    KC_SCROLL_DIR_H,
+    KC_TC_INC,
+    KC_TC_DEC,
+    KC_SD_V,
+    KC_SD_H,
 };
 
 enum click_state {
@@ -69,7 +70,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_RSFT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,         KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,SFT_T(KC_ENT),
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,FN      ,KC_LALT                   ,KC_SPC  ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,FN
+        KC_LCTL ,BALL    ,KC_LALT                   ,KC_SPC  ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,FN
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
     ),
     [1] = LAYOUT(
@@ -80,36 +81,36 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_TOG ,RGB_HUI ,RGB_SAI ,RGB_VAI ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD,
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
     [2] = LAYOUT(
     // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
-        KC_ESC  ,KC_1    ,KC_2    ,KC_3    ,KC_4    ,KC_5    ,         KC_6    ,KC_7    ,KC_8    ,KC_9    ,KC_0    ,KC_MINS ,
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TAB  ,KC_Q    ,KC_W    ,KC_E    ,KC_R    ,KC_T    ,         KC_Y    ,KC_U    ,KC_I    ,KC_O    ,KC_P    ,KC_BSPC ,
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,KC_A    ,KC_S    ,KC_D    ,KC_F    ,KC_G    ,         KC_H    ,KC_J    ,KC_K    ,KC_L    ,KC_SCLN ,KC_QUOT ,
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_SD_V ,KBC_RST ,CPI_I100,CPI_I1K ,SCRL_DVI,KC_TC_INC ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_RSFT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,         KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,SFT_T(KC_ENT),
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_SD_H ,KBC_SAVE,CPI_D100,CPI_D1K ,SCRL_DVD,KC_TC_DEC ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,KC_TRNS ,KC_LALT                   ,KC_SPC  ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,KC_TRNS
-    // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
+        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
+    // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
     [3] = LAYOUT(
-    // ,--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+-------------------+-------------.
-        KC_TRNS ,KC_TRNS            ,KC_TRNS            ,KC_TRNS   ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS   ,KC_TRNS            ,KC_TRNS            ,KC_TRNS ,
-    // |--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+--------------------+------------|
-        KC_TRNS ,KC_TRNS            ,KC_TRNS            ,KC_TRNS   ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS   ,KC_TRNS            ,KC_TRNS            ,KC_TRNS ,
-    // |--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+-------------------+-------------|
-        KC_TRNS ,KC_MY_SCR          ,KC_MY_BTN1         ,KC_MY_BTN2,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_MY_BTN1,KC_MY_BTN2         ,KC_MY_SCR          ,KC_TRNS ,
-    // |--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+-------------------+-------------|
-        KC_TRNS ,KC_SCROLL_DIR_V    ,KC_SCROLL_DIR_H    ,KC_TRNS   ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS   ,KC_SCROLL_DIR_V    ,KC_SCROLL_DIR_H    ,KC_TRNS ,
-    // |--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+-------------------+-------------|
-        KC_TRNS ,KC_TO_CLICKABLE_INC,KC_TO_CLICKABLE_DEC                    ,KC_TRNS ,         KC_TRNS                     ,KC_TO_CLICKABLE_INC,KC_TO_CLICKABLE_DEC,KC_TRNS
-    // `--------+-------------------+-------------------+----------+--------+--------|        |--------+--------+----------+-------------------+-------------------+-------------'
+    // ,--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------.
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_MY_BTN1,KC_MY_BTN2,KC_MY_SCR ,KC_TRNS ,         KC_TRNS ,KC_MY_SCR ,KC_MY_BTN1,KC_MY_BTN2,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
+    // |--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------|
+        KC_TRNS ,KC_TRNS   ,KC_TRNS                         ,KC_TRNS ,         KC_TRNS                       ,KC_TRNS   ,KC_TRNS   ,KC_TRNS
+    // `--------+----------+----------+----------+----------+--------|        |--------+----------+----------+----------+----------+-------------'
     )
 };
 // clang-format on
@@ -213,14 +214,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
         return false;
 
-        case KC_TO_CLICKABLE_INC:
+        case KC_TC_INC:
             if (record->event.pressed) {
                 user_config.to_clickable_movement += 5; // user_config.to_clickable_time += 10;
                 eeconfig_update_user(user_config.raw);
             }
             return false;
 
-        case KC_TO_CLICKABLE_DEC:
+        case KC_TC_DEC:
             if (record->event.pressed) {
 
                 user_config.to_clickable_movement -= 5; // user_config.to_clickable_time -= 10;
@@ -238,14 +239,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_SCROLL_DIR_V:
+        case KC_SD_V:
             if (record->event.pressed) {
                 user_config.mouse_scroll_v_reverse = !user_config.mouse_scroll_v_reverse;
                 eeconfig_update_user(user_config.raw);
             }
             return false;
 
-        case KC_SCROLL_DIR_H:
+        case KC_SD_H:
             if (record->event.pressed) {
                 user_config.mouse_scroll_h_reverse = !user_config.mouse_scroll_h_reverse;
                 eeconfig_update_user(user_config.raw);
@@ -399,3 +400,4 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 
     return mouse_report;
 }
+
