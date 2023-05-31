@@ -305,8 +305,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
     int16_t current_x = mouse_report.x;
     int16_t current_y = mouse_report.y;
-    int16_t current_h = 0;
-    int16_t current_v = 0;
+    int16_t current_h = mouse_report.h;
+    int16_t current_v = mouse_report.v;
 
     if (current_x != 0 || current_y != 0) {
 
