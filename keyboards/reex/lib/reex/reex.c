@@ -506,11 +506,11 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // process events which works on pressed only.
     if (record->event.pressed) {
         switch (keycode) {
-            case KBC_RST:
+            case REC_RST:
                 reex_set_cpi(0);
                 reex_set_scroll_div(0);
                 break;
-            case KBC_SAVE: {
+            case REC_SAVE: {
                 reex_config_t c = {
                     .cpi  = reex.cpi_value,
                     .sdiv = reex.scroll_div,

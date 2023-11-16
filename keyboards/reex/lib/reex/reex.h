@@ -61,8 +61,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Types
 
 enum reex_keycodes {
-    KBC_RST  = QK_KB_0, // Reex configuration: reset to default
-    KBC_SAVE = QK_KB_1, // Reex configuration: save to EEPROM
+    REC_RST  = QK_KB_0, // Reex configuration: reset to default
+    REC_SAVE = QK_KB_1, // Reex configuration: save to EEPROM
 
     CPI_I100 = QK_KB_2, // CPI +100 CPI
     CPI_D100 = QK_KB_3, // CPI -100 CPI
@@ -77,7 +77,7 @@ enum reex_keycodes {
     SCRL_DVD = QK_KB_9, // Decrement scroll divider
 
     // User customizable 32 keycodes.
-    REEX_SAFE_RANGE = QK_USER_0,
+    REEX_SAFE_RANGE = QK_KB_10,
 };
 
 typedef union {
