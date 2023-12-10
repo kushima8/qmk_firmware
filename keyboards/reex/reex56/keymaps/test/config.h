@@ -1,7 +1,7 @@
 /*
 This is the c configuration file for the keymap
 
-Copyright 2023 @kushima8
+Copyright 2023 kushima8 (@kushima8)
 Copyright 2023 MURAOKA Taro (aka KoRoN, @kaoriya)
 
 This program is free software: you can redistribute it and/or modify

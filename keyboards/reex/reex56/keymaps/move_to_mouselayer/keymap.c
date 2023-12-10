@@ -1,5 +1,5 @@
 /*
-Copyright 2023 kushima8
+Copyright 2023 kushima8 (@kushima8)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -89,9 +89,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_RSFT ,KC_Z    ,KC_X    ,KC_C    ,KC_V    ,KC_B    ,         KC_N    ,KC_M    ,KC_COMM ,KC_DOT  ,KC_SLSH ,SFT_T(KC_ENT),
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,BALL    ,KC_LALT                   ,KC_SPC  ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,FN ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-                 KC_A    ,KC_B    ,KC_C    ,KC_D    ,KC_E    ,         KC_F    ,KC_G    ,KC_H    ,KC_I    ,KC_J
+        KC_LCTL ,BALL    ,KC_LALT                   ,KC_SPC  ,         KC_SPC                    ,KC_RALT ,KC_RGUI ,FN
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
     ),
     [1] = LAYOUT(
@@ -104,9 +102,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-                 KC_A    ,KC_B    ,KC_C    ,KC_D    ,KC_E    ,         KC_F    ,KC_G    ,KC_H    ,KC_I    ,KC_J
+        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
     [2] = LAYOUT(
@@ -119,9 +115,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_SD_H ,REC_SAVE,CPI_D100,CPI_D1K ,SCRL_DVD,KC_TC_DEC ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
-    // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-                 KC_A    ,KC_B    ,KC_C    ,KC_D    ,KC_E    ,         KC_F    ,KC_G    ,KC_H    ,KC_I    ,KC_J
+        KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------'
     ),
     [3] = LAYOUT(
@@ -134,9 +128,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
         KC_TRNS ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_MY_BTN5,         KC_MY_BTN5,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
     // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
-        KC_TRNS ,KC_TRNS   ,KC_TRNS                         ,KC_TRNS   ,         KC_TRNS                         ,KC_TRNS   ,KC_TRNS   ,KC_TRNS ,
-    // |--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------|
-                 KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,         KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS   ,KC_TRNS
+        KC_TRNS ,KC_TRNS   ,KC_TRNS                         ,KC_TRNS   ,         KC_TRNS                         ,KC_TRNS   ,KC_TRNS   ,KC_TRNS
     // `--------+----------+----------+----------+----------+----------|        |----------+----------+----------+----------+----------+-------------'
     )
 };

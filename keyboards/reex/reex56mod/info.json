@@ -1,9 +1,9 @@
 {
-    "keyboard_name": "reex56ex",
+    "keyboard_name": "reex56mod",
     "manufacturer": "kushima8",
     "usb": {
         "vid": "0x3938",
-        "pid": "0x8335",
+        "pid": "0x5235",
         "device_version": "0.0.1"
     },
     "rgblight": {

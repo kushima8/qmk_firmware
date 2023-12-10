@@ -1,8 +1,5 @@
 /*
-This is the c configuration file for the keymap
-
-Copyright 2023 @kushima8
-Copyright 2023 MURAOKA Taro (aka KoRoN, @kaoriya)
+Copyright 2023 kushima8 (@kushima8)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,13 +15,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include QMK_KEYBOARD_H
 
-#ifdef RGBLIGHT_ENABLE
-#    ifdef RGBLIGHT_EFFECT_BREATHING
-#        undef RGBLIGHT_EFFECT_BREATHING
-#    endif
-#    ifndef RGBLIGHT_EFFECT_RGB_TEST
-#        define RGBLIGHT_EFFECT_RGB_TEST  // required for LED test
-#    endif
-#endif
+#include "lib/reex/reex.h"
+
+//////////////////////////////////////////////////////////////////////////////
+
+// clang-format off
+matrix_row_t matrix_mask[MATRIX_ROWS] = {
+    0b11111111,
+    0b11111111,
+    0b00111111,
+    0b00001111,
+    0b10000111,
+    0b11001100,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11111111,
+    0b11110111,
+    0b11001100,
+};
+// clang-format on
+

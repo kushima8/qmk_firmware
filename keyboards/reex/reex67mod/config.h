@@ -5,10 +5,10 @@
 
 // USB Device descriptor parameters
 //#define VENDOR_ID           0x3938
-//#define PRODUCT_ID          0x8335
+//#define PRODUCT_ID          0x5236
 //#define DEVICE_VER          0x0001
 //#define MANUFACTURER        kushima8
-//#define PRODUCT             Reex56ex
+//#define PRODUCT             Reex67mod
 
 /* key matrix size */
 #define MATRIX_ROWS         (6 * 2)
@@ -17,6 +17,23 @@
 #define MATRIX_COL_PINS     { B5, F4, F5, B6 }
 #define MATRIX_MASKED
 #define DEBOUNCE            5
+
+#define ENCODERS_PAD_A { B2 }
+#define ENCODERS_PAD_B { B3 }
+#define ENCODER_RESOLUTION 4
+//#define ENCODERS_PAD_A_RIGHT { B3 }
+//#define ENCODERS_PAD_B_RIGHT { B2 }
+//#define ENCODER_RESOLUTIONS_RIGHT { 4 }
+#define ENCODER_MAP_KEY_DELAY 10
+
+#define DIP_SWITCH_PINS { B1 }
+//#define DIP_SWITCH_PINS_RIGHT { F7 }
+
+#define POINTING_DEVICE_AUTO_MOUSE_ENABLE
+#define AUTO_MOUSE_DEFAULT_LAYER 3
+#define AUTO_MOUSE_TIME 650
+//#define AUTO_MOUSE_DELAY 200
+//#define AUTO_MOUSE_DEBOUNCE 25
 
 #define DYNAMIC_KEYMAP_LAYER_COUNT 4
 
@@ -36,8 +53,8 @@
 // RGB LED settings
 #define WS2812_DI_PIN       D3
 #ifdef RGBLIGHT_ENABLE
-#    define RGBLED_NUM      64
-#    define RGBLED_SPLIT    { 32, 32 }
+#    define RGBLED_NUM      75
+#    define RGBLED_SPLIT    { 33, 42 }
 #    ifndef RGBLIGHT_LIMIT_VAL
 #        define RGBLIGHT_LIMIT_VAL  100 // limitated for power consumption
 #    endif
@@ -52,7 +69,7 @@
 #    endif
 #endif
 #ifdef RGB_MATRIX_ENABLE
-#    define RGB_MATRIX_SPLIT    { 32, 32 }
+#    define RGB_MATRIX_SPLIT    { 33, 42 }
 #endif
 
 #ifndef OLED_FONT_H
@@ -67,10 +84,6 @@
 #undef LOCKING_SUPPORT_ENABLE
 #undef LOCKING_RESYNC_ENABLE
 
-#ifdef RGBLIGHT_ENABLE
-#    define RGBLIGHT_EFFECT_BREATHING
-#    define RGBLIGHT_EFFECT_RGB_TEST
-#endif
-
 #define TAP_CODE_DELAY 5
 
+#define NO_ACTION_ONESHOT

@@ -1,6 +1,6 @@
 /*
 Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
-Copyright 2023 kushima8
+Copyright 2023 kushima8 (@kushima8)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ reex_t reex = {
     .this_have_ball = false,
     .that_enable    = false,
     .that_have_ball = false,
+	.negotiated     = false,
 
     .this_motion = {0},
     .that_motion = {0},
@@ -230,11 +231,11 @@ static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t
 }
 
 static void rpc_get_info_invoke(void) {
-    static bool     negotiated = false;
+    //static bool     negotiated = false;
     static uint32_t last_sync  = 0;
     static int      round      = 0;
     uint32_t        now        = timer_read32();
-    if (negotiated || TIMER_DIFF_32(now, last_sync) < REEX_TX_GETINFO_INTERVAL) {
+    if (reex.negotiated || TIMER_DIFF_32(now, last_sync) < REEX_TX_GETINFO_INTERVAL) {
         return;
     }
     last_sync = now;
@@ -246,7 +247,7 @@ static void rpc_get_info_invoke(void) {
             return;
         }
     }
-    negotiated          = true;
+    reex.negotiated     = true;
     reex.that_enable    = true;
     reex.that_have_ball = recv.ballcnt > 0;
     dprintf("reex:rpc_get_info_invoke: negotiated #%d %d\n", round, reex.that_have_ball);

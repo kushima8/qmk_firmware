@@ -1,6 +1,6 @@
 /*
 Copyright 2022 MURAOKA Taro (aka KoRoN, @kaoriya)
-Copyright 2023 kushima8
+Copyright 2023 kushima8 (@kushima8)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -103,6 +103,7 @@ typedef struct {
     bool this_have_ball;
     bool that_enable;
     bool that_have_ball;
+	bool negotiated;
 
     reex_motion_t this_motion;
     reex_motion_t that_motion;
