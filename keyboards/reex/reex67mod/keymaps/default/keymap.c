@@ -88,30 +88,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
-#if defined(ENCODER_ENABLE) && defined(DIP_SWITCH_ENABLE)
-void housekeeping_task_user(void){
-    static bool encoder_ini_flg = true;
-    if(reex.negotiated && encoder_ini_flg){
-        if(is_keyboard_master()){
-            if(!reex.this_have_ball){
-                encoder_init();
-                dip_switch_init();
-                setPinOutput(F7);
-                writePinLow(F7);
-                encoder_ini_flg = false;
-            }
-        }
-    }
-}
-#endif
-
-#ifdef DIP_SWITCH_ENABLE
-void matrix_slave_scan_kb(void) {
-    dip_switch_read(false);
-    matrix_slave_scan_user();
-}
-#endif
-
 #ifdef OLED_ENABLE
 #    include "lib/oledkit/oledkit.h"
 
@@ -119,46 +95,6 @@ void oledkit_render_info_user(void) {
     reex_oled_render_layerinfo();
     reex_oled_render_keyinfo();
     reex_oled_render_ballinfo();
-}
-#endif
-
-#if defined(ENCODER_ENABLE) && defined(DIP_SWITCH_ENABLE)
-void keyboard_post_init_user(void) {
-    if(!is_keyboard_master()){
-        if(!reex.this_have_ball){
-            encoder_init();
-            dip_switch_init();
-            setPinOutput(F7);
-            writePinLow(F7);
-        }
-    }
-}
-#endif
-
-#ifdef ENCODER_MAP_ENABLE
-const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [0] = { ENCODER_CCW_CW(KC_B, KC_A ) },
-    [1] = { ENCODER_CCW_CW(KC_D, KC_C ) },
-    [2] = { ENCODER_CCW_CW(KC_F, KC_E ) },
-    [3] = { ENCODER_CCW_CW(KC_H, KC_G ) },
-};
-#endif
-
-#ifdef DIP_SWITCH_ENABLE
-bool dip_switch_update_kb(uint8_t index, bool active) {
-    if (!dip_switch_update_user(index, active)){
-        return false;
-    }
-    if(!reex.negotiated){
-        return false;
-    }
-    switch (index) {
-        case 0:
-              action_exec(MAKE_KEYEVENT(5, 0, active));
-//            action_exec(MAKE_KEYEVENT(isLeftHand ? 5 : 11, 0, active));
-            break;
-    }
-    return false;
 }
 #endif
 
@@ -175,5 +111,65 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             break;
     }
     return state;
+}
+#endif
+
+#if defined(ENCODER_ENABLE) && defined(DIP_SWITCH_ENABLE)
+void keyboard_post_init_user(void) {
+    if(!is_keyboard_master()){
+        if(!reex.this_have_ball){
+            encoder_init();
+            dip_switch_init();
+            setPinOutput(F7);
+            writePinLow(F7);
+        }
+    }
+}
+
+void housekeeping_task_user(void){
+    static bool encoder_ini_flg = true;
+    if(reex.negotiated && encoder_ini_flg){
+        if(is_keyboard_master()){
+            if(!reex.this_have_ball){
+                encoder_init();
+                dip_switch_init();
+                setPinOutput(F7);
+                writePinLow(F7);
+                encoder_ini_flg = false;
+            }
+        }
+    }
+}
+#endif
+
+#ifdef ENCODER_MAP_ENABLE
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+    [0] = { ENCODER_CCW_CW(KC_B, KC_A ) },
+    [1] = { ENCODER_CCW_CW(KC_D, KC_C ) },
+    [2] = { ENCODER_CCW_CW(KC_F, KC_E ) },
+    [3] = { ENCODER_CCW_CW(KC_H, KC_G ) },
+};
+#endif
+
+#ifdef DIP_SWITCH_ENABLE
+void matrix_slave_scan_kb(void) {
+    dip_switch_read(false);
+    matrix_slave_scan_user();
+}
+
+bool dip_switch_update_kb(uint8_t index, bool active) {
+    if (!dip_switch_update_user(index, active)){
+        return false;
+    }
+    if(!reex.negotiated){
+        return false;
+    }
+    switch (index) {
+        case 0:
+              action_exec(MAKE_KEYEVENT(5, 0, active));
+//            action_exec(MAKE_KEYEVENT(isLeftHand ? 5 : 11, 0, active));
+            break;
+    }
+    return false;
 }
 #endif
