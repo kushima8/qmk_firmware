@@ -14,17 +14,7 @@
         {		"name": "SCRL_TO", "title": "SCRL_TO", "shortName": "SCRL_TO"},
         {		"name": "SCRL_MO", "title": "SCRL_MO", "shortName": "SCRL_MO"},
         {		"name": "SCRL_DVI", "title": "SCRL_DVI", "shortName": "SCRL_DVI"},
-        {		"name": "SCRL_DVD", "title": "SCRL_DVD", "shortName": "SCRL_DVD"},
-        {		"name": "MY_BTN1", "title": "MY_BTN1", "shortName": "KMY_BTN1"},
-        {		"name": "MY_BTN2", "title": "MY_BTN2", "shortName": "KC_MY_BTN2"},
-        {		"name": "MY_BTN3", "title": "MY_BTN3", "shortName": "KC_MY_BTN3"},
-        {		"name": "MY_BTN4", "title": "MY_BTN4", "shortName": "KC_MY_BTN4"},
-        {		"name": "MY_BTN5", "title": "MY_BTN5", "shortName": "KC_MY_BTN5"},
-        {		"name": "MY_SCR", "title": "MY_SCR", "shortName": "KC_MY_SCR"},
-        {		"name": "TC_INC", "title": "TC_INC", "shortName": "KC_TC_INC"},
-        {		"name": "TC_DEC", "title": "TC_DEC", "shortName": "KC_TC_DEC"},
-        {		"name": "SD_V", "title": "SD_V", "shortName": "KC_SD_V"},
-        {		"name": "SD_H", "title": "SD_H", "shortName": "KC_SD_H"}
+        {		"name": "SCRL_DVD", "title": "SCRL_DVD", "shortName": "SCRL_DVD"}
     ],
     "layouts":{
         "keymap":[
