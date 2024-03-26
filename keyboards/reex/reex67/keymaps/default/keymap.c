@@ -1,7 +1,5 @@
 /*
-This is the c configuration file for the keymap
-
-Copyright 2023 @kushima8
+Copyright 2023 kushima8 (@kushima8)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include QMK_KEYBOARD_H
 #include "quantum.h"
-#include <stdio.h>
 
 #define MANUAL  TO(0)
 #define AUTO   TO(1)

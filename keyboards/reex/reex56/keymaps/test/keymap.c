@@ -1,6 +1,4 @@
 /*
-This is the c configuration file for the keymap
-
 Copyright 2023 kushima8 (@kushima8)
 Copyright 2023 MURAOKA Taro (aka KoRoN, @kaoriya)
 
@@ -21,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 #include "quantum.h"
 
-// clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT(
     // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
