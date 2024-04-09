@@ -54,11 +54,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------.
         KC_TRNS ,KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,         KC_F6   ,KC_F7   ,KC_F8   ,KC_F9   ,KC_F10  ,KC_F11  ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_F12  ,
+        KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,AML_TO  ,         KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_F12  ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        REC_RST ,SCRL_TO ,CPI_I100,CPI_I1K ,SCRL_DVI,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_TOG ,RGB_HUI ,RGB_SAI ,RGB_VAI ,
+        REC_RST ,SCRL_TO ,CPI_I100,CPI_I1K ,SCRL_DVI,AML_I50 ,         KC_TRNS ,KC_TRNS ,RGB_TOG ,RGB_HUI ,RGB_SAI ,RGB_VAI ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        REC_SAVE,SCRL_MO ,CPI_D100,CPI_D1K ,SCRL_DVD,KC_TRNS ,         KC_TRNS ,KC_TRNS ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,
+        REC_SAVE,SCRL_MO ,CPI_D100,CPI_D1K ,SCRL_DVD,AML_D50 ,         KC_TRNS ,KC_TRNS ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_TRNS ,KC_TRNS ,KC_TRNS                   ,KC_TRNS ,         KC_TRNS                   ,KC_TRNS ,KC_TRNS ,KC_TRNS
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
@@ -78,14 +78,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 // clang-format on
-
-uint16_t keycode_config(uint16_t keycode) {
-    return keycode;
-}
-
-uint8_t mod_config(uint8_t mod) {
-    return mod;
-}
 
 #ifdef OLED_ENABLE
 

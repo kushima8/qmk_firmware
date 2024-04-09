@@ -58,11 +58,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // ,--------+--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------+--------+--------+--------.
         KC_TRNS ,KC_F1   ,KC_F2   ,KC_F3   ,KC_F4   ,KC_F5   ,KC_F6   ,                     KC_F7   ,KC_F8   ,KC_F9   ,KC_F10  ,KC_F11  ,KC_F12  ,KC_INS  ,KC_DEL  ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_CAPS ,CPI_I1K ,RGB_TOG ,RGB_HUI ,RGB_SAI ,RGB_VAI ,                              KC_TRNS ,KC_TRNS ,KC_PSCR ,KC_SCRL ,KC_PAUS ,KC_UP   ,KC_TRNS ,KC_TRNS ,
+        KC_CAPS ,CPI_I1K ,RGB_TOG ,RGB_HUI ,RGB_SAI ,RGB_VAI ,                              AML_TO  ,KC_TRNS ,KC_PSCR ,KC_SCRL ,KC_PAUS ,KC_UP   ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|                             |--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TRNS ,CPI_D1K ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,                              KC_TRNS ,KC_TRNS ,KC_HOME ,KC_PGUP ,KC_LEFT ,KC_RGHT ,KC_TRNS ,
+        KC_TRNS ,CPI_D1K ,RGB_MOD ,RGB_HUD ,RGB_SAD ,RGB_VAD ,                              AML_I50 ,KC_TRNS ,KC_HOME ,KC_PGUP ,KC_LEFT ,KC_RGHT ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|                             |--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_TRNS ,CPI_I100,SCRL_DVI,SCRL_DVD,SCRL_MO ,SCRL_TO ,                              KC_TRNS ,KC_TRNS ,KC_END  ,KC_PGDN ,KC_DOWN ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
+        KC_TRNS ,CPI_I100,SCRL_DVI,SCRL_DVD,SCRL_MO ,SCRL_TO ,                              AML_D50 ,KC_TRNS ,KC_END  ,KC_PGDN ,KC_DOWN ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------|                             |--------+--------+--------+--------+--------+--------+--------+--------|
         REC_SAVE,REC_RST ,CPI_D100                  ,KC_TRNS ,                              KC_TRNS ,                  KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,KC_TRNS ,
     // |--------+--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------+--------+--------|
@@ -86,14 +86,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 // clang-format on
-
-uint16_t keycode_config(uint16_t keycode) {
-    return keycode;
-}
-
-uint8_t mod_config(uint8_t mod) {
-    return mod;
-}
 
 #ifdef OLED_ENABLE
 
