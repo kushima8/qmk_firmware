@@ -40,7 +40,7 @@
 #    define SPLIT_OLED_ENABLE
 #endif
 
-// If your PC does not recognize Keyball, try setting this macro. This macro
+// If your PC does not recognize Reex, try setting this macro. This macro
 // increases the firmware size by 200 bytes, so it is disabled by default, but
 // it has been reported to work well in such cases.
 //#define SPLIT_WATCHDOG_ENABLE

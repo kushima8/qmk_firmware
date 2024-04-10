@@ -60,10 +60,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /// mod_config() in keycode_config.c.
 ///
 /// These functions customize the magic key code and are useless if the magic
-/// key code is disabled.  Therefore, Keyball automatically disables it.
+/// key code is disabled.  Therefore, Reex automatically disables it.
 /// However, there may be cases where you still need these functions even after
 /// disabling the magic key code. In that case, define this macro.
-//#define KEYBALL_KEEP_MAGIC_FUNCTIONS
+//#define REEX_KEEP_MAGIC_FUNCTIONS
 
 //////////////////////////////////////////////////////////////////////////////
 // Constants
