@@ -53,8 +53,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /// enabled high CPI setting or so.  Valid valus are 0x04 or 0x81.  Define this
 /// in your config.h to be enable.  Please note that using this option will
 /// increase the firmware size by more than 4KB.
-//#define KEYBALL_PMW3360_UPLOAD_SROM_ID 0x04
-//#define KEYBALL_PMW3360_UPLOAD_SROM_ID 0x81
+//#define REEX_PMW3360_UPLOAD_SROM_ID 0x04
+//#define REEX_PMW3360_UPLOAD_SROM_ID 0x81
 
 /// Defining this macro keeps two functions intact: keycode_config() and
 /// mod_config() in keycode_config.c.
