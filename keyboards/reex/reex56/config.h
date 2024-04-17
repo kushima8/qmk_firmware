@@ -11,8 +11,8 @@
 //#define PRODUCT             Reex56
 
 /* key matrix size */
-#define MATRIX_ROWS         (5 * 2)
-#define MATRIX_COLS         (4 * 2)
+#define MATRIX_ROWS         (5 * 2)  // split keyboard
+#define MATRIX_COLS         (4 * 2)  // duplex matrix
 #define MATRIX_ROW_PINS     { D4, C6, D7, E6, B4 }
 #define MATRIX_COL_PINS     { B5, F4, F5, B6 }
 #define MATRIX_MASKED

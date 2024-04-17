@@ -16,9 +16,10 @@ NKRO_ENABLE = no            # Enable N-Key Rollover
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 AUDIO_ENABLE = no           # Audio output
 
-# reex56 is split keyboard.
+# Duplex matrix.
 CUSTOM_MATRIX = lite
-SRC += matrix.c
+SRC += lib/duplexmatrix/duplexmatrix.c
+# Reex56Mod is split keyboard.
 SPLIT_KEYBOARD = yes
 
 # Optical sensor driver for trackball.

@@ -159,7 +159,7 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {
     reex_set_cpi(cpi);
 }
 
-static void motion_to_mouse_move(reex_motion_t *m, report_mouse_t *r, bool is_left) {
+__attribute__((weak)) void reex_on_apply_motion_to_mouse_move(reex_motion_t *m, report_mouse_t *r, bool is_left) {
     r->x = -clip2int8(m->x);
     r->y = clip2int8(m->y);
     // clear motion
@@ -167,7 +167,7 @@ static void motion_to_mouse_move(reex_motion_t *m, report_mouse_t *r, bool is_le
     m->y = 0;
 }
 
-static void motion_to_mouse_scroll(reex_motion_t *m, report_mouse_t *r, bool is_left) {
+__attribute__((weak)) void reex_on_apply_motion_to_mouse_scroll(reex_motion_t *m, report_mouse_t *r, bool is_left) {
     // consume motion of trackball.
     int16_t div = 1 << (reex_get_scroll_div() - 1);
     int16_t x = divmod16(&m->x, div);
@@ -177,8 +177,9 @@ static void motion_to_mouse_scroll(reex_motion_t *m, report_mouse_t *r, bool is_
     r->h = -clip2int8(x);
     r->v = -clip2int8(y);
 
-#if REEX_SCROLLSNAP_ENABLE
-    // scroll snap.
+    // Scroll snapping
+#if REEX_SCROLLSNAP_ENABLE == 1
+    // Old behavior up to 1.3.2)
     uint32_t now = timer_read32();
     if (r->h != 0 || r->v != 0) {
         reex.scroll_snap_last = now;
@@ -189,14 +190,27 @@ static void motion_to_mouse_scroll(reex_motion_t *m, report_mouse_t *r, bool is_
         reex.scroll_snap_tension_h += y;
         r->h = 0;
     }
+#elif REEX_SCROLLSNAP_ENABLE == 2
+    // New behavior
+    switch (reex_get_scrollsnap_mode()) {
+        case REEX_SCROLLSNAP_MODE_VERTICAL:
+            r->h = 0;
+            break;
+        case REEX_SCROLLSNAP_MODE_HORIZONTAL:
+            r->v = 0;
+            break;
+        default:
+            // pass by without doing anything
+            break;
+    }
 #endif
 }
 
 static void motion_to_mouse(reex_motion_t *m, report_mouse_t *r, bool is_left, bool as_scroll) {
     if (as_scroll) {
-        motion_to_mouse_scroll(m, r, is_left);
+        reex_on_apply_motion_to_mouse_scroll(m, r, is_left);
     } else {
-        motion_to_mouse_move(m, r, is_left);
+        reex_on_apply_motion_to_mouse_move(m, r, is_left);
     }
 }
 
@@ -368,8 +382,23 @@ void reex_oled_render_ballinfo(void) {
     oled_write(format_4d(reex_get_cpi()) + 1, false);
     oled_write_P(PSTR("00 "), false);
 
-    // indicate scroll mode: on/off
+    // indicate scroll snap mode: "VT" (vertical), "HN" (horiozntal), and "SCR" (free)
+#if 1 && REEX_SCROLLSNAP_ENABLE == 2
+    switch (reex_get_scrollsnap_mode()) {
+        case REEX_SCROLLSNAP_MODE_VERTICAL:
+            oled_write_P(PSTR("VT"), false);
+            break;
+        case REEX_SCROLLSNAP_MODE_HORIZONTAL:
+            oled_write_P(PSTR("HO"), false);
+            break;
+        default:
+            oled_write_P(PSTR("\xBE\xBF"), false);
+            break;
+    }
+#else
     oled_write_P(PSTR("\xBE\xBF"), false);
+#endif
+    // indicate scroll mode: on/off
     if (reex.scroll_mode) {
         oled_write_P(LFSTR_ON, false);
     } else {
@@ -467,6 +496,20 @@ void reex_set_scroll_mode(bool mode) {
     reex.scroll_mode = mode;
 }
 
+reex_scrollsnap_mode_t reex_get_scrollsnap_mode(void) {
+#if REEX_SCROLLSNAP_ENABLE == 2
+    return reex.scrollsnap_mode;
+#else
+    return 0;
+#endif
+}
+
+void reex_set_scrollsnap_mode(reex_scrollsnap_mode_t mode) {
+#if REEX_SCROLLSNAP_ENABLE == 2
+    reex.scrollsnap_mode = mode;
+#endif
+}
+
 uint8_t reex_get_scroll_div(void) {
     return reex.scroll_div == 0 ? REEX_SCROLL_DIV_DEFAULT : reex.scroll_div;
 }
@@ -511,6 +554,9 @@ void keyboard_post_init_kb(void) {
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
         set_auto_mouse_enable(c.amle);
         set_auto_mouse_timeout(c.amlto == 0 ? AUTO_MOUSE_TIME : (c.amlto + 1) * AML_TIMEOUT_QU);
+#endif
+#if REEX_SCROLLSNAP_ENABLE == 2
+        reex_set_scrollsnap_mode(c.ssnap);
 #endif
     }
 
@@ -614,6 +660,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     .amle  = get_auto_mouse_enable(),
                     .amlto = (get_auto_mouse_timeout() / AML_TIMEOUT_QU) - 1,
 #endif
+#if REEX_SCROLLSNAP_ENABLE == 2
+                    .ssnap = reex_get_scrollsnap_mode(),
+#endif
                 };
                 eeconfig_update_kb(c.raw);
             } break;
@@ -640,6 +689,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             case SCRL_DVD:
                 add_scroll_div(-1);
                 break;
+
+#if REEX_SCROLLSNAP_ENABLE == 2
+            case SSNP_HOR:
+                reex_set_scrollsnap_mode(REEX_SCROLLSNAP_MODE_HORIZONTAL);
+                break;
+            case SSNP_VRT:
+                reex_set_scrollsnap_mode(REEX_SCROLLSNAP_MODE_VERTICAL);
+                break;
+            case SSNP_FRE:
+                reex_set_scrollsnap_mode(REEX_SCROLLSNAP_MODE_FREE);
+                break;
+#endif
 
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
             case AML_TO:
