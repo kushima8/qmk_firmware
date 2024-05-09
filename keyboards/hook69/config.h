@@ -17,20 +17,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "config_common.h"
+//#include "config_common.h"
 
 /* USB Device descriptor parameter */
-#define VENDOR_ID    0x3938
-#define PRODUCT_ID   0x3639
-#define DEVICE_VER   0x0001
-#define MANUFACTURER kushima8
-#define PRODUCT      HOOK69
+//#define VENDOR_ID    0x3938
+//#define PRODUCT_ID   0x3639
+//#define DEVICE_VER   0x0001
+//#define MANUFACTURER kushima8
+//#define PRODUCT      HOOK69
 
 /* key matrix size */
 #define MATRIX_ROWS 12
 #define MATRIX_COLS 6
 
 // VIA config
+#define DYNAMIC_KEYMAP_LAYER_COUNT 4
 #define VIA_CUSTOM_LIGHTING_ENABLE
 #define VIA_RGBLIGHT_USER_ADDR (EECONFIG_SIZE)
 #define VIA_EEPROM_MAGIC_ADDR (VIA_RGBLIGHT_USER_ADDR + DYNAMIC_KEYMAP_LAYER_COUNT * 4)  // Layer * 4bytes(RGB Light config)
@@ -72,9 +73,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define BACKLIGHT_LEVELS 3
 //#define BACKLIGHT_BREATHING
 
-#define RGB_DI_PIN D3
-#ifdef RGB_DI_PIN
-#    define RGBLED_NUM 1
+#define WS2812_DI_PIN      D3
+#ifdef RGBLIGHT_ENABLE
+#    define RGBLED_NUM      1
 //#    define RGBLIGHT_HUE_STEP 8
 //#    define RGBLIGHT_SAT_STEP 8
 //#    define RGBLIGHT_VAL_STEP 8

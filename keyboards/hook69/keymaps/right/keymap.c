@@ -17,12 +17,8 @@
 #include QMK_KEYBOARD_H
 #include "keymap_japanese.h"
 #include "eeprom.h"
-
 #if defined(RGBLIGHT_ENABLE)
-    #include "rgblight.h"
-#elif defined(RGB_MATRIX_ENABLE)
-    #include "rgb_matrix.h"
-    extern rgb_config_t rgb_matrix_config;
+#include "rgblight.h"
 #endif
 
 // Defines names for use in layer keycodes and the keymap
@@ -40,7 +36,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
         JP_YEN   ,KC_UP   ,KC_PSCR ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
+        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTL ,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTL ,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
     ),
     [_2nd] = LAYOUT(
@@ -58,7 +54,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
         JP_YEN   ,KC_UP   ,KC_PSCR ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
+        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTL ,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTL ,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
     ),
     [_4th] = LAYOUT(
@@ -67,52 +63,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
         JP_YEN   ,KC_UP   ,KC_PSCR ,KC_6    ,KC_5    ,KC_4    ,KC_ENT  ,KC_RSFT ,JP_RBRC ,JP_COLN ,JP_SCLN ,KC_L    ,KC_K    ,KC_J    ,KC_SPC  ,KC_H    ,KC_G    ,KC_F    ,KC_D    ,KC_S    ,KC_A    ,KC_LSFT ,KC_TAB  ,
      // |--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
-        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTRL,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTRL,KC_CAPS
+        KC_RIGHT ,KC_DOWN ,KC_LEFT ,KC_9    ,KC_8    ,KC_7    ,KC_RCTL ,MO(_2nd),JP_BSLS ,KC_SLSH ,KC_DOT  ,KC_COMM ,KC_M    ,KC_N    ,KC_SPC  ,KC_B    ,KC_V    ,KC_C    ,KC_X    ,KC_Z    ,KC_LALT ,KC_LCTL ,KC_CAPS
      // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
     )
 };
 
-#ifdef ENCODER_ENABLE
-
-/* Rotary encoder settings */
-
-keyevent_t encoder_ccw  = {
-    .key = (keypos_t){.row = 5, .col = 5},
-    .pressed = false
+#ifdef ENCODER_MAP_ENABLE
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+    [_1st] = { ENCODER_CCW_CW(KC_B, KC_A ) },
+    [_2nd] = { ENCODER_CCW_CW(KC_D, KC_C ) },
+    [_3rd] = { ENCODER_CCW_CW(KC_F, KC_E ) },
+    [_4th] = { ENCODER_CCW_CW(KC_H, KC_G ) },
 };
-
-keyevent_t encoder_cw  = {
-    .key = (keypos_t){.row = 11, .col = 5},
-    .pressed = false
-};
-
-void matrix_scan_user(void) {
-    if (IS_PRESSED(encoder_ccw)) {
-        encoder_ccw.pressed = false;
-        encoder_ccw.time = (timer_read() | 1);
-        action_exec(encoder_ccw);
-    }
-
-    if (IS_PRESSED(encoder_cw)) {
-        encoder_cw.pressed = false;
-        encoder_cw.time = (timer_read() | 1);
-        action_exec(encoder_cw);
-    }
-}
-
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (!clockwise){
-        encoder_cw.pressed = true;
-        encoder_cw.time = (timer_read() | 1);
-        action_exec(encoder_cw);
-    } else {
-        encoder_ccw.pressed = true;
-        encoder_ccw.time = (timer_read() | 1);
-        action_exec(encoder_ccw);
-    }
-    return true;
-}
-
 #endif
 
 #ifdef OLED_ENABLE
@@ -186,13 +148,10 @@ bool oled_task_user(void) {
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     uint8_t layer = get_highest_layer(state);
-
     if (layer < DYNAMIC_KEYMAP_LAYER_COUNT) {
-        #if defined(RGBLIGHT_ENABLE)
-                rgblight_update_dword(eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer)));
-        #elif defined(RGB_MATRIX_ENABLE)
-                rgb_matrix_config.raw = eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer));
-        #endif
+#if defined(RGBLIGHT_ENABLE)
+        rgblight_update_qword(eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer)));
+#endif
     }
 
     return state;
