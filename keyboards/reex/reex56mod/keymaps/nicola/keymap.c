@@ -28,6 +28,9 @@ enum custom_keycodes {
 // NICOLA親指シフト
   KC_EISU = NI_SAFE_RANGE,  // OFF
   KC_KANA2, // ON
+  NI_MO_0,
+  NI_MO_1,
+  NI_MO_2,
 // NICOLA親指シフト
 };
 
@@ -87,7 +90,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
         KC_RSFT ,NI_Z    ,NI_X    ,NI_C    ,NI_V    ,NI_B    ,         NI_N    ,NI_M    ,NI_COMM ,NI_DOT  ,NI_SLSH ,SFT_T(KC_ENT),
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
-        KC_LCTL ,KC_EISU ,KC_LALT                   ,NI_SHFTL,         NI_SHFTR                  ,KC_RALT ,KC_RGUI ,NI_1 ,
+        KC_LCTL ,KC_EISU ,KC_LALT                   ,NI_SHFTL,         NI_SHFTR                  ,KC_RALT ,KC_RGUI ,NI_MO_2 ,
     // |--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+--------+-------------|
                  NI_A    ,NI_B    ,NI_SHFTL,NI_D    ,NI_E    ,         NI_SHFTR,NI_G    ,NI_H    ,NI_I    ,NI_J
     // `--------+--------+--------+--------+--------+--------|        |--------+--------+--------+--------+---------------------'
@@ -202,6 +205,51 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KC_KANA2:
       if (record->event.pressed) {
         // NICOLA親指シフト
+        tap_code(JP_HENK); // Win10以前
+        tap_code(KC_LANGUAGE_1); // Mac, Win11以降
+        nicola_on();
+      }
+      return false;
+      break;
+    case NI_MO_0:
+      if (record->event.pressed) {
+        tap_code(JP_MHEN); // Win10以前
+        tap_code(KC_LANGUAGE_2); // Mac, Win11以降
+        nicola_off();
+        layer_on(0);
+      }else{
+        // NICOLA親指シフト
+        layer_off(0);
+        tap_code(JP_HENK); // Win10以前
+        tap_code(KC_LANGUAGE_1); // Mac, Win11以降
+        nicola_on();
+      }
+      return false;
+      break;
+    case NI_MO_1:
+      if (record->event.pressed) {
+        tap_code(JP_MHEN); // Win10以前
+        tap_code(KC_LANGUAGE_2); // Mac, Win11以降
+        nicola_off();
+        layer_on(1);
+      }else{
+        // NICOLA親指シフト
+        layer_off(1);
+        tap_code(JP_HENK); // Win10以前
+        tap_code(KC_LANGUAGE_1); // Mac, Win11以降
+        nicola_on();
+      }
+      return false;
+      break;
+    case NI_MO_2:
+      if (record->event.pressed) {
+        tap_code(JP_MHEN); // Win10以前
+        tap_code(KC_LANGUAGE_2); // Mac, Win11以降
+        nicola_off();
+        layer_on(2);
+      }else{
+        // NICOLA親指シフト
+        layer_off(2);
         tap_code(JP_HENK); // Win10以前
         tap_code(KC_LANGUAGE_1); // Mac, Win11以降
         nicola_on();
