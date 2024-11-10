@@ -9,3 +9,4 @@ OPT_DEFS = -DTIMEOUT_INTERRUPT
 
 # NICOLA key down timre requires TIMER1 so Backlight LED must be turned off
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
+RGBLIGHT_ENABLE = no
