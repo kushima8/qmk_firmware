@@ -22,6 +22,9 @@
  * - あいまいな句読点"NICOLA_FUZZY_PUNCTUATION"の追加
  * - Hold/TapのHoldに指定したModifierに対応
  */
+ /*
+  * Copyright 2023 kushima8 (@kushima8)
+  */
 
 #include QMK_KEYBOARD_H
 #include "nicola.h"
