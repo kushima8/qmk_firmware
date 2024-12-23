@@ -3,10 +3,9 @@ SRC += nicola/nicola.c
 SRC += nicola/jtu.c
 SRC += nicola/key_duration.c
 
-# 16-bit timer (TIMER1) ‚ğg—p‚µ‚½ƒ^ƒCƒ€ƒAƒEƒg
-# ˆê’èŠÔŒo‰ß‚·‚é‚ÆAkey down ó‘Ô‚Ì‚Ü‚Ü‚Å‚àƒL[‚ªo—Í‚³‚ê‚é
+# 16-bit timer (TIMER1) ã‚’ä½¿ç”¨ã—ãŸã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆ
+# ä¸€å®šæ™‚é–“çµŒéã™ã‚‹ã¨ã€key down çŠ¶æ…‹ã®ã¾ã¾ã§ã‚‚ã‚­ãƒ¼ãŒå‡ºåŠ›ã•ã‚Œã‚‹
 OPT_DEFS = -DTIMEOUT_INTERRUPT
 
 # NICOLA key down timre requires TIMER1 so Backlight LED must be turned off
-BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 RGBLIGHT_ENABLE = no
