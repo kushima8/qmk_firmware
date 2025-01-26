@@ -1,0 +1,37 @@
+{
+    "name":"Reex56mod",
+    "vendorId":"0x3938",
+    "productId":"0x5235",
+    "lighting":"qmk_rgblight",
+    "matrix":{"rows":12,"cols":8},
+    "customKeycodes": [
+        {		"name": "REC_RST", "title": "REC_RST", "shortName": "REC_RST"},
+        {		"name": "REC_SAVE", "title": "REC_SAVE", "shortName": "REC_SAVE"},
+        {		"name": "CPI_I100", "title": "CPI_I100", "shortName": "CPI_I100"},
+        {		"name": "CPI_D100", "title": "CPI_D100", "shortName": "CPI_D100"},
+        {		"name": "CPI_I1K", "title": "CPI_I1K", "shortName": "CPI_I1K"},
+        {		"name": "CPI_D1K", "title": "CPI_D1K", "shortName": "CPI_D1K"},
+        {		"name": "SCRL_TO", "title": "SCRL_TO", "shortName": "SCRL_TO"},
+        {		"name": "SCRL_MO", "title": "SCRL_MO", "shortName": "SCRL_MO"},
+        {		"name": "SCRL_DVI", "title": "SCRL_DVI", "shortName": "SCRL_DVI"},
+        {		"name": "SCRL_DVD", "title": "SCRL_DVD", "shortName": "SCRL_DVD"},
+        {		"name": "AML_TO", "title": "AML_TO", "shortName": "AML_TO"},
+        {		"name": "AML_I50", "title": "AML_I50", "shortName": "AML_I50"},
+        {		"name": "AML_D50", "title": "AML_D50", "shortName": "AML_D50"},
+        {		"name": "SSNP_VRT", "title": "SSNP_VRT", "shortName": "SSNP_VRT"},
+        {		"name": "SSNP_HOR", "title": "SSNP_HOR", "shortName": "SSNP_HOR"},
+        {		"name": "SSNP_FRE", "title": "SSNP_FRE", "shortName": "SSNP_FRE"}
+    ],
+    "layouts":{
+        "keymap":[
+            ["0,0","0,1","0,2","0,3","1,0","1,1",{"x":3},"6,0","6,1","6,2","6,3","7,0","7,1"],
+            ["1,2","1,3","2,0","2,1","2,2","2,3",{"x":3},"7,2","7,3","8,0","8,1","8,2","8,3"],
+            ["3,0","3,1","3,2","3,3","4,0","4,1",{"x":3},"9,0","9,1","9,2","9,3","10,0","10,1"],
+            ["4,2","0,4","0,5","0,6","0,7","1,4",{"x":3},"10,2","6,4","6,5","6,6","6,7","7,4"],
+            ["1,5","1,6","1,7",{"x":2},"2,4",{"x":3},"7,5",{"x":2},"7,6","7,7","8,4"],
+            [{"x":1},"5,2","5,3","4,7","5,6","5,7",{"x":3},"11,7","11,6","10,7","11,3","11,2"],
+            [{"x":7,"a":7},"e0"],
+            [{"y":0.25,"x":7,"a":4},"5,0"]
+        ]
+    }
+}
