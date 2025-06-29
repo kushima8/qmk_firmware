@@ -148,11 +148,22 @@ bool oled_task_user(void) {
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     uint8_t layer = get_highest_layer(state);
-    if (layer < DYNAMIC_KEYMAP_LAYER_COUNT) {
-#if defined(RGBLIGHT_ENABLE)
-        rgblight_update_qword(eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer)));
-#endif
+//    if (layer < DYNAMIC_KEYMAP_LAYER_COUNT) {
+//        rgblight_update_dword(eeprom_read_dword((const uint32_t *)(VIA_RGBLIGHT_USER_ADDR + 4 * layer)));
+//    }
+    switch (layer) {
+        case 0:
+            rgblight_sethsv(HSV_RED);
+            break;
+        case 1:
+            rgblight_sethsv(HSV_BLUE);
+            break;
+        case 2:
+            rgblight_sethsv(HSV_GREEN);
+            break;
+        case 3:
+            rgblight_sethsv(HSV_WHITE);
+            break;
     }
-
     return state;
 }
