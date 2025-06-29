@@ -1,5 +1,5 @@
 {
-    "name":"hook64",
+    "name":"HOOK64",
     "vendorId":"0x3938",
     "productId":"0x3635",
     "lighting":"qmk_rgblight",
