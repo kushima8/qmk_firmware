@@ -177,6 +177,11 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM SharedReport[] = {
 #    endif
 #endif
 
+#if defined(SHARED_REPORT_STARTED) && defined(JOYSTICK_ENABLE) && !defined(JOYSTICK_SHARED_EP)
+};
+#define SHARED_REPORT_EARLY_CLOSE
+#endif
+
 #ifdef JOYSTICK_ENABLE
 #    ifndef JOYSTICK_SHARED_EP
 const USB_Descriptor_HIDReport_Datatype_t PROGMEM JoystickReport[] = {
@@ -380,7 +385,7 @@ const USB_Descriptor_HIDReport_Datatype_t PROGMEM SharedReport[] = {
     HID_RI_END_COLLECTION(0),
 #endif
 
-#ifdef SHARED_EP_ENABLE
+#if defined(SHARED_EP_ENABLE) && !defined(SHARED_REPORT_EARLY_CLOSE)
 };
 #endif
 
