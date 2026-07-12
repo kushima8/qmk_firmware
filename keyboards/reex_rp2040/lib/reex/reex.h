@@ -50,6 +50,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define REEX_SCROLLSNAP_TENSION_THRESHOLD 12
 #endif
 
+/// Per-ball orientation correction, in degrees (0, 90, 180 or 270).
+/// The value rotates the cursor/scroll direction clockwise, so if the
+/// cursor moves 90 degrees clockwise off from the ball (e.g. rolling the
+/// ball up moves the cursor right), subtract 90 from the value; if it
+/// moves 90 degrees counter-clockwise off (rolling up moves the cursor
+/// left), add 90; if it is fully inverted, add or subtract 180.
+/// Each ball (1st/2nd, left/right half) can be adjusted independently.
+#ifndef REEX_ROTATE_BALL1_LEFT
+#    define REEX_ROTATE_BALL1_LEFT 0
+#endif
+#ifndef REEX_ROTATE_BALL1_RIGHT
+#    define REEX_ROTATE_BALL1_RIGHT 0
+#endif
+#ifndef REEX_ROTATE_BALL2_LEFT
+#    define REEX_ROTATE_BALL2_LEFT 0
+#endif
+#ifndef REEX_ROTATE_BALL2_RIGHT
+#    define REEX_ROTATE_BALL2_RIGHT 0
+#endif
+
+// Only compile the orientation-correction code when at least one ball uses a
+// non-zero angle.  With the default of 0 the correction is a no-op, so this
+// keeps the original (unrotated) behavior and avoids extra flash usage on the
+// space-constrained atmega32u4 builds.
+#if (REEX_ROTATE_BALL1_LEFT != 0) || (REEX_ROTATE_BALL1_RIGHT != 0) || (REEX_ROTATE_BALL2_LEFT != 0) || (REEX_ROTATE_BALL2_RIGHT != 0)
+#    define REEX_HAS_ROTATE
+#endif
+
+// Second-trackball-per-side support (up to two balls on each half, four in
+// total).  Enabled by default on ARM (e.g. RP2040) boards.  It is disabled by
+// default on AVR (atmega32u4) because the extra code does not fit in the flash
+// of every variant; when disabled the firmware keeps the original one-ball-
+// per-side behavior.  Define REEX_ENABLE_EX_BALL or REEX_DISABLE_EX_BALL in a
+// board config.h to override the default.
+#if !defined(REEX_ENABLE_EX_BALL) && !defined(REEX_DISABLE_EX_BALL)
+#    if !defined(__AVR__)
+#        define REEX_ENABLE_EX_BALL
+#    endif
+#endif
+#if defined(REEX_ENABLE_EX_BALL) && defined(REEX_DISABLE_EX_BALL)
+#    undef REEX_ENABLE_EX_BALL
+#endif
+
 /// Specify SROM ID to be uploaded PMW3360DW (optical sensor).  It will be
 /// enabled high CPI setting or so.  Valid valus are 0x04 or 0x81.  Define this
 /// in your config.h to be enable.  Please note that using this option will
@@ -124,7 +167,7 @@ typedef union {
 } reex_config_t;
 
 typedef struct {
-    uint8_t ballcnt; // count of balls: support only 0 or 1, for now
+    uint8_t ballcnt; // count of balls on the side: 0, 1 or 2
 } reex_info_t;
 
 typedef struct {
@@ -144,10 +187,16 @@ typedef struct {
     bool this_have_ball;
     bool that_enable;
     bool that_have_ball;
-	bool negotiated;
+    bool negotiated;
+
+    bool ex_this_have_ball;
+    bool ex_that_have_ball;
 
     reex_motion_t this_motion;
     reex_motion_t that_motion;
+
+    reex_motion_t ex_this_motion;
+    reex_motion_t ex_that_motion;
 
     uint8_t cpi_value;
     bool    cpi_changed;

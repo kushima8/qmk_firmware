@@ -23,8 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////////////
 // Configurations
 
-#ifndef PMW3360_NCS_PIN
-#    define PMW3360_NCS_PIN F7
+#ifndef PMW3360_NCS_PINS
+#    ifndef PMW3360_NCS_PIN
+#        define PMW3360_NCS_PINS {F7}
+#    else
+#        define PMW3360_CS_PINS \
+            { PMW3360_CS_PIN }
+#    endif
 #endif
 
 /// DEBUG_PMW3360_SCAN_RATE enables scan performance counter.
@@ -119,19 +124,19 @@ extern const pmw3360_srom_t pmw3360_srom_0x81;
 
 /// pmw3360_init initializes PMW3360DM-T2QU module.
 /// It will return true when succeeded, otherwise false.
-bool pmw3360_init(void);
+bool pmw3360_init(int8_t index);
 
-void pmw3360_srom_upload(pmw3360_srom_t srom);
+void pmw3360_srom_upload(int8_t index,pmw3360_srom_t srom);
 
 /// pmw3360_motion_read gets a motion data by Motion register.
 /// This requires to write a dummy data to pmw3360_Motion register
 /// just before.
-bool pmw3360_motion_read(pmw3360_motion_t *d);
+bool pmw3360_motion_read(int8_t index,pmw3360_motion_t *d);
 
 /// pmw3360_motion_burst gets a motion data by Motion_Burst command.
 /// This requires to write a dummy data to pmw3360_Motion_Burst register
 /// just before.
-bool pmw3360_motion_burst(pmw3360_motion_t *d);
+bool pmw3360_motion_burst(int8_t index,pmw3360_motion_t *d);
 
 /// pmw3360_scan_rate_get gets count of scan in a last second.
 /// This works only when DEBUG_PMW3360_SCAN_RATE is defined.
@@ -147,22 +152,22 @@ void pmw3360_cpi_set(uint8_t cpi);
 // Register operations
 
 /// pmw3360_reg_write writes a value to a register.
-void pmw3360_reg_write(uint8_t addr, uint8_t data);
+void pmw3360_reg_write(int8_t index,uint8_t addr, uint8_t data);
 
 /// pmw3360_reg_read reads a value from a register.
-uint8_t pmw3360_reg_read(uint8_t addr);
+uint8_t pmw3360_reg_read(int8_t index,uint8_t addr);
 
 //////////////////////////////////////////////////////////////////////////////
 // SPI operations
 
-bool pmw3360_spi_start(void);
+bool pmw3360_spi_start(int8_t index);
 
 void inline pmw3360_spi_stop(void) {
     spi_stop();
 }
 
 /// \deprecated use pmw3360_reg_write() instead of this.
-spi_status_t inline pmw3360_spi_write(uint8_t data) {
+spi_status_t inline pmw3360_spi_write(int8_t index,uint8_t data) {
     return spi_write(data);
 }
 

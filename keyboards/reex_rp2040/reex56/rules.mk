@@ -55,8 +55,8 @@ GRAVE_ESC_ENABLE = yes
 WS2812_DRIVER = vendor
 SERIAL_DRIVER = vendor
 
-QMK_SETTINGS = yes 
-
-TAP_DANCE_ENABLE = yes
-COMBO_ENABLE = yes
-KEY_OVERRIDE_ENABLE = yes
+# vial-qmk 専用機能 (QMK_SETTINGS / 動的 TAP_DANCE / COMBO / KEY_OVERRIDE) は
+# plain QMK ではキーマップ側の静的定義が必要なため無効化
+TAP_DANCE_ENABLE = no
+COMBO_ENABLE = no
+KEY_OVERRIDE_ENABLE = no

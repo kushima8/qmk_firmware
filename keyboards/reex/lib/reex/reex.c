@@ -34,7 +34,7 @@ const uint16_t AML_TIMEOUT_MIN = 100;
 const uint16_t AML_TIMEOUT_MAX = 1000;
 const uint16_t AML_TIMEOUT_QU  = 50;   // Quantization Unit
 
-static const char BL = '\xB0'; // Blank indicator character
+#define BL '\xB0' // Blank indicator character (strict C: static initializerで使えるようdefine化)
 static const char LFSTR_ON[] PROGMEM = "\xB2\xB3";
 static const char LFSTR_OFF[] PROGMEM = "\xB4\xB5";
 
@@ -44,8 +44,13 @@ reex_t reex = {
     .that_have_ball = false,
     .negotiated     = false,
 
+    .ex_this_have_ball = false,
+    .ex_that_have_ball = false,
+
     .this_motion = {0},
     .that_motion = {0},
+    .ex_this_motion = {0},
+    .ex_that_motion = {0},
 
     .cpi_value   = 0,
     .cpi_changed = false,
@@ -136,17 +141,35 @@ static void add_scroll_div(int8_t delta) {
 // Pointing device driver
 
 void pointing_device_driver_init(void) {
-    reex.this_have_ball = pmw3360_init();
+    // 1st trackball (sensor index 0) on this side.
+    reex.this_have_ball = pmw3360_init(0);
+#ifdef REEX_ENABLE_EX_BALL
+    // 2nd trackball (sensor index 1) on this side.
+    // The 2nd ball is assumed to be connected only when the 1st one is,
+    // so probe it only in that case.
+    reex.ex_this_have_ball = reex.this_have_ball ? pmw3360_init(1) : false;
+#endif
     if (reex.this_have_ball) {
 #if defined(REEX_PMW3360_UPLOAD_SROM_ID)
 #    if REEX_PMW3360_UPLOAD_SROM_ID == 0x04
-        pmw3360_srom_upload(pmw3360_srom_0x04);
+        pmw3360_srom_upload(0,pmw3360_srom_0x04);
+#ifdef REEX_ENABLE_EX_BALL
+        if (reex.ex_this_have_ball) {
+            pmw3360_srom_upload(1,pmw3360_srom_0x04);
+        }
+#endif
 #    elif REEX_PMW3360_UPLOAD_SROM_ID == 0x81
-        pmw3360_srom_upload(pmw3360_srom_0x81);
+        pmw3360_srom_upload(0,pmw3360_srom_0x81);
+#ifdef REEX_ENABLE_EX_BALL
+        if (reex.ex_this_have_ball) {
+            pmw3360_srom_upload(1,pmw3360_srom_0x81);
+        }
+#endif
 #    else
 #        error Invalid value for REEX_PMW3360_UPLOAD_SROM_ID. Please choose 0x04 or 0x81 or disable it.
 #    endif
 #endif
+        // pmw3360_cpi_set() applies the CPI to all sensors on this side.
         pmw3360_cpi_set(CPI_DEFAULT - 1);
     }
 }
@@ -160,8 +183,12 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {
 }
 
 __attribute__((weak)) void reex_on_apply_motion_to_mouse_move(reex_motion_t *m, report_mouse_t *r, bool is_left) {
-    r->x = -clip2int8(m->x);
-    r->y = clip2int8(m->y);
+    // Accumulate into the report (instead of overwriting it) so that
+    // multiple trackballs can act as the pointer at the same time.
+    // Per-ball orientation correction (REEX_ROTATE_BALL*) is already
+    // applied when the sensor is read.
+    r->x = clip2int8(add16(r->x, -m->x));
+    r->y = clip2int8(add16(r->y, m->y));
     // clear motion
     m->x = 0;
     m->y = 0;
@@ -174,8 +201,12 @@ __attribute__((weak)) void reex_on_apply_motion_to_mouse_scroll(reex_motion_t *m
     int16_t y = divmod16(&m->y, div);
 
     // apply to mouse report.
-    r->h = -clip2int8(x);
-    r->v = -clip2int8(y);
+    // Accumulate into the report (instead of overwriting it) so that
+    // multiple trackballs can act as the scroll wheel at the same time.
+    // Per-ball orientation correction (REEX_ROTATE_BALL*) is already
+    // applied when the sensor is read.
+    r->h = clip2int8(add16(r->h, -x));
+    r->v = clip2int8(add16(r->v, -y));
 
     // Scroll snapping
 #if REEX_SCROLLSNAP_ENABLE == 1
@@ -230,27 +261,124 @@ static inline bool should_report(void) {
         reex.this_motion.y = 0;
         reex.that_motion.x = 0;
         reex.that_motion.y = 0;
+#ifdef REEX_ENABLE_EX_BALL
+        reex.ex_this_motion.x = 0;
+        reex.ex_this_motion.y = 0;
+        reex.ex_that_motion.x = 0;
+        reex.ex_that_motion.y = 0;
+#endif
     }
 #endif
     return true;
 }
 
+#ifdef REEX_HAS_ROTATE
+// rotate_motion applies the per-ball orientation correction to raw sensor
+// deltas.  Rotating here (on the half that owns the sensor, before the
+// motion is accumulated or sent over the split link) makes the correction
+// apply consistently to pointer movement, scrolling and RPC-synced motion.
+static void rotate_motion(pmw3360_motion_t *d, uint16_t deg) {
+    int16_t x = d->x;
+    int16_t y = d->y;
+    switch (deg % 360) {
+        case 45:
+            // Diagonal (45-degree step) rotations scale the motion by
+            // sqrt(2); compensate with CPI if it feels too fast.
+            d->x = add16(x, y);
+            d->y = add16(y, -x);
+            break;
+        case 90:
+            d->x = y;
+            d->y = -x;
+            break;
+        case 135:
+            d->x = add16(y, -x);
+            d->y = add16(-x, -y);
+            break;
+        case 180:
+            d->x = -x;
+            d->y = -y;
+            break;
+        case 225:
+            d->x = add16(-x, -y);
+            d->y = add16(x, -y);
+            break;
+        case 270:
+            d->x = -y;
+            d->y = x;
+            break;
+        case 315:
+            d->x = add16(x, -y);
+            d->y = add16(x, y);
+            break;
+        default:
+            break;
+    }
+}
+#endif // REEX_HAS_ROTATE
+
 report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
-    // fetch from optical sensor.
+    // fetch from optical sensors on this side.
     if (reex.this_have_ball) {
         pmw3360_motion_t d = {0};
-        if (pmw3360_motion_burst(&d)) {
+        if (pmw3360_motion_burst(0,&d)) {
+#ifdef REEX_HAS_ROTATE
+            rotate_motion(&d, is_keyboard_left() ? REEX_ROTATE_BALL1_LEFT : REEX_ROTATE_BALL1_RIGHT);
+#endif
             ATOMIC_BLOCK_FORCEON {
                 reex.this_motion.x = add16(reex.this_motion.x, d.x);
                 reex.this_motion.y = add16(reex.this_motion.y, d.y);
             }
         }
     }
+#ifdef REEX_ENABLE_EX_BALL
+    if (reex.ex_this_have_ball) {
+        pmw3360_motion_t d = {0};
+        if (pmw3360_motion_burst(1,&d)) {
+#ifdef REEX_HAS_ROTATE
+            rotate_motion(&d, is_keyboard_left() ? REEX_ROTATE_BALL2_LEFT : REEX_ROTATE_BALL2_RIGHT);
+#endif
+            ATOMIC_BLOCK_FORCEON {
+                reex.ex_this_motion.x = add16(reex.ex_this_motion.x, d.x);
+                reex.ex_this_motion.y = add16(reex.ex_this_motion.y, d.y);
+            }
+        }
+    }
+#endif
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master() && should_report()) {
-        // modify mouse report by PMW3360 motion.
+        // Role assignment (with scroll_mode off):
+        //   * This side's 1st ball is the pointer when present, otherwise
+        //     the other side's 1st ball is the pointer.
+        //   * The other side's 2nd ball is also a pointer when this side
+        //     has a ball (i.e. 3 or 4 balls in total).
+        //   * Every other ball acts as a scroll wheel.
+        // scroll_mode swaps the role of every ball, which keeps the
+        // traditional one-ball-per-side behavior intact.
+        //
+        //   balls present            | pointer      | scroll
+        //   -------------------------+--------------+----------------------
+        //   M1st                     | M1st         | -
+        //   S1st                     | S1st         | -
+        //   M1st,S1st                | M1st         | S1st
+        //   M1st,M2nd                | M1st         | M2nd
+        //   S1st,S2nd                | S1st         | S2nd
+        //   M1st,M2nd,S1st           | M1st         | M2nd,S1st
+        //   M1st,S1st,S2nd           | M1st,S2nd    | S1st
+        //   M1st,M2nd,S1st,S2nd      | M1st,S2nd    | M2nd,S1st
+#ifdef REEX_ENABLE_EX_BALL
+        bool that1_is_pointer = !reex.this_have_ball && reex.that_have_ball;
+        bool that2_is_pointer = reex.this_have_ball;
+        // modify mouse report by PMW3360 motions.
+        motion_to_mouse(&reex.this_motion, &rep, is_keyboard_left(), reex.scroll_mode);
+        motion_to_mouse(&reex.ex_this_motion, &rep, is_keyboard_left(), !reex.scroll_mode);
+        motion_to_mouse(&reex.that_motion, &rep, !is_keyboard_left(), reex.scroll_mode ^ !that1_is_pointer);
+        motion_to_mouse(&reex.ex_that_motion, &rep, !is_keyboard_left(), reex.scroll_mode ^ !that2_is_pointer);
+#else
+        // single trackball per side (original behavior)
         motion_to_mouse(&reex.this_motion, &rep, is_keyboard_left(), reex.scroll_mode);
         motion_to_mouse(&reex.that_motion, &rep, !is_keyboard_left(), reex.scroll_mode ^ reex.this_have_ball);
+#endif
         // store mouse report for OLED.
         reex.last_mouse = rep;
     }
@@ -264,7 +392,11 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
 
 static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     reex_info_t info = {
+#ifdef REEX_ENABLE_EX_BALL
+        .ballcnt = (uint8_t)((reex.this_have_ball ? 1 : 0) + (reex.ex_this_have_ball ? 1 : 0)),
+#else
         .ballcnt = reex.this_have_ball ? 1 : 0,
+#endif
     };
     *(reex_info_t *)out_data = info;
     reex_on_adjust_layout(REEX_ADJUST_SECONDARY);
@@ -287,9 +419,12 @@ static void rpc_get_info_invoke(void) {
             return;
         }
     }
-    reex.negotiated     = true;
-    reex.that_enable    = true;
-    reex.that_have_ball = recv.ballcnt > 0;
+    reex.negotiated        = true;
+    reex.that_enable       = true;
+    reex.that_have_ball    = recv.ballcnt > 0;
+#ifdef REEX_ENABLE_EX_BALL
+    reex.ex_that_have_ball = recv.ballcnt > 1;
+#endif
     dprintf("reex:rpc_get_info_invoke: negotiated #%d %d\n", round, reex.that_have_ball);
 
     // split keyboard negotiation completed.
@@ -328,6 +463,30 @@ static void rpc_get_motion_invoke(void) {
     last_sync = now;
     return;
 }
+
+#ifdef REEX_ENABLE_EX_BALL
+static void rpc_get_ex_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+    *(reex_motion_t *)out_data = reex.ex_this_motion;
+    // clear motion
+    reex.ex_this_motion.x = 0;
+    reex.ex_this_motion.y = 0;
+}
+
+static void rpc_get_ex_motion_invoke(void) {
+    static uint32_t last_sync = 0;
+    uint32_t        now       = timer_read32();
+    if (TIMER_DIFF_32(now, last_sync) < REEX_TX_GETMOTION_INTERVAL) {
+        return;
+    }
+    reex_motion_t recv = {0};
+    if (transaction_rpc_exec(REEX_GET_EX_MOTION, 0, NULL, sizeof(recv), &recv)) {
+        reex.ex_that_motion.x = add16(reex.ex_that_motion.x, recv.x);
+        reex.ex_that_motion.y = add16(reex.ex_that_motion.y, recv.y);
+    }
+    last_sync = now;
+    return;
+}
+#endif
 
 static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
     reex_set_cpi(*(reex_cpi_t *)in_data);
@@ -542,6 +701,9 @@ void keyboard_post_init_kb(void) {
     if (!is_keyboard_master()) {
         transaction_register_rpc(REEX_GET_INFO, rpc_get_info_handler);
         transaction_register_rpc(REEX_GET_MOTION, rpc_get_motion_handler);
+#ifdef REEX_ENABLE_EX_BALL
+        transaction_register_rpc(REEX_GET_EX_MOTION, rpc_get_ex_motion_handler);
+#endif
         transaction_register_rpc(REEX_SET_CPI, rpc_set_cpi_handler);
     }
 #endif
@@ -572,6 +734,11 @@ void housekeeping_task_kb(void) {
             rpc_get_motion_invoke();
             rpc_set_cpi_invoke();
         }
+#ifdef REEX_ENABLE_EX_BALL
+        if (reex.ex_that_have_ball) {
+            rpc_get_ex_motion_invoke();
+        }
+#endif
     }
 }
 #endif

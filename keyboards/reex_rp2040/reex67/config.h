@@ -3,6 +3,24 @@
 
 #pragma once
 
+/* =====================================================================
+ * QMK 0.22.x 互換シム
+ * vial-qmk (新しいQMKベース) から移植した lib/ および同梱 pmw3360 ドライバは
+ * 新GPIO API名を使うため、旧API名へのエイリアスを定義する。
+ * config.h は全ソースに -include されるため、ドライバ/lib側は無修正でよい。
+ * ===================================================================== */
+#ifndef __ASSEMBLER__
+#    include <stddef.h> /* pmw3360.h が size_t を使うため */
+#endif
+#define gpio_set_pin_output(pin) setPinOutput(pin)
+#define gpio_set_pin_input(pin) setPinInput(pin)
+#define gpio_set_pin_input_high(pin) setPinInputHigh(pin)
+#define gpio_write_pin(pin, level) writePin(pin, level)
+#define gpio_write_pin_low(pin) writePinLow(pin)
+#define gpio_write_pin_high(pin) writePinHigh(pin)
+#define gpio_read_pin(pin) readPin(pin)
+
+
 // USB Device descriptor parameters
 //#define VENDOR_ID           0x3938
 //#define PRODUCT_ID          0x3637
@@ -42,7 +60,7 @@
 // it has been reported to work well in such cases.
 //#define SPLIT_WATCHDOG_ENABLE
 
-#define SPLIT_TRANSACTION_IDS_KB REEX_GET_INFO, REEX_GET_MOTION, REEX_SET_CPI
+#define SPLIT_TRANSACTION_IDS_KB REEX_GET_INFO, REEX_GET_MOTION, REEX_SET_CPI, REEX_GET_EX_MOTION
 
 // RGB LED settings
 #define WS2812_DI_PIN GP0

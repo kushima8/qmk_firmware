@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 #include "quantum.h"
 #include "drivers/pmw3360/pmw3360.h"
-#include "lib/reex/reex.c"
+#include "lib/reex/reex.h"
+#include "transactions.h"
 
 #define MANUAL  TO(0)
 #define AUTO   TO(1)
@@ -99,6 +100,16 @@ void oledkit_render_info_user(void) {
 }
 #endif
 
+static int16_t add16(int16_t a, int16_t b) {
+    int16_t r = a + b;
+    if (a >= 0 && b >= 0 && r < 0) {
+        r = 32767;
+    } else if (a < 0 && b < 0 && r >= 0) {
+        r = -32768;
+    }
+    return r;
+}
+
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch(get_highest_layer(remove_auto_mouse_layer(state, true))) {
@@ -115,16 +126,41 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 }
 #endif
 
+static void rpc_get_ex_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
+    *(reex_motion_t *)out_data = reex.ex_this_motion;
+    // clear motion
+    reex.ex_this_motion.x = 0;
+    reex.ex_this_motion.y = 0;
+}
+
 #if defined(ENCODER_ENABLE) && defined(DIP_SWITCH_ENABLE)
 void keyboard_post_init_user(void) {
     if(!is_keyboard_master()){
         if(!reex.this_have_ball){
             encoder_init();
             dip_switch_init();
-            gpio_set_pin_output(GP26);
+#ifndef __AVR__
+            gpio_set_pin_output(GP26); /* RP2040 専用ピン (AVR 版には存在しない) */
             gpio_write_pin_low(GP26);
+#endif
         }
+        transaction_register_rpc(REEX_GET_EX_MOTION, rpc_get_ex_motion_handler);
     }
+}
+
+static void rpc_get_ex_motion_invoke(void) {
+    static uint32_t last_sync = 0;
+    uint32_t        now       = timer_read32();
+    if (TIMER_DIFF_32(now, last_sync) < REEX_TX_GETMOTION_INTERVAL) {
+        return;
+    }
+    reex_motion_t ex_recv = {0};
+    if (transaction_rpc_exec(REEX_GET_EX_MOTION, 0, NULL, sizeof(ex_recv), &ex_recv)) {
+        reex.ex_that_motion.x = add16(reex.that_motion.x, ex_recv.x);
+        reex.ex_that_motion.y = add16(reex.that_motion.y, ex_recv.y);
+    }
+    last_sync = now;
+    return;
 }
 
 void housekeeping_task_user(void){
@@ -134,17 +170,20 @@ void housekeeping_task_user(void){
             if(!reex.this_have_ball){
                 encoder_init();
                 dip_switch_init();
-                gpio_set_pin_output(GP26);
+#ifndef __AVR__
+                gpio_set_pin_output(GP26); /* RP2040 専用ピン (AVR 版には存在しない) */
                 gpio_write_pin_low(GP26);
+#endif
                 encoder_ini_flg = false;
             }
+        rpc_get_ex_motion_invoke();
         }
     }
 }
 #endif
 
 #ifdef ENCODER_MAP_ENABLE
-const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
+const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [0] = { ENCODER_CCW_CW(KC_B, KC_A ) },
     [1] = { ENCODER_CCW_CW(KC_D, KC_C ) },
     [2] = { ENCODER_CCW_CW(KC_F, KC_E ) },
@@ -177,37 +216,80 @@ bool dip_switch_update_kb(uint8_t index, bool active) {
 
 #ifdef POINTING_DEVICE_ENABLE
 
-bool ex_have_ball = false;
+const uint8_t EX_CPI_DEFAULT = REEX_CPI_DEFAULT / 100;
+
+static inline int8_t clip2int8(int16_t v) {
+    return (v) < -127 ? -127 : (v) > 127 ? 127 : (int8_t)v;
+}
+
+static void motion_to_mouse(reex_motion_t *m, report_mouse_t *r, bool is_left, bool as_scroll) {
+    if (!as_scroll) {
+        reex_on_apply_motion_to_mouse_scroll(m, r, is_left);
+    } else {
+        reex_on_apply_motion_to_mouse_move(m, r, is_left);
+    }
+}
+
+static inline bool should_report(void) {
+    uint32_t now = timer_read32();
+#if defined(REEX_REPORTMOUSE_INTERVAL) && REEX_REPORTMOUSE_INTERVAL > 0
+    // throttling mouse report rate.
+    static uint32_t last = 0;
+    if (TIMER_DIFF_32(now, last) < REEX_REPORTMOUSE_INTERVAL) {
+        return false;
+    }
+    last = now;
+#endif
+#if defined(REEX_SCROLLBALL_INHIVITOR) && REEX_SCROLLBALL_INHIVITOR > 0
+    if (TIMER_DIFF_32(now, reex.scroll_mode_changed) < REEX_SCROLLBALL_INHIVITOR) {
+        reex.ex_this_motion.x = 0;
+        reex.ex_this_motion.y = 0;
+        reex.ex_that_motion.x = 0;
+        reex.ex_that_motion.y = 0;
+    }
+#endif
+    return true;
+}
 
 void pointing_device_init_kb(void) {
-    ex_have_ball = pmw3360_init(1);
+    reex.ex_this_have_ball = pmw3360_init(1);
+    if (reex.ex_this_have_ball) {
 #if defined(REEX_PMW3360_UPLOAD_SROM_ID)
 #    if REEX_PMW3360_UPLOAD_SROM_ID == 0x04
-        pmw3360_srom_upload(0,pmw3360_srom_0x04);
+        pmw3360_srom_upload(1,pmw3360_srom_0x04);
 #    elif REEX_PMW3360_UPLOAD_SROM_ID == 0x81
-        pmw3360_srom_upload(0,pmw3360_srom_0x81);
+        pmw3360_srom_upload(1,pmw3360_srom_0x81);
 #    else
 #        error Invalid value for REEX_PMW3360_UPLOAD_SROM_ID. Please choose 0x04 or 0x81 or disable it.
 #    endif
 #endif
+        pmw3360_cpi_set(EX_CPI_DEFAULT - 1);
+    }
 }
 
-report_mouse_t pointing_device_task_kb(report_mouse_t rep) {
-    if (ex_have_ball && reex.this_have_ball) {
-        pmw3360_motion_t d = {0};
-        if (pmw3360_motion_burst(1,&d)) {
+report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
+    if (reex.this_have_ball && reex.ex_this_have_ball) {
+        pmw3360_motion_t ex_d = {0};
+        if (pmw3360_motion_burst(1,&ex_d)) {
             ATOMIC_BLOCK_FORCEON {
-                reex.ex_this_motion.x = add16(reex.ex_this_motion.x, d.x);
-                reex.ex_this_motion.y = add16(reex.ex_this_motion.y, d.y);
+                reex.ex_this_motion.x = add16(reex.ex_this_motion.x, ex_d.x);
+                reex.ex_this_motion.y = add16(reex.ex_this_motion.y, ex_d.y);
+                //reex.ex_this_motion.x = clip2int8(mouse_report.x + reex.ex_this_motion.x);
+                //reex.ex_this_motion.y = clip2int8(mouse_report.y + reex.ex_this_motion.y);
             }
         }
     }
     // report mouse event, if keyboard is primary.
     if (is_keyboard_master() && should_report()) {
         // modify mouse report by PMW3360 motion.
-        motion_to_mouse(&reex.ex_this_motion, &rep, is_keyboard_left(), !reex.scroll_mode);
+        if(reex.ex_this_have_ball){
+        motion_to_mouse(&reex.ex_this_motion, &mouse_report, is_keyboard_left(), reex.scroll_mode);
+        }
+        //if(reex.ex_that_have_ball){
+        motion_to_mouse(&reex.ex_that_motion, &mouse_report, !is_keyboard_left(), !reex.scroll_mode);
+        //}
     }
-    return rep;
+    return pointing_device_task_user(mouse_report);
 }
 
 #endif

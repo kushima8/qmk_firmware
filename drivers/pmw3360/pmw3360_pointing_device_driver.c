@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 bool pmw3360_has = false;
 
 void pointing_device_driver_init(void) {
-    pmw3360_has = pmw3360_init();
-    pmw3360_reg_write(pmw3360_Motion_Burst, 0);
+    pmw3360_has = pmw3360_init(0);
+    pmw3360_reg_write(0,pmw3360_Motion_Burst, 0);
 }
 
 #define constrain_hid(amt) ((amt) < -127 ? -127 : ((amt) > 127 ? 127 : (amt)))
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t mouse_report) {
     pmw3360_motion_t d = {0};
-    if (pmw3360_has && pmw3360_motion_burst(&d)) {
+    if (pmw3360_has && pmw3360_motion_burst(0,&d)) {
         mouse_report.x = constrain_hid(d.y);
         mouse_report.y = constrain_hid(d.x);
     }

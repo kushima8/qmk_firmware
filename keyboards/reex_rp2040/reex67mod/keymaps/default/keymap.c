@@ -120,8 +120,8 @@ void keyboard_post_init_user(void) {
         if(!reex.this_have_ball){
             encoder_init();
             dip_switch_init();
-            setPinOutput(F7);
-            writePinLow(F7);
+            setPinOutput(GP26); /* RP2040: AVR版の F7 相当 (reex56mod と同じ) */
+            writePinLow(GP26);
         }
     }
 }
@@ -133,8 +133,8 @@ void housekeeping_task_user(void){
             if(!reex.this_have_ball){
                 encoder_init();
                 dip_switch_init();
-                setPinOutput(F7);
-                writePinLow(F7);
+                setPinOutput(GP26); /* RP2040: AVR版の F7 相当 (reex56mod と同じ) */
+                writePinLow(GP26);
                 encoder_ini_flg = false;
             }
         }

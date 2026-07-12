@@ -50,11 +50,42 @@ SRC += analog.c
 
 DIP_SWITCH_ENABLE = yes
 
+# =====================================================================
+# ポインティング入力の選択 (コメントアウトで切り替え)
+#
+#   ジョイスティックを使う場合  : 【A】を有効化、【B】を全てコメントアウト
+#   トラックボールを使う場合    : 【A】を全てコメントアウト、【B】を有効化
+#
+# ピン割り当て:
+#   joystick  : X=F6, Y=F7 (ADC)
+#   trackball : SCK=B1, MOSI=B2, MISO=B3, NCS=F7 (ハードウェアSPI)
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 【A】アナログジョイスティック構成 (デフォルト)
+# ---------------------------------------------------------------------
 JOYSTICK_ENABLE = yes
+
+# ---------------------------------------------------------------------
+# 【B】PMW3360 トラックボール構成
+#     ※ B1(SCK)/B2(MOSI) をSPIが使うため DIP スイッチは併用不可 (= no にする)
+#     ※ atmega32u4 のフラッシュ節約のため LTO を有効にする
+# ---------------------------------------------------------------------
+#JOYSTICK_ENABLE = no
+#POINTING_DEVICE_ENABLE = yes
+#POINTING_DEVICE_DRIVER = custom
+#SRC += drivers/pmw3360/pmw3360.c
+#SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
+#QUANTUM_LIB_SRC += spi_master.c
+#DIP_SWITCH_ENABLE = no
+#LTO_ENABLE = yes
+
 # lib/joystick_user is located one level up from the keyboard dir:
 #   keyboards/gbc/
 #   ├── gbc24/                (this keyboard)
 #   └── lib/joystick_user/
+# ソース全体が #ifdef JOYSTICK_ENABLE で括られているため、
+# trackball ビルドでも追加したまま(空にコンパイルされる)で問題ない。
 SRC      += joystick_user.c
 VPATH    += keyboards/gbc/lib/joystick_user
 OPT_DEFS += -Ikeyboards/gbc/lib/joystick_user

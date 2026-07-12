@@ -62,11 +62,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define DIP_SWITCH_PINS { B2 }
 
-#define JOY_X_PIN F6
-#define JOY_Y_PIN F7
-#define JOYSTICK_BUTTON_COUNT 1
-#define JOYSTICK_AXIS_COUNT 2
-#define JOYSTICK_AXIS_RESOLUTION 10
+/* ---- アナログジョイスティック構成 (POINTING_INPUT = joystick) ---- */
+#ifdef JOYSTICK_ENABLE
+#    define JOY_X_PIN F6
+#    define JOY_Y_PIN F7
+#    define JOYSTICK_BUTTON_COUNT 1
+#    define JOYSTICK_AXIS_COUNT 2
+#    define JOYSTICK_AXIS_RESOLUTION 10
+#endif
+
+/* ---- PMW3360 トラックボール構成 (POINTING_INPUT = trackball) ----
+ * ジョイスティック接続部を交換してトラックボールモジュールを装着する。
+ * SPI はハードウェア SPI を使用:
+ *   SCK  = B1
+ *   MOSI = B2
+ *   MISO = B3
+ *   NCS  = F7 (JOY_Y と同じピンを流用。ドライバのデフォルトと同一)
+ */
+#ifdef POINTING_DEVICE_ENABLE
+#    define PMW3360_NCS_PINS { F7 }
+
+/* ---- 同梱 pmw3360 ドライバを「無修正」で QMK 0.22.x でビルドするための互換対応 ----
+ * (config.h は全ソースに -include されるため、ここに置けばドライバ側は変更不要)
+ *
+ * 1) pmw3360.h が size_t を使うが stddef.h を include していない
+ *    → ここで強制 include (.S ファイルでは typedef が使えないため C のみ)
+ * 2) pmw3360.c が新 GPIO API 名 gpio_set_pin_output() を使うが 0.22.x には無い
+ *    → 旧 API setPinOutput() へのエイリアスを定義
+ */
+#    ifndef __ASSEMBLER__
+#        include <stddef.h>
+#    endif
+#    define gpio_set_pin_output(pin) setPinOutput(pin)
+#endif
 
 //#define LED_NUM_LOCK_PIN B0
 //#define LED_CAPS_LOCK_PIN B1
