@@ -6,10 +6,10 @@ BOOTLOADER = rp2040
 
 # Build Options
 BOOTMAGIC_ENABLE = no       # Enable Bootmagic Lite
-EXTRAKEY_ENABLE = yes       # Audio control and System control (RP2040 has enough USB endpoints)
+EXTRAKEY_ENABLE = no        # Audio control and System control (RP2040 has enough USB endpoints)
 CONSOLE_ENABLE = no         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
-NKRO_ENABLE = yes           # Enable N-Key Rollover
+NKRO_ENABLE = no            # Enable N-Key Rollover
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 AUDIO_ENABLE = no           # Audio output
 
@@ -67,17 +67,24 @@ DIP_SWITCH_ENABLE = yes
 JOYSTICK_ENABLE = yes
 
 # ---------------------------------------------------------------------
-# 【B】PMW3360 トラックボール構成
-#     ※ B1(SCK)/B2(MOSI) をSPIが使うため DIP スイッチは併用不可 (= no にする)
+# 【B】PMW3360 トラックボール構成 (lib/gbc 経由)
+#     ※ センサーへのアクセスは lib/gbc/gbc.c が行う。
+#       gbc.c が custom pointing device driver
+#       (pointing_device_driver_init / get_report / get_cpi / set_cpi)
+#       を提供するため、pmw3360_pointing_device_driver.c は使わない。
+#     ※ pmw3360.c は同梱ドライバ (drivers/pmw3360/) を無修正で使用。
+#     ※ GP18(SCK)/GP19(MOSI) をSPIが使うため DIP スイッチは併用不可 (= no にする)
 #     ※ RP2040 はフラッシュに余裕があるため LTO は不要
 # ---------------------------------------------------------------------
 #JOYSTICK_ENABLE = no
 #POINTING_DEVICE_ENABLE = yes
 #POINTING_DEVICE_DRIVER = custom
 #SRC += drivers/pmw3360/pmw3360.c
-#SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
+#SRC += lib/gbc/gbc.c
 #QUANTUM_LIB_SRC += spi_master.c
 #DIP_SWITCH_ENABLE = no
+# gbc.c 使用時のフラグ (gbc24.c 側の軸補正を無効化するために使用)
+# OPT_DEFS += -DGBC_CORE_ENABLE
 
 # lib/joystick_user is located one level up from the keyboard dir:
 #   keyboards/gbc/

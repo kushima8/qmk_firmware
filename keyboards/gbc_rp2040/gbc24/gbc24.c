@@ -16,7 +16,7 @@
 
 #include "gbc24.h"
 
-#ifdef POINTING_DEVICE_ENABLE
+#if defined(POINTING_DEVICE_ENABLE) && !defined(GBC_CORE_ENABLE)
 /* PMW3360 トラックボールの軸補正 (キーボード側で対応、ドライバは無修正)
  *
  * 同梱ドライバの pointing_device_driver_get_report() は
@@ -35,3 +35,8 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
     return pointing_device_task_user(mouse_report);
 }
 #endif
+/* GBC_CORE_ENABLE (lib/gbc/gbc.c 経由) の場合、gbc.c の
+ * gbc_on_apply_motion_to_mouse_move() が x = -d.x, y = d.y を出力する。
+ * これは「旧ドライバ出力 (x=d.y, y=d.x) + 上記回転補正」の最終結果と同一の
+ * マッピングであるため、キーボード側の追加補正は不要 (二重適用防止のため無効化)。
+ */

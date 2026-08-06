@@ -3,12 +3,28 @@
     "vendorId":"0x3938",
     "productId":"0x3234",
     "matrix":{"rows":5,"cols":8},
- "customKeycodes": [
-        {		"name": "JOY_DIGI", "title": "JOY_DIGI", "shortName": "JOY_DIGI"},
-        {		"name": "JOY_MOUS", "title": "JOY_MOUS", "shortName": "JOY_MOUS"},
-        {		"name": "JOY_ANLG", "title": "JOY_ANLG", "shortName": "JOY_ANLG"},
-        {		"name": "JOY_SPD_UP", "title": "JOY_SPD_UP", "shortName": "JOY_SPD_UP"},
-        {		"name": "JOY_SPD_DN", "title": "JOY_SPD_DN", "shortName": "JOY_SPD_DN"}
+    "customKeycodes": [
+        { "name": "REC_RST",    "title": "センサー設定をリセット",           "shortName": "REC_RST"  },
+        { "name": "REC_SAVE",   "title": "センサー設定をEEPROMに保存",       "shortName": "REC_SAVE" },
+        { "name": "CPI_I100",   "title": "CPI +100 (max 3500)",              "shortName": "CPI+100"  },
+        { "name": "CPI_D100",   "title": "CPI -100 (min 100)",               "shortName": "CPI-100"  },
+        { "name": "CPI_I1K",    "title": "CPI +1000 (max 3500)",             "shortName": "CPI+1K"   },
+        { "name": "CPI_D1K",    "title": "CPI -1000 (min 100)",              "shortName": "CPI-1K"   },
+        { "name": "SCRL_TO",    "title": "スクロールモード トグル",          "shortName": "SCRL_TO"  },
+        { "name": "SCRL_MO",    "title": "押下中スクロールモード",           "shortName": "SCRL_MO"  },
+        { "name": "SCRL_DVI",   "title": "スクロール除数 +1 (遅くなる)",     "shortName": "SCRL_DVI" },
+        { "name": "SCRL_DVD",   "title": "スクロール除数 -1 (速くなる)",     "shortName": "SCRL_DVD" },
+        { "name": "AML_TO",     "title": "自動マウスレイヤー トグル",        "shortName": "AML_TO"   },
+        { "name": "AML_I50",    "title": "自動マウスレイヤー timeout +50ms", "shortName": "AML+50"   },
+        { "name": "AML_D50",    "title": "自動マウスレイヤー timeout -50ms", "shortName": "AML-50"   },
+        { "name": "SSNP_VRT",   "title": "スクロールスナップ: 垂直",         "shortName": "SSNP_VRT" },
+        { "name": "SSNP_HOR",   "title": "スクロールスナップ: 水平",         "shortName": "SSNP_HOR" },
+        { "name": "SSNP_FRE",   "title": "スクロールスナップ: 無効 (自由)",  "shortName": "SSNP_FRE" },
+        { "name": "JOY_DIGI",   "title": "ジョイスティック → デジタル4方向", "shortName": "JOY_DIGI" },
+        { "name": "JOY_MOUS",   "title": "ジョイスティック → マウス",        "shortName": "JOY_MOUS" },
+        { "name": "JOY_ANLG",   "title": "ジョイスティック → アナログ軸",    "shortName": "JOY_ANLG" },
+        { "name": "JOY_SPD_UP", "title": "マウス最大速度 上げる",            "shortName": "JOY_SPD+" },
+        { "name": "JOY_SPD_DN", "title": "マウス最大速度 下げる",            "shortName": "JOY_SPD-" }
     ],
     "layouts":{
         "keymap":[

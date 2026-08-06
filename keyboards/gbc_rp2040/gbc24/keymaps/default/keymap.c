@@ -33,7 +33,7 @@ enum layer_names {
 };
 
 enum custom_keycodes {
-    JOY_DIGI = QK_KB_0,      /* VIA custom keycode range (user00) */
+    JOY_DIGI = QK_KB_16,     /* VIA custom keycode range (user00) */
     JOY_MOUS,                /* ジョイスティック → マウス */
     JOY_ANLG,                /* ジョイスティック → アナログ (ゲームパッド軸) */
     JOY_SPD_UP,              /* マウス最大速度 上げる */

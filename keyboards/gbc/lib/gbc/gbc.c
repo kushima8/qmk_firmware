@@ -34,7 +34,7 @@ const uint16_t AML_TIMEOUT_MIN = 100;
 const uint16_t AML_TIMEOUT_MAX = 1000;
 const uint16_t AML_TIMEOUT_QU  = 50;   // Quantization Unit
 
-static const char BL = '\xB0'; // Blank indicator character
+#define BL '\xB0' // Blank indicator character (macro: avr-gcc は静的初期化子に const 変数を許容しないため)
 static const char LFSTR_ON[] PROGMEM = "\xB2\xB3";
 static const char LFSTR_OFF[] PROGMEM = "\xB4\xB5";
 
@@ -136,13 +136,15 @@ static void add_scroll_div(int8_t delta) {
 // Pointing device driver
 
 void pointing_device_driver_init(void) {
-    gbc.this_have_ball = pmw3360_init();
+    // 添付 pmw3360 ドライバはセンサー index を取る API のため、
+    // 単一センサー構成の GBC24 では index 0 を指定する。
+    gbc.this_have_ball = pmw3360_init(0);
     if (gbc.this_have_ball) {
 #if defined(GBC_PMW3360_UPLOAD_SROM_ID)
 #    if GBC_PMW3360_UPLOAD_SROM_ID == 0x04
-        pmw3360_srom_upload(pmw3360_srom_0x04);
+        pmw3360_srom_upload(0, pmw3360_srom_0x04);
 #    elif GBC_PMW3360_UPLOAD_SROM_ID == 0x81
-        pmw3360_srom_upload(pmw3360_srom_0x81);
+        pmw3360_srom_upload(0, pmw3360_srom_0x81);
 #    else
 #        error Invalid value for GBC_PMW3360_UPLOAD_SROM_ID. Please choose 0x04 or 0x81 or disable it.
 #    endif
@@ -239,7 +241,7 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     // fetch from optical sensor.
     if (gbc.this_have_ball) {
         pmw3360_motion_t d = {0};
-        if (pmw3360_motion_burst(&d)) {
+        if (pmw3360_motion_burst(0, &d)) {
             ATOMIC_BLOCK_FORCEON {
                 gbc.this_motion.x = add16(gbc.this_motion.x, d.x);
                 gbc.this_motion.y = add16(gbc.this_motion.y, d.y);
