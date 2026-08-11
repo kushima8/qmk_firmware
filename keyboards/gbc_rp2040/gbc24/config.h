@@ -68,7 +68,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef JOYSTICK_ENABLE
 #    define JOY_X_PIN GP27
 #    define JOY_Y_PIN GP26
-#    define JOYSTICK_BUTTON_COUNT 1
+#    define JOYSTICK_BUTTON_COUNT 32
 #    define JOYSTICK_AXIS_COUNT 2
 #    define JOYSTICK_AXIS_RESOLUTION 10
 #endif
