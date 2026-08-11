@@ -83,6 +83,17 @@
 #define JOY_DEAD_ANALOG_PERCENT   12
 #define JOY_DEAD_ANALOG           (JOY_JS_AXIS_MAX * JOY_DEAD_ANALOG_PERCENT / 100)
 
+/* --- アナログモード Y 軸の向き ---
+ * HID の Generic Desktop Y (Usage 0x31) は「下方向が正」と定義されている。
+ * 本ファイルは dy > 0 を「スティック上」として扱っている
+ * (compute_direction() の DIR_N、process_mouse() の -dy 補正を参照) ため、
+ * アナログモードでも符号を反転させないと上下が逆になる。
+ * 配線の都合で ADC の増加方向が逆なボードでは 0 にすること。
+ */
+#ifndef JOY_ANALOG_INVERT_Y
+#    define JOY_ANALOG_INVERT_Y 1
+#endif
+
 #define JOY_CLAMP(v, lo, hi) ((v) < (lo) ? (lo) : (v) > (hi) ? (hi) : (v))
 
 /* ============================================================
@@ -285,8 +296,16 @@ static void process_mouse(uint16_t x, uint16_t y) {
 static void process_analog(uint16_t x, uint16_t y) {
     release_last_dir();
 
-    int16_t ax = adc_to_axis((int32_t)x - (int32_t)joy.x_center);
-    int16_t ay = adc_to_axis((int32_t)y - (int32_t)joy.y_center);
+    int32_t dx = (int32_t)x - (int32_t)joy.x_center;
+    int32_t dy = (int32_t)y - (int32_t)joy.y_center;
+
+    /* HID ゲームパッドの Y は下方向が正。dy>0 (上) を負値へ写す。 */
+#if JOY_ANALOG_INVERT_Y
+    dy = -dy;
+#endif
+
+    int16_t ax = adc_to_axis(dx);
+    int16_t ay = adc_to_axis(dy);
 
     /* 変換後デッドゾーン (HID 軸スケール) */
     if (ax > -JOY_DEAD_ANALOG && ax < JOY_DEAD_ANALOG) ax = 0;
