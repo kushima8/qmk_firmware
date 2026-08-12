@@ -105,7 +105,7 @@
  *  16 bit → -32768..32767
  */
 #define JOY_JS_AXIS_MAX   ((int16_t)((1L << (JOYSTICK_AXIS_RESOLUTION - 1)) - 1))
-#define JOY_JS_AXIS_MIN   ((int16_t)(-(1L << (JOYSTICK_AXIS_RESOLUTION - 1))))
+#define JOY_JS_AXIS_MIN   ((int16_t)(-JOY_JS_AXIS_MAX))
 
 /* --- アナログモード デッドゾーン (HID 軸範囲に対する割合) ---
  *   解像度に比例してスケールされる。
