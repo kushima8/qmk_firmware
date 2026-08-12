@@ -84,7 +84,7 @@ JOYSTICK_ENABLE = yes
 #QUANTUM_LIB_SRC += spi_master.c
 #DIP_SWITCH_ENABLE = no
 # gbc.c 使用時のフラグ (gbc24.c 側の軸補正を無効化するために使用)
-# OPT_DEFS += -DGBC_CORE_ENABLE
+#OPT_DEFS += -DGBC_CORE_ENABLE
 
 # lib/joystick_user is located one level up from the keyboard dir:
 #   keyboards/gbc/
