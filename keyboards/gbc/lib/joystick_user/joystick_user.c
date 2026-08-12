@@ -45,10 +45,42 @@
 #define JOY_ADC_CENTER_DEFAULT   (1 << (JOY_ADC_BITS - 1))         /*  512 */
 #define JOY_ADC_RANGE_HALF       (1 << (JOY_ADC_BITS - 1))         /*  512 */
 
-/* --- デッドゾーン (ADC 生値ベース) --- */
-#define JOY_DEAD_DIGITAL         120   /* デジタルモード メイン方向 */
-#define JOY_DEAD_DIGITAL_DIAG     70   /* デジタルモード センター判定 */
-#define JOY_DEAD_MOUSE           120   /* マウスモード 円形デッドゾーン */
+/* --- 可動域 (カバー等で機械的に制限された、中心からの ADC 差分の絶対値) ---
+ * config.h で JOY_X_SPAN_NEG / JOY_X_SPAN_POS / JOY_Y_SPAN_NEG / JOY_Y_SPAN_POS
+ * を定義すると、その位置まで倒したときに HID 軸値が ±フルスケール (1.00) になる。
+ * 未定義の場合は従来どおり ±512 (ADC 10bit の理論フルスケール) を仮定する。
+ */
+#ifndef JOY_X_SPAN_NEG
+#    define JOY_X_SPAN_NEG JOY_ADC_RANGE_HALF
+#endif
+#ifndef JOY_X_SPAN_POS
+#    define JOY_X_SPAN_POS JOY_ADC_RANGE_HALF
+#endif
+#ifndef JOY_Y_SPAN_NEG
+#    define JOY_Y_SPAN_NEG JOY_ADC_RANGE_HALF
+#endif
+#ifndef JOY_Y_SPAN_POS
+#    define JOY_Y_SPAN_POS JOY_ADC_RANGE_HALF
+#endif
+
+/* 4軸方向のうち最小の可動量。デジタル/マウスモードの基準に使う。
+ * (QMK 側の MIN マクロ有無に依存しないよう独自名で定義)
+ */
+#define JOY_MIN2(a, b)   ((a) < (b) ? (a) : (b))
+#define JOY_SPAN_MIN     JOY_MIN2(JOY_MIN2(JOY_X_SPAN_NEG, JOY_X_SPAN_POS), \
+                                  JOY_MIN2(JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS))
+
+/* --- デッドゾーン (ADC 生値ベース、可動域に対する割合で定義) ---
+ * 割合は従来の固定値 (120/512 ≈ 24%, 70/512 ≈ 14%) を踏襲している。
+ * 反応を軽くしたい場合はパーセントを下げること。
+ */
+#define JOY_DEAD_DIGITAL_PERCENT       24   /* デジタルモード メイン方向 */
+#define JOY_DEAD_DIGITAL_DIAG_PERCENT  14   /* デジタルモード センター判定 */
+#define JOY_DEAD_MOUSE_PERCENT         24   /* マウスモード 円形デッドゾーン */
+
+#define JOY_DEAD_DIGITAL       (JOY_SPAN_MIN * JOY_DEAD_DIGITAL_PERCENT / 100)
+#define JOY_DEAD_DIGITAL_DIAG  (JOY_SPAN_MIN * JOY_DEAD_DIGITAL_DIAG_PERCENT / 100)
+#define JOY_DEAD_MOUSE         (JOY_SPAN_MIN * JOY_DEAD_MOUSE_PERCENT / 100)
 
 /* --- マウス最大速度 --- */
 #define JOY_MOUSE_SPEED_MIN        1
@@ -190,16 +222,23 @@ static void stop_mouse(void) {
     host_mouse_send(&report);
 }
 
-/* ADC 生値の符号付き差分 (±512 相当) を HID 軸値に変換。
- * JOYSTICK_AXIS_RESOLUTION と ADC 解像度の差をシフトで吸収する。
+/* ADC 生値の符号付き差分を、実測した可動域 (span) を基準に HID 軸値へ線形変換。
+ *
+ *   delta == +span_pos  ->  +JOY_JS_AXIS_MAX  (= 1.00)
+ *   delta == -span_neg  ->  -JOY_JS_AXIS_MAX  (= -1.00)
+ *
+ * 正方向と負方向で span を分けているのは、カバーの成形誤差やスティックの
+ * 取り付け位置で可動域が非対称になることが多いため。
+ *
+ * span を基準に割るため、ADC の解像度 (AVR:10bit / RP2040:12bit) に
+ * 依存しない。旧 adc_to_axis() のシフト処理は不要になったため廃止した。
  */
-static inline int16_t adc_to_axis(int32_t adc_delta) {
-#if JOYSTICK_AXIS_RESOLUTION > JOY_ADC_BITS
-    adc_delta <<= (JOYSTICK_AXIS_RESOLUTION - JOY_ADC_BITS);
-#elif JOYSTICK_AXIS_RESOLUTION < JOY_ADC_BITS
-    adc_delta >>= (JOY_ADC_BITS - JOYSTICK_AXIS_RESOLUTION);
-#endif
-    return (int16_t)JOY_CLAMP(adc_delta, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
+static inline int16_t scale_axis(int32_t delta, uint16_t span_neg, uint16_t span_pos) {
+    uint16_t span = (delta < 0) ? span_neg : span_pos;
+    if (span == 0) span = 1;   /* ゼロ除算防止 */
+
+    int32_t v = delta * (int32_t)JOY_JS_AXIS_MAX / (int32_t)span;
+    return (int16_t)JOY_CLAMP(v, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
 }
 
 /* ============================================================
@@ -247,7 +286,7 @@ static void process_digital(uint16_t x, uint16_t y) {
  *   sqrt 不要、誤差最大約 4%
  *
  * マウス HID は int8_t 固定 (±127) なので JOYSTICK_AXIS_RESOLUTION の
- * 影響を受けない。
+ * 影響を受けない。速度は JOY_SPAN_MIN (実可動域) を基準に正規化する。
  * ============================================================ */
 
 static void process_mouse(uint16_t x, uint16_t y) {
@@ -266,7 +305,10 @@ static void process_mouse(uint16_t x, uint16_t y) {
 
     /* デッドゾーン境界=速度 1、フル傾倒=mouse_speed_max */
     uint16_t eff     = mag - JOY_DEAD_MOUSE;
-    uint16_t max_eff = JOY_ADC_RANGE_HALF - JOY_DEAD_MOUSE;
+    /* 分母は実可動域。旧コードは ±512 前提だったため、カバーで可動域を
+     * 制限していると mouse_speed_max に到達できなかった。
+     */
+    uint16_t max_eff = JOY_SPAN_MIN - JOY_DEAD_MOUSE;
     int16_t  speed   = (int16_t)((uint32_t)eff * joy.mouse_speed_max / max_eff);
     if (speed < 1) speed = 1;
 
@@ -299,13 +341,19 @@ static void process_analog(uint16_t x, uint16_t y) {
     int32_t dx = (int32_t)x - (int32_t)joy.x_center;
     int32_t dy = (int32_t)y - (int32_t)joy.y_center;
 
-    /* HID ゲームパッドの Y は下方向が正。dy>0 (上) を負値へ写す。 */
-#if JOY_ANALOG_INVERT_Y
-    dy = -dy;
-#endif
+    /* 反転は「変換後」に行う。変換前に dy の符号を反転させると、
+     * scale_axis() 内の span_neg / span_pos の選択が生 ADC の方向と
+     * 食い違ってしまうため。
+     */
+    int16_t ax = scale_axis(dx, JOY_X_SPAN_NEG, JOY_X_SPAN_POS);
+    int16_t ay = scale_axis(dy, JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS);
 
-    int16_t ax = adc_to_axis(dx);
-    int16_t ay = adc_to_axis(dy);
+    /* HID ゲームパッドの Y は下方向が正。dy>0 (上) を負値へ写す。
+     * -JOY_JS_AXIS_MIN は JOY_JS_AXIS_MAX を 1 だけ超えるため再クランプする。
+     */
+#if JOY_ANALOG_INVERT_Y
+    ay = (int16_t)JOY_CLAMP(-(int32_t)ay, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
+#endif
 
     /* 変換後デッドゾーン (HID 軸スケール) */
     if (ax > -JOY_DEAD_ANALOG && ax < JOY_DEAD_ANALOG) ax = 0;

@@ -69,6 +69,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define JOYSTICK_BUTTON_COUNT 32
 #    define JOYSTICK_AXIS_COUNT 2
 #    define JOYSTICK_AXIS_RESOLUTION 10
+
+/* ---- カバーによる可動域制限の補正 ----
+ * 中心位置は joy_init() が起動時に自動取得するため実測不要。
+ * ここには「中心から、カバーに当たって止まる位置まで」の ADC 差分の
+ * 絶対値を入れる。この位置まで倒すと HID 軸値が 1.00 / -1.00 になる。
+ *
+ * NEG = ADC 値が減る方向 / POS = ADC 値が増える方向。
+ * 実測値そのままではなく 2〜3% 内側の値を入れると、個体差や温度ドリフトが
+ * あっても確実に端まで届く (超過分はクランプされるので副作用はない)。
+ *
+ * 4 つとも未定義にすると従来動作 (±512 フルスケール仮定) に戻る。
+ */
+#    define JOY_X_SPAN_NEG 258
+#    define JOY_X_SPAN_POS 236
+#    define JOY_Y_SPAN_NEG 277
+#    define JOY_Y_SPAN_POS 230
 #endif
 
 /* ---- PMW3360 トラックボール構成 (POINTING_INPUT = trackball) ----
@@ -213,4 +229,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#endif
 
 #define TAP_CODE_DELAY 5
-
