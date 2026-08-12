@@ -77,32 +77,47 @@
  *   デジタル / マウス : JOY_SPAN_MIN (実可動域) に対する割合
  *   アナログ          : JOY_JS_AXIS_MAX (HID 軸フルスケール) に対する割合
  *
- * デジタルモードのセンター判定 (DIAG) は、メイン方向しきい値に対する
- * 固定比率で導出する。DIAG > MAIN になると compute_direction() の
- * 方向判定が壊れるため、独立して可変にはしない。
+ * デジタルモードは 2 つのしきい値を持つ:
+ *   DIAG = センター判定。これを超えた時点で必ず何らかの方向が確定するため、
+ *          「実際の発火点」はこちら。ユーザーが調整する値はこれを指す。
+ *   MAIN = 主方向の明確判定。DIAG から固定比率で導出する。
+ *          DIAG > MAIN になると compute_direction() の方向判定が壊れるため、
+ *          独立して可変にはしない。
  */
 #define JOY_DZ_STEP                 2   /* キー 1 回あたりの増減量 (%) */
 
-#define JOY_DZ_DIGITAL_MIN         10
-#define JOY_DZ_DIGITAL_MAX         60
-#define JOY_DZ_DIGITAL_DEFAULT     52   /* SPAN_MIN=230 で 119 (旧固定値 120 相当) */
+#define JOY_DZ_DIGITAL_MIN          6
+#define JOY_DZ_DIGITAL_MAX         90
+#define JOY_DZ_DIGITAL_DEFAULT     40   /* SPAN_MIN=230 で DIAG 92 / MAIN 158 */
 
 #define JOY_DZ_MOUSE_MIN            4
-#define JOY_DZ_MOUSE_MAX           50
+#define JOY_DZ_MOUSE_MAX           90
 #define JOY_DZ_MOUSE_DEFAULT       24   /* SPAN_MIN=230 で 55 */
 
 #define JOY_DZ_ANALOG_MIN           2
-#define JOY_DZ_ANALOG_MAX          40
+#define JOY_DZ_ANALOG_MAX          90
 #define JOY_DZ_ANALOG_DEFAULT      12   /* AXIS_MAX=511 で 61 */
 
-/* センター判定 = メインしきい値 x 58% (旧固定値 70/120 の比率) */
-#define JOY_DZ_DIAG_RATIO          58
+/* 主方向しきい値 = 発火点 x 172% (旧固定値 120/70 の比率)
+ * ただし JOY_SPAN_MIN で上限クランプする。発火点を高く設定すると
+ * 素の 172% は実可動域を超え、主方向判定が一度も成立しなくなるため
+ * (発火点 90% なら 207 x 1.72 = 356 > 可動域 239〜296)。
+ * クランプ後も MAIN > DIAG は保たれる (発火点の上限が 90% < 100% のため)。
+ */
+#define JOY_DZ_MAIN_RATIO         172
 
-/* 実行時の絶対値 (ADC 生値 / HID 軸値) */
-#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_SPAN_MIN * joy.dz_digital / 100))
-#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)(JOY_DEAD_DIGITAL * JOY_DZ_DIAG_RATIO / 100))
-#define JOY_DEAD_MOUSE         ((uint16_t)(JOY_SPAN_MIN * joy.dz_mouse / 100))
-#define JOY_DEAD_ANALOG        ((int16_t)(JOY_JS_AXIS_MAX * joy.dz_analog / 100))
+/* 実行時の絶対値 (ADC 生値 / HID 軸値)
+ * DIAG が発火点、MAIN はそこから導出する (旧版と定義が逆になっている点に注意)
+ */
+/* AVR は int が 16bit のため、乗算は int32_t に広げてから行う
+ * (span 未定義時 SPAN_MIN=512、16bit 解像度時 AXIS_MAX=32767 で桁溢れするため)
+ */
+#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)((int32_t)JOY_SPAN_MIN * joy.dz_digital / 100))
+#define JOY_DEAD_DIGITAL_RAW   ((int32_t)JOY_DEAD_DIGITAL_DIAG * JOY_DZ_MAIN_RATIO / 100)
+#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_DEAD_DIGITAL_RAW > (int32_t)JOY_SPAN_MIN \
+                                          ? (int32_t)JOY_SPAN_MIN : JOY_DEAD_DIGITAL_RAW))
+#define JOY_DEAD_MOUSE         ((uint16_t)((int32_t)JOY_SPAN_MIN * joy.dz_mouse / 100))
+#define JOY_DEAD_ANALOG        ((int16_t)((int32_t)JOY_JS_AXIS_MAX * joy.dz_analog / 100))
 
 /* --- マウス最大速度 --- */
 #define JOY_MOUSE_SPEED_MIN        1
@@ -406,7 +421,9 @@ static void process_mouse(uint16_t x, uint16_t y) {
     /* 分母は実可動域。旧コードは ±512 前提だったため、カバーで可動域を
      * 制限していると mouse_speed_max に到達できなかった。
      */
-    uint16_t max_eff = JOY_SPAN_MIN - JOY_DEAD_MOUSE;
+    uint16_t max_eff = (JOY_DEAD_MOUSE < JOY_SPAN_MIN)
+                           ? (uint16_t)(JOY_SPAN_MIN - JOY_DEAD_MOUSE)
+                           : 1;   /* 0 除算防止 */
     int16_t  speed   = (int16_t)((uint32_t)eff * joy.mouse_speed_max / max_eff);
     if (speed < 1) speed = 1;
 
