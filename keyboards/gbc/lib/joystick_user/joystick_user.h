@@ -57,4 +57,13 @@ uint8_t joy_get_mouse_speed(void);
 void    joy_mouse_speed_up(void);
 void    joy_mouse_speed_down(void);
 
+/* ---- デッドゾーン (現在のモードに作用、EEPROM 永続化) ----
+ * 単位は割合(%)。デジタル/マウスは実可動域に対する割合、
+ * アナログは HID 軸フルスケールに対する割合。
+ */
+uint8_t joy_get_deadzone(void);
+void    joy_deadzone_up(void);
+void    joy_deadzone_down(void);
+void    joy_deadzone_reset(void);
+
 #endif /* JOYSTICK_ENABLE */

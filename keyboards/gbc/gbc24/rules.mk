@@ -32,6 +32,10 @@ OLED_ENABLE = yes               # Please Enable this in each keymaps.
 SPACE_CADET_ENABLE = yes
 MAGIC_ENABLE = yes
 
+# デッドゾーン実行時可変 + EEPROM 永続化の追加で残フラッシュが 290 バイトまで
+# 減るため有効化。有効時 25086/28672 (87%) 程度まで回収できる。
+LTO_ENABLE = yes
+
 VIA_ENABLE = yes
 
 GRAVE_ESC_ENABLE = yes

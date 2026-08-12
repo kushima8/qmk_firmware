@@ -70,17 +70,39 @@
 #define JOY_SPAN_MIN     JOY_MIN2(JOY_MIN2(JOY_X_SPAN_NEG, JOY_X_SPAN_POS), \
                                   JOY_MIN2(JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS))
 
-/* --- デッドゾーン (ADC 生値ベース、可動域に対する割合で定義) ---
- * 割合は従来の固定値 (120/512 ≈ 24%, 70/512 ≈ 14%) を踏襲している。
- * 反応を軽くしたい場合はパーセントを下げること。
+/* --- デッドゾーン (実行時可変) ---
+ * 3 モードそれぞれのデッドゾーンを「割合(%)」として実行時に保持する。
+ * JOY_DZ_UP / JOY_DZ_DN キーで現在のモードの値を増減し、EEPROM に保存する。
+ *
+ *   デジタル / マウス : JOY_SPAN_MIN (実可動域) に対する割合
+ *   アナログ          : JOY_JS_AXIS_MAX (HID 軸フルスケール) に対する割合
+ *
+ * デジタルモードのセンター判定 (DIAG) は、メイン方向しきい値に対する
+ * 固定比率で導出する。DIAG > MAIN になると compute_direction() の
+ * 方向判定が壊れるため、独立して可変にはしない。
  */
-#define JOY_DEAD_DIGITAL_PERCENT       24   /* デジタルモード メイン方向 */
-#define JOY_DEAD_DIGITAL_DIAG_PERCENT  14   /* デジタルモード センター判定 */
-#define JOY_DEAD_MOUSE_PERCENT         24   /* マウスモード 円形デッドゾーン */
+#define JOY_DZ_STEP                 2   /* キー 1 回あたりの増減量 (%) */
 
-#define JOY_DEAD_DIGITAL       (JOY_SPAN_MIN * JOY_DEAD_DIGITAL_PERCENT / 100)
-#define JOY_DEAD_DIGITAL_DIAG  (JOY_SPAN_MIN * JOY_DEAD_DIGITAL_DIAG_PERCENT / 100)
-#define JOY_DEAD_MOUSE         (JOY_SPAN_MIN * JOY_DEAD_MOUSE_PERCENT / 100)
+#define JOY_DZ_DIGITAL_MIN         10
+#define JOY_DZ_DIGITAL_MAX         60
+#define JOY_DZ_DIGITAL_DEFAULT     52   /* SPAN_MIN=230 で 119 (旧固定値 120 相当) */
+
+#define JOY_DZ_MOUSE_MIN            4
+#define JOY_DZ_MOUSE_MAX           50
+#define JOY_DZ_MOUSE_DEFAULT       24   /* SPAN_MIN=230 で 55 */
+
+#define JOY_DZ_ANALOG_MIN           2
+#define JOY_DZ_ANALOG_MAX          40
+#define JOY_DZ_ANALOG_DEFAULT      12   /* AXIS_MAX=511 で 61 */
+
+/* センター判定 = メインしきい値 x 58% (旧固定値 70/120 の比率) */
+#define JOY_DZ_DIAG_RATIO          58
+
+/* 実行時の絶対値 (ADC 生値 / HID 軸値) */
+#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_SPAN_MIN * joy.dz_digital / 100))
+#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)(JOY_DEAD_DIGITAL * JOY_DZ_DIAG_RATIO / 100))
+#define JOY_DEAD_MOUSE         ((uint16_t)(JOY_SPAN_MIN * joy.dz_mouse / 100))
+#define JOY_DEAD_ANALOG        ((int16_t)(JOY_JS_AXIS_MAX * joy.dz_analog / 100))
 
 /* --- マウス最大速度 --- */
 #define JOY_MOUSE_SPEED_MIN        1
@@ -105,15 +127,16 @@
  *  16 bit → -32768..32767
  */
 #define JOY_JS_AXIS_MAX   ((int16_t)((1L << (JOYSTICK_AXIS_RESOLUTION - 1)) - 1))
+/* QMK 本体は USB ディスクリプタで論理範囲を -JOYSTICK_MAX_VALUE ..
+ * +JOYSTICK_MAX_VALUE (対称) と申告する (tmk_core/protocol/usb_descriptor.c)。
+ * 下限を -(1<<n-1) にすると申告値を 1 下回り、ホスト側で -1.00196 のような
+ * 超過値になるため、上限と対称に定義する。
+ */
 #define JOY_JS_AXIS_MIN   ((int16_t)(-JOY_JS_AXIS_MAX))
 
-/* --- アナログモード デッドゾーン (HID 軸範囲に対する割合) ---
- *   解像度に比例してスケールされる。
- *   10bit → 511 * 12 / 100 ≈ 61
- *    8bit → 127 * 12 / 100 ≈ 15
+/* アナログモードのデッドゾーンは上部の実行時可変ブロックで定義済み
+ * (JOY_DEAD_ANALOG / JOY_DZ_ANALOG_*)。解像度に比例してスケールされる。
  */
-#define JOY_DEAD_ANALOG_PERCENT   12
-#define JOY_DEAD_ANALOG           (JOY_JS_AXIS_MAX * JOY_DEAD_ANALOG_PERCENT / 100)
 
 /* --- アナログモード Y 軸の向き ---
  * HID の Generic Desktop Y (Usage 0x31) は「下方向が正」と定義されている。
@@ -170,6 +193,15 @@ static struct {
     uint8_t    mouse_speed_max;
     uint16_t   last_poll;
 
+    /* デッドゾーン (割合%、実行時可変) */
+    uint8_t    dz_digital;
+    uint8_t    dz_mouse;
+    uint8_t    dz_analog;
+
+    /* EEPROM 遅延書き込み: 変更後 JOY_EE_SAVE_DELAY_MS 経過で 1 回だけ書く */
+    bool       ee_dirty;
+    uint16_t   ee_dirty_at;
+
     /* 冗長な HID レポートを避けるための前回値 */
     joy_dir_t  last_dir;
     int16_t    last_ax;       /* 解像度 > 8bit に対応するため int16_t */
@@ -180,10 +212,76 @@ static struct {
     .y_center        = JOY_ADC_CENTER_DEFAULT,
     .mouse_speed_max = JOY_MOUSE_SPEED_DEFAULT,
     .last_poll       = 0,
+    .dz_digital      = JOY_DZ_DIGITAL_DEFAULT,
+    .dz_mouse        = JOY_DZ_MOUSE_DEFAULT,
+    .dz_analog       = JOY_DZ_ANALOG_DEFAULT,
+    .ee_dirty        = false,
+    .ee_dirty_at     = 0,
     .last_dir        = DIR_CENTER,
     .last_ax         = 0,
     .last_ay         = 0,
 };
+
+/* ============================================================
+ * EEPROM 永続化 (eeconfig_user: 4 バイト)
+ *
+ * eeconfig_kb は gbc.c がトラックボール設定で使用中のため、
+ * ユーザーデータブロック側を使う。
+ * 書き込み回数を抑えるため、変更から一定時間後に 1 回だけ書く。
+ * ============================================================ */
+
+#define JOY_EE_SAVE_DELAY_MS   2000
+
+typedef union {
+    uint32_t raw;
+    struct {
+        uint8_t dz_digital;
+        uint8_t dz_mouse;
+        uint8_t dz_analog;
+        uint8_t mouse_speed;
+    };
+} joy_eeconfig_t;
+
+static void joy_ee_load(void) {
+    if (!eeconfig_is_enabled()) return;
+
+    joy_eeconfig_t c = {.raw = eeconfig_read_user()};
+
+    /* 未初期化 (0x00 / 0xFF) や範囲外は既定値のまま使う */
+    if (c.dz_digital >= JOY_DZ_DIGITAL_MIN && c.dz_digital <= JOY_DZ_DIGITAL_MAX) {
+        joy.dz_digital = c.dz_digital;
+    }
+    if (c.dz_mouse >= JOY_DZ_MOUSE_MIN && c.dz_mouse <= JOY_DZ_MOUSE_MAX) {
+        joy.dz_mouse = c.dz_mouse;
+    }
+    if (c.dz_analog >= JOY_DZ_ANALOG_MIN && c.dz_analog <= JOY_DZ_ANALOG_MAX) {
+        joy.dz_analog = c.dz_analog;
+    }
+    if (c.mouse_speed >= JOY_MOUSE_SPEED_MIN && c.mouse_speed <= JOY_MOUSE_SPEED_MAX) {
+        joy.mouse_speed_max = c.mouse_speed;
+    }
+}
+
+static void joy_ee_mark_dirty(void) {
+    joy.ee_dirty    = true;
+    joy.ee_dirty_at = timer_read();
+}
+
+static void joy_ee_flush(void) {
+    if (!joy.ee_dirty) return;
+    if (timer_elapsed(joy.ee_dirty_at) < JOY_EE_SAVE_DELAY_MS) return;
+
+    joy.ee_dirty = false;
+    if (!eeconfig_is_enabled()) return;
+
+    joy_eeconfig_t c = {
+        .dz_digital  = joy.dz_digital,
+        .dz_mouse    = joy.dz_mouse,
+        .dz_analog   = joy.dz_analog,
+        .mouse_speed = joy.mouse_speed_max,
+    };
+    eeconfig_update_user(c.raw);
+}
 
 /* QMK が参照する軸定義 (2軸、どちらも仮想) */
 joystick_config_t joystick_axes[JOYSTICK_AXIS_COUNT] = {
@@ -349,7 +447,7 @@ static void process_analog(uint16_t x, uint16_t y) {
     int16_t ay = scale_axis(dy, JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS);
 
     /* HID ゲームパッドの Y は下方向が正。dy>0 (上) を負値へ写す。
-     * -JOY_JS_AXIS_MIN は JOY_JS_AXIS_MAX を 1 だけ超えるため再クランプする。
+     * 軸レンジは対称なので反転で範囲外にはならないが、念のためクランプする。
      */
 #if JOY_ANALOG_INVERT_Y
     ay = (int16_t)JOY_CLAMP(-(int32_t)ay, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
@@ -399,9 +497,13 @@ void joy_init(void) {
     }
     joy.x_center = (uint16_t)(sum_x / JOY_CALIB_SAMPLES);
     joy.y_center = (uint16_t)(sum_y / JOY_CALIB_SAMPLES);
+
+    joy_ee_load();
 }
 
 void joy_task(void) {
+    joy_ee_flush();
+
     if (timer_elapsed(joy.last_poll) < JOY_POLL_INTERVAL_MS) return;
     joy.last_poll = timer_read();
 
@@ -434,12 +536,69 @@ void joy_mouse_speed_up(void) {
     int16_t next = (int16_t)joy.mouse_speed_max + JOY_MOUSE_SPEED_STEP;
     joy.mouse_speed_max = (uint8_t)JOY_CLAMP(
         next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
+    joy_ee_mark_dirty();
 }
 
 void joy_mouse_speed_down(void) {
     int16_t next = (int16_t)joy.mouse_speed_max - JOY_MOUSE_SPEED_STEP;
     joy.mouse_speed_max = (uint8_t)JOY_CLAMP(
         next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
+    joy_ee_mark_dirty();
+}
+
+/* ============================================================
+ * デッドゾーン (現在のモードに作用)
+ * ============================================================ */
+
+/* 現在のモードのデッドゾーン割合への参照と可動範囲を取得 */
+static uint8_t *joy_dz_target(uint8_t *lo, uint8_t *hi) {
+    switch (joy.mode) {
+        case JOY_MODE_MOUSE:
+            *lo = JOY_DZ_MOUSE_MIN;   *hi = JOY_DZ_MOUSE_MAX;
+            return &joy.dz_mouse;
+        case JOY_MODE_ANALOG:
+            *lo = JOY_DZ_ANALOG_MIN;  *hi = JOY_DZ_ANALOG_MAX;
+            return &joy.dz_analog;
+        case JOY_MODE_DIGITAL:
+        default:
+            *lo = JOY_DZ_DIGITAL_MIN; *hi = JOY_DZ_DIGITAL_MAX;
+            return &joy.dz_digital;
+    }
+}
+
+uint8_t joy_get_deadzone(void) {
+    uint8_t lo, hi;
+    return *joy_dz_target(&lo, &hi);
+}
+
+static void joy_dz_adjust(int8_t delta) {
+    uint8_t  lo, hi;
+    uint8_t *p    = joy_dz_target(&lo, &hi);
+    int16_t  next = (int16_t)*p + delta;
+
+    *p = (uint8_t)JOY_CLAMP(next, lo, hi);
+
+    /* しきい値が変わったので次回ポーリングで必ず再評価・再送させる */
+    release_last_dir();
+    joy.last_ax = JOY_JS_AXIS_MIN;
+    joy.last_ay = JOY_JS_AXIS_MIN;
+
+    joy_ee_mark_dirty();
+}
+
+void joy_deadzone_up(void) {
+    joy_dz_adjust(JOY_DZ_STEP);
+}
+
+void joy_deadzone_down(void) {
+    joy_dz_adjust(-JOY_DZ_STEP);
+}
+
+void joy_deadzone_reset(void) {
+    joy.dz_digital = JOY_DZ_DIGITAL_DEFAULT;
+    joy.dz_mouse   = JOY_DZ_MOUSE_DEFAULT;
+    joy.dz_analog  = JOY_DZ_ANALOG_DEFAULT;
+    joy_dz_adjust(0);
 }
 
 #endif /* JOYSTICK_ENABLE */

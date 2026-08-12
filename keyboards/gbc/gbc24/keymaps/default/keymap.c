@@ -38,6 +38,9 @@ enum custom_keycodes {
     JOY_ANLG,                /* ジョイスティック → アナログ (ゲームパッド軸) */
     JOY_SPD_UP,              /* マウス最大速度 上げる */
     JOY_SPD_DN,              /* マウス最大速度 下げる */
+    JOY_DZ_UP,               /* 現在のモードのデッドゾーン 広げる (鈍くする) */
+    JOY_DZ_DN,               /* 現在のモードのデッドゾーン 狭める (敏感にする) */
+    JOY_DZ_RST,              /* 3 モードのデッドゾーンを既定値に戻す */
 };
 
 #ifdef JOYSTICK_ENABLE
@@ -48,6 +51,9 @@ enum custom_keycodes {
  *   3 = JOY_ANLG
  *   4 = JOY_SPD_UP
  *   5 = JOY_SPD_DN
+ *   6 = JOY_DZ_UP
+ *   7 = JOY_DZ_DN
+ *   8 = JOY_DZ_RST
  */
 static uint8_t last_joy_event = 0;
 #endif
@@ -140,7 +146,10 @@ static void oled_render_joystick(void) {
     char buf[6];
     snprintf(buf, sizeof(buf), "S:%u", joy_get_mouse_speed());
     oled_write_ln(buf, false);
-    /* デバッグ: 最後に受信した JOY 系 keycode の種別 (1=DIGI 2=MOUS 3=ANLG 4=UP 5=DN) */
+    /* 現在のモードのデッドゾーン (%) */
+    snprintf(buf, sizeof(buf), "D:%u", joy_get_deadzone());
+    oled_write_ln(buf, false);
+    /* デバッグ: 最後に受信した JOY 系 keycode の種別 */
     snprintf(buf, sizeof(buf), "E:%u", last_joy_event);
     oled_write_ln(buf, false);
 }
@@ -203,6 +212,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case JOY_ANLG:   joy_set_mode(JOY_MODE_ANALOG);  last_joy_event = 3; return false;
         case JOY_SPD_UP: joy_mouse_speed_up();           last_joy_event = 4; return false;
         case JOY_SPD_DN: joy_mouse_speed_down();         last_joy_event = 5; return false;
+        case JOY_DZ_UP:  joy_deadzone_up();              last_joy_event = 6; return false;
+        case JOY_DZ_DN:  joy_deadzone_down();            last_joy_event = 7; return false;
+        case JOY_DZ_RST: joy_deadzone_reset();           last_joy_event = 8; return false;
 #endif
         default: break;
     }
