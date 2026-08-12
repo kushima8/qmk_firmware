@@ -88,7 +88,7 @@
 
 #define JOY_DZ_DIGITAL_MIN          6
 #define JOY_DZ_DIGITAL_MAX         90
-#define JOY_DZ_DIGITAL_DEFAULT     50   /* SPAN_MIN=230 で DIAG 92 / MAIN 158 */
+#define JOY_DZ_DIGITAL_DEFAULT     54   /* SPAN_MIN=230 で DIAG 92 / MAIN 158 */
 
 #define JOY_DZ_MOUSE_MIN            4
 #define JOY_DZ_MOUSE_MAX           90
