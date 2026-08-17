@@ -1,36 +1,36 @@
 {
-    "name":"GBC24",
-    "vendorId":"0x3938",
-    "productId":"0x3234",
-    "matrix":{"rows":5,"cols":8},
+    "name": "GBC24",
+    "vendorId": "0x3938",
+    "productId": "0x3234",
+    "matrix": { "rows": 5, "cols": 8 },
     "customKeycodes": [
-        { "name": "REC_RST",    "title": "ƒZƒ“ƒT[İ’è‚ğƒŠƒZƒbƒg",           "shortName": "REC_RST"  },
-        { "name": "REC_SAVE",   "title": "ƒZƒ“ƒT[İ’è‚ğEEPROM‚É•Û‘¶",       "shortName": "REC_SAVE" },
-        { "name": "CPI_I100",   "title": "CPI +100 (max 3500)",              "shortName": "CPI+100"  },
-        { "name": "CPI_D100",   "title": "CPI -100 (min 100)",               "shortName": "CPI-100"  },
-        { "name": "CPI_I1K",    "title": "CPI +1000 (max 3500)",             "shortName": "CPI+1K"   },
-        { "name": "CPI_D1K",    "title": "CPI -1000 (min 100)",              "shortName": "CPI-1K"   },
-        { "name": "SCRL_TO",    "title": "ƒXƒNƒ[ƒ‹ƒ‚[ƒh ƒgƒOƒ‹",          "shortName": "SCRL_TO"  },
-        { "name": "SCRL_MO",    "title": "‰Ÿ‰º’†ƒXƒNƒ[ƒ‹ƒ‚[ƒh",           "shortName": "SCRL_MO"  },
-        { "name": "SCRL_DVI",   "title": "ƒXƒNƒ[ƒ‹œ” +1 (’x‚­‚È‚é)",     "shortName": "SCRL_DVI" },
-        { "name": "SCRL_DVD",   "title": "ƒXƒNƒ[ƒ‹œ” -1 (‘¬‚­‚È‚é)",     "shortName": "SCRL_DVD" },
-        { "name": "AML_TO",     "title": "©“®ƒ}ƒEƒXƒŒƒCƒ„[ ƒgƒOƒ‹",        "shortName": "AML_TO"   },
-        { "name": "AML_I50",    "title": "©“®ƒ}ƒEƒXƒŒƒCƒ„[ timeout +50ms", "shortName": "AML+50"   },
-        { "name": "AML_D50",    "title": "©“®ƒ}ƒEƒXƒŒƒCƒ„[ timeout -50ms", "shortName": "AML-50"   },
-        { "name": "SSNP_VRT",   "title": "ƒXƒNƒ[ƒ‹ƒXƒiƒbƒv: ‚’¼",         "shortName": "SSNP_VRT" },
-        { "name": "SSNP_HOR",   "title": "ƒXƒNƒ[ƒ‹ƒXƒiƒbƒv: …•½",         "shortName": "SSNP_HOR" },
-        { "name": "SSNP_FRE",   "title": "ƒXƒNƒ[ƒ‹ƒXƒiƒbƒv: –³Œø (©—R)",  "shortName": "SSNP_FRE" },
-        { "name": "JOY_DIGI",   "title": "ƒWƒ‡ƒCƒXƒeƒBƒbƒN ¨ ƒfƒWƒ^ƒ‹4•ûŒü", "shortName": "JOY_DIGI" },
-        { "name": "JOY_MOUS",   "title": "ƒWƒ‡ƒCƒXƒeƒBƒbƒN ¨ ƒ}ƒEƒX",        "shortName": "JOY_MOUS" },
-        { "name": "JOY_ANLG",   "title": "ƒWƒ‡ƒCƒXƒeƒBƒbƒN ¨ ƒAƒiƒƒO²",    "shortName": "JOY_ANLG" },
-        { "name": "JOY_SPD_UP", "title": "ƒ}ƒEƒXÅ‘å‘¬“x ã‚°‚é",            "shortName": "JOY_SPD+" },
-        { "name": "JOY_SPD_DN", "title": "ƒ}ƒEƒXÅ‘å‘¬“x ‰º‚°‚é",            "shortName": "JOY_SPD-" },
-        { "name": "JOY_DZ_UP",  "title": "ƒfƒbƒhƒ][ƒ“ L‚°‚é",              "shortName": "JOY_DZ+"  },
-        { "name": "JOY_DZ_DN",  "title": "ƒfƒbƒhƒ][ƒ“ ‹·‚ß‚é",              "shortName": "JOY_DZ-"  },
-        { "name": "JOY_DZ_RST", "title": "ƒfƒbƒhƒ][ƒ“ ƒŠƒZƒbƒg",            "shortName": "JOY_DZ0"  }
+        { "name": "REC_RST",    "title": "ã‚»ãƒ³ã‚µãƒ¼ã‚’ãƒªã‚»ãƒƒãƒˆ",                  "shortName": "REC_RST"  },
+        { "name": "REC_SAVE",   "title": "ã‚»ãƒ³ã‚µãƒ¼å€¤ã‚’EEPROMã«ä¿å­˜",            "shortName": "REC_SAVE" },
+        { "name": "CPI_I100",   "title": "CPI +100 (max 3500)",                 "shortName": "CPI+100"  },
+        { "name": "CPI_D100",   "title": "CPI -100 (min 100)",                  "shortName": "CPI-100"  },
+        { "name": "CPI_I1K",    "title": "CPI +1000 (max 3500)",                "shortName": "CPI+1K"   },
+        { "name": "CPI_D1K",    "title": "CPI -1000 (min 100)",                 "shortName": "CPI-1K"   },
+        { "name": "SCRL_TO",    "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ãƒ¢ãƒ¼ãƒ‰ ãƒˆã‚°ãƒ«",             "shortName": "SCRL_TO"  },
+        { "name": "SCRL_MO",    "title": "æŠ¼ä¸‹ä¸­ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ãƒ¢ãƒ¼ãƒ‰",              "shortName": "SCRL_MO"  },
+        { "name": "SCRL_DVI",   "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é™¤æ•° +1 (é…ããªã‚‹)",        "shortName": "SCRL_DVI" },
+        { "name": "SCRL_DVD",   "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é™¤æ•° -1 (é€Ÿããªã‚‹)",        "shortName": "SCRL_DVD" },
+        { "name": "AML_TO",     "title": "è‡ªå‹•ãƒã‚¦ã‚¹ãƒ¬ã‚¤ãƒ¤ãƒ¼ ãƒˆã‚°ãƒ«",           "shortName": "AML_TO"   },
+        { "name": "AML_I50",    "title": "è‡ªå‹•ãƒã‚¦ã‚¹ãƒ¬ã‚¤ãƒ¤ãƒ¼ timeout +50ms",    "shortName": "AML+50"   },
+        { "name": "AML_D50",    "title": "è‡ªå‹•ãƒã‚¦ã‚¹ãƒ¬ã‚¤ãƒ¤ãƒ¼ timeout -50ms",    "shortName": "AML-50"   },
+        { "name": "SSNP_VRT",   "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ã‚¹ãƒŠãƒƒãƒ—: å‚ç›´",            "shortName": "SSNP_VRT" },
+        { "name": "SSNP_HOR",   "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ã‚¹ãƒŠãƒƒãƒ—: æ°´å¹³",            "shortName": "SSNP_HOR" },
+        { "name": "SSNP_FRE",   "title": "ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ã‚¹ãƒŠãƒƒãƒ—: ç„¡åŠ¹ (è‡ªç”±)",     "shortName": "SSNP_FRE" },
+        { "name": "JOY_DIGI",   "title": "ã‚¸ãƒ§ã‚¤ã‚¹ãƒ†ã‚£ãƒƒã‚¯ â†’ ãƒ‡ã‚¸ã‚¿ãƒ«4æ–¹å‘",    "shortName": "JOY_DIGI" },
+        { "name": "JOY_MOUS",   "title": "ã‚¸ãƒ§ã‚¤ã‚¹ãƒ†ã‚£ãƒƒã‚¯ â†’ ãƒã‚¦ã‚¹",           "shortName": "JOY_MOUS" },
+        { "name": "JOY_ANLG",   "title": "ã‚¸ãƒ§ã‚¤ã‚¹ãƒ†ã‚£ãƒƒã‚¯ â†’ ã‚¢ãƒŠãƒ­ã‚°è»¸",       "shortName": "JOY_ANLG" },
+        { "name": "JOY_SPD_UP", "title": "ãƒã‚¦ã‚¹æ„Ÿåº¦ ä¸Šã’ã‚‹",                   "shortName": "JOY_SPD+" },
+        { "name": "JOY_SPD_DN", "title": "ãƒã‚¦ã‚¹æ„Ÿåº¦ ä¸‹ã’ã‚‹",                   "shortName": "JOY_SPD-" },
+        { "name": "JOY_DZ_UP",  "title": "ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³ åºƒã’ã‚‹",                 "shortName": "JOY_DZ+"  },
+        { "name": "JOY_DZ_DN",  "title": "ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³ ç‹­ã‚ã‚‹",                 "shortName": "JOY_DZ-"  },
+        { "name": "JOY_DZ_RST", "title": "ãƒ‡ãƒƒãƒ‰ã‚¾ãƒ¼ãƒ³ ãƒªã‚»ãƒƒãƒˆ",               "shortName": "JOY_DZ0"  }
     ],
-    "layouts":{
-        "keymap":[
+    "layouts": {
+        "keymap": [
             ["0,0","0,1","0,2","0,3","1,0","1,1","1,2"],
             ["1,3","2,0","2,1","2,2","2,3","3,0","3,1"],
             [{"x":0.5,"w":1.5},"3,2","3,3","0,4","0,5",{"w":1.5},"0,6",{"x":2.25},"1,7"],
@@ -40,4 +40,3 @@
         ]
     }
 }
-
