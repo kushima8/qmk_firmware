@@ -66,4 +66,11 @@ void    joy_deadzone_up(void);
 void    joy_deadzone_down(void);
 void    joy_deadzone_reset(void);
 
+/* ---- 設定値のテキスト出力 (CFG_SHOW キー用) ----
+ * 現在のモード / マウス最大速度 / 3 モード分のデッドゾーン / EEPROM 保存状態を
+ * 1 項目 1 行でキー入力としてホストへタイプする (先頭行 "GBC24 joystick")。
+ * US / JIS どちらの配列でも同じ文字になる記号だけを使う。
+ */
+void    joy_send_status(void);
+
 #endif /* JOYSTICK_ENABLE */

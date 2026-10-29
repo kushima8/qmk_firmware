@@ -27,7 +27,8 @@
         { "name": "JOY_SPD_DN", "title": "マウス感度 下げる",                   "shortName": "JOY_SPD-" },
         { "name": "JOY_DZ_UP",  "title": "デッドゾーン 広げる",                 "shortName": "JOY_DZ+"  },
         { "name": "JOY_DZ_DN",  "title": "デッドゾーン 狭める",                 "shortName": "JOY_DZ-"  },
-        { "name": "JOY_DZ_RST", "title": "デッドゾーン リセット",               "shortName": "JOY_DZ0"  }
+        { "name": "JOY_DZ_RST", "title": "デッドゾーン リセット",               "shortName": "JOY_DZ0"  },
+        { "name": "CFG_SHOW",   "title": "現在の設定値をテキスト出力",          "shortName": "CFG_SHOW" }
     ],
     "layouts": {
         "keymap": [

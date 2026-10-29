@@ -214,6 +214,13 @@ void gbc_oled_render_keyinfo(void);
 /// inactive layers.
 void gbc_oled_render_layerinfo(void);
 
+/// gbc_send_status types current trackball settings to the host as text.
+/// It is intended for boards without OLED (see CFG_SHOW keycode).
+/// It prints one item per line (header "GBC24 trackball", cpi, scroll mode,
+/// scroll div, scroll snap, auto mouse, aml timeout, eeprom).
+/// Only characters that are identical on US and JIS layouts are used.
+void gbc_send_status(void);
+
 /// gbc_get_scroll_mode gets current scroll mode.
 bool gbc_get_scroll_mode(void);
 

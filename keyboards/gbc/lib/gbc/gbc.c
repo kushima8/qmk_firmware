@@ -488,6 +488,130 @@ void gbc_oled_render_layerinfo(void) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Text status output (for boards without OLED)
+//
+// 出力に使う記号は US / JIS 配列で同じ文字になるもの (空白 , . / - %) のみ。
+// snprintf はフラッシュを大きく消費するため 10 進変換は自前で行う。
+
+static void send_dec(uint16_t v) {
+    char    buf[6];
+    uint8_t i = sizeof(buf) - 1;
+    buf[i]    = '\0';
+    do {
+        buf[--i] = (char)('0' + v % 10);
+        v /= 10;
+    } while (v != 0 && i != 0);
+    send_string(buf + i);
+}
+
+static void send_onoff(bool on) {
+    send_string_P(on ? PSTR("on") : PSTR("off"));
+}
+
+// is_config_saved reports whether the effective settings stored in EEPROM
+// equal the current ones.  Stored values are decoded the same way as
+// keyboard_post_init_kb() does, so an untouched (all zero) EEPROM matches
+// the defaults.
+static bool is_config_saved(void) {
+    if (!eeconfig_is_enabled()) {
+        return false;
+    }
+    gbc_config_t c = {.raw = eeconfig_read_kb()};
+
+    uint8_t saved_cpi = c.cpi == 0 ? CPI_DEFAULT : (c.cpi > CPI_MAX ? CPI_MAX : c.cpi);
+    if (saved_cpi != gbc_get_cpi()) {
+        return false;
+    }
+    uint8_t saved_sdiv = c.sdiv == 0 ? GBC_SCROLL_DIV_DEFAULT : c.sdiv;
+    if (saved_sdiv != gbc_get_scroll_div()) {
+        return false;
+    }
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+    if ((bool)c.amle != get_auto_mouse_enable()) {
+        return false;
+    }
+    uint16_t saved_amlto = c.amlto == 0 ? AUTO_MOUSE_TIME : (c.amlto + 1) * AML_TIMEOUT_QU;
+    if (saved_amlto != get_auto_mouse_timeout()) {
+        return false;
+    }
+#endif
+#if GBC_SCROLLSNAP_ENABLE == 2
+    if ((gbc_scrollsnap_mode_t)c.ssnap != gbc_get_scrollsnap_mode()) {
+        return false;
+    }
+#endif
+    return true;
+}
+
+// Output format (labels padded to 16 columns, no indent, newline after
+// every line including the last one):
+//
+//   GBC24 trackball
+//   cpi             500
+//   scroll mode     off
+//   scroll div      4  1/8
+//   scroll snap     vertical
+//   auto mouse      on
+//   aml timeout     650ms
+//   eeprom          saved
+void gbc_send_status(void) {
+    send_string_P(PSTR("GBC24 trackball\n"));
+
+    // Stored CPI value v means v * 100 CPI.
+    send_string_P(PSTR("cpi             "));
+    if (gbc.this_have_ball) {
+        send_dec((uint16_t)gbc_get_cpi() * 100);
+        send_string_P(PSTR("\n"));
+    } else {
+        send_string_P(PSTR("none\n"));
+    }
+
+    send_string_P(PSTR("scroll mode     "));
+    send_onoff(gbc.scroll_mode);
+    send_string_P(PSTR("\n"));
+
+    // Divider n means 1/2^(n-1).
+    send_string_P(PSTR("scroll div      "));
+    send_dec(gbc_get_scroll_div());
+    send_string_P(PSTR("  1/"));
+    send_dec((uint16_t)1 << (gbc_get_scroll_div() - 1));
+    send_string_P(PSTR("\n"));
+
+    send_string_P(PSTR("scroll snap     "));
+#if GBC_SCROLLSNAP_ENABLE == 2
+    switch (gbc_get_scrollsnap_mode()) {
+        case GBC_SCROLLSNAP_MODE_VERTICAL:
+            send_string_P(PSTR("vertical\n"));
+            break;
+        case GBC_SCROLLSNAP_MODE_HORIZONTAL:
+            send_string_P(PSTR("horizontal\n"));
+            break;
+        default:
+            send_string_P(PSTR("free\n"));
+            break;
+    }
+#elif GBC_SCROLLSNAP_ENABLE == 1
+    send_string_P(PSTR("auto\n"));
+#else
+    send_string_P(PSTR("off\n"));
+#endif
+
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+    send_string_P(PSTR("auto mouse      "));
+    send_onoff(get_auto_mouse_enable());
+    send_string_P(PSTR("\naml timeout     "));
+    send_dec(get_auto_mouse_timeout());
+    send_string_P(PSTR("ms\n"));
+#else
+    send_string_P(PSTR("auto mouse      n/a\naml timeout     n/a\n"));
+#endif
+
+    // Trackball settings are written to EEPROM only by REC_SAVE.
+    send_string_P(is_config_saved() ? PSTR("eeprom          saved\n")
+                                    : PSTR("eeprom          not saved, press REC SAVE\n"));
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Public API functions
 
 bool gbc_get_scroll_mode(void) {

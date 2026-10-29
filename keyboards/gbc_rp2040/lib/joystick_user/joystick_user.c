@@ -618,4 +618,65 @@ void joy_deadzone_reset(void) {
     joy_dz_adjust(0);
 }
 
+/* ============================================================
+ * 設定値のテキスト出力 (CFG_SHOW キー用)
+ *
+ * snprintf を使うとフラッシュを 1KB 以上消費するため、10 進変換は自前で行う。
+ * 出力に使う記号は「US / JIS 配列で同じ位置にあるもの」(空白 , . / - %) のみ。
+ * ':' '=' '(' などは JIS 配列のホストで別の文字に化けるため使わない。
+ * ============================================================ */
+
+static void joy_send_dec(uint16_t v) {
+    char    buf[6];
+    uint8_t i = sizeof(buf) - 1;
+    buf[i]    = '\0';
+    do {
+        buf[--i] = (char)('0' + v % 10);
+        v /= 10;
+    } while (v != 0 && i != 0);
+    send_string(buf + i);
+}
+
+/* デッドゾーン 1 行分。現在のモードの行には "<- current" を付ける */
+static void joy_send_dz_line(const char *label, uint8_t value, bool current) {
+    send_string_P(label);
+    joy_send_dec(value);
+    send_string_P(current ? PSTR("%   <- current\n") : PSTR("%\n"));
+}
+
+/* 出力形式 (項目名は 16 桁で揃える、行頭字下げなし、最終行も改行):
+ *   GBC24 joystick
+ *   mode            mouse
+ *   mouse speed     15 / 50
+ *   deadzone digi   54%
+ *   deadzone mouse  24%   <- current
+ *   deadzone analog 12%
+ *   eeprom          saved
+ */
+void joy_send_status(void) {
+    send_string_P(PSTR("GBC24 joystick\n"));
+
+    send_string_P(PSTR("mode            "));
+    switch (joy.mode) {
+        case JOY_MODE_DIGITAL: send_string_P(PSTR("digi\n"));    break;
+        case JOY_MODE_MOUSE:   send_string_P(PSTR("mouse\n"));   break;
+        case JOY_MODE_ANALOG:  send_string_P(PSTR("analog\n"));  break;
+        default:               send_string_P(PSTR("unknown\n")); break;
+    }
+
+    send_string_P(PSTR("mouse speed     "));
+    joy_send_dec(joy.mouse_speed_max);
+    send_string_P(PSTR(" / "));
+    joy_send_dec(JOY_MOUSE_SPEED_MAX);
+    send_string_P(PSTR("\n"));
+
+    joy_send_dz_line(PSTR("deadzone digi   "), joy.dz_digital, joy.mode == JOY_MODE_DIGITAL);
+    joy_send_dz_line(PSTR("deadzone mouse  "), joy.dz_mouse,   joy.mode == JOY_MODE_MOUSE);
+    joy_send_dz_line(PSTR("deadzone analog "), joy.dz_analog,  joy.mode == JOY_MODE_ANALOG);
+
+    /* 変更から EEPROM 書き込みまで 2 秒の遅延があるため、その間は auto saving */
+    send_string_P(joy.ee_dirty ? PSTR("eeprom          auto saving\n")
+                               : PSTR("eeprom          saved\n"));
+}
+
 #endif /* JOYSTICK_ENABLE */
