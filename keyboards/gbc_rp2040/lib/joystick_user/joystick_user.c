@@ -49,22 +49,28 @@
 #define JOY_ADC_CENTER_DEFAULT   (1 << (JOY_ADC_BITS - 1))         /*  512 */
 #define JOY_ADC_RANGE_HALF       (1 << (JOY_ADC_BITS - 1))         /*  512 */
 
-/* --- 可動域 (カバー等で機械的に制限された、中心からの ADC 差分の絶対値) ---
- * config.h で JOY_X_SPAN_NEG / JOY_X_SPAN_POS / JOY_Y_SPAN_NEG / JOY_Y_SPAN_POS
- * を定義すると、その位置まで倒したときに HID 軸値が ±フルスケール (1.00) になる。
- * 未定義の場合は従来どおり ±512 (ADC 10bit の理論フルスケール) を仮定する。
+/* --- 可動域 (カバー等で機械的に制限された端の ADC 絶対値) ---
+ * config.h で JOY_X_MIN / JOY_X_MAX / JOY_Y_MIN / JOY_Y_MAX (カバーに当たって
+ * 止まる位置の ADC 生値) を定義する。未定義なら 0 / 1023 (理論フルスケール)。
+ *
+ * 中心 (静止位置) は起動時と長押しリセット時に毎回自動取得する。実測では
+ * 端は ±3 カウントで再現する一方、静止位置はバネ戻りのヒステリシスで
+ * 挿し直すたびに 20 カウント以上動くため、保存するのは端だけにし、
+ * 「中心から端までの距離 (span)」は中心が決まるたびに計算し直す。
+ * span には JOY_CAL_SPAN_MARGIN_PCT (97%) を掛け、端の少し手前で
+ * フルスケールに達するようにする。
  */
-#ifndef JOY_X_SPAN_NEG
-#    define JOY_X_SPAN_NEG JOY_ADC_RANGE_HALF
+#ifndef JOY_X_MIN
+#    define JOY_X_MIN 0
 #endif
-#ifndef JOY_X_SPAN_POS
-#    define JOY_X_SPAN_POS JOY_ADC_RANGE_HALF
+#ifndef JOY_X_MAX
+#    define JOY_X_MAX JOY_ADC_MAX
 #endif
-#ifndef JOY_Y_SPAN_NEG
-#    define JOY_Y_SPAN_NEG JOY_ADC_RANGE_HALF
+#ifndef JOY_Y_MIN
+#    define JOY_Y_MIN 0
 #endif
-#ifndef JOY_Y_SPAN_POS
-#    define JOY_Y_SPAN_POS JOY_ADC_RANGE_HALF
+#ifndef JOY_Y_MAX
+#    define JOY_Y_MAX JOY_ADC_MAX
 #endif
 
 /* 倒し量の正規化スケール: どの方向も、カバーに当たる位置 (span) まで倒すと
@@ -245,8 +251,12 @@ static struct {
     int16_t    mouse_acc_x;
     int16_t    mouse_acc_y;
 
-    /* 可動域 (中心からカバーに当たるまでの ADC 差分)。
-     * 既定は config.h の JOY_*_SPAN_*、キャリブレーション保存後は実測値。 */
+    /* 可動域の端 (ADC 絶対値)。既定は config.h の JOY_*_MIN/MAX、
+     * キャリブレーション保存後は実測値。 */
+    uint16_t   x_min, x_max;
+    uint16_t   y_min, y_max;
+    /* 中心から端までの距離 (97% マージン込み)。中心が決まるたびに
+     * joy_update_spans() で端から計算する。 */
     uint16_t   span_xn;
     uint16_t   span_xp;
     uint16_t   span_yn;
@@ -256,7 +266,7 @@ static struct {
     uint8_t    cal_phase;      /* JOY_CAL_PHASE_* */
     uint8_t    cal_result;     /* JOY_CAL_RESULT_* (CFG_SHOW 表示用) */
     bool       cal_saved;      /* EEPROM の実測値を使用中 */
-    bool       cal_span_saved; /* 可動域も実測値 (false なら中心のみ実測) */
+    bool       cal_span_saved; /* 端も実測値 (false なら中心の参照値のみ保存、端は既定値) */
     uint16_t   cal_done_at;    /* 直前の確定/失敗/リセット時刻 (OLED 表示用) */
     bool       cal_show;       /* OLED に結果を表示中 (表示期間が過ぎたら false)。
                                 * timer_elapsed() は 16bit で約 65 秒ごとに巻き戻るため、
@@ -276,10 +286,11 @@ static struct {
     .mode            = JOY_MODE_DIGITAL,
     .x_center        = JOY_ADC_CENTER_DEFAULT,
     .y_center        = JOY_ADC_CENTER_DEFAULT,
-    .span_xn         = JOY_X_SPAN_NEG,
-    .span_xp         = JOY_X_SPAN_POS,
-    .span_yn         = JOY_Y_SPAN_NEG,
-    .span_yp         = JOY_Y_SPAN_POS,
+    .x_min           = JOY_X_MIN,
+    .x_max           = JOY_X_MAX,
+    .y_min           = JOY_Y_MIN,
+    .y_max           = JOY_Y_MAX,
+    /* span_* は joy_init() の joy_update_spans() で計算 */
     .mouse_speed_max = JOY_MOUSE_SPEED_DEFAULT,
     .last_poll       = 0,
     .dz_digital      = JOY_DZ_DIGITAL_DEFAULT,
@@ -380,16 +391,18 @@ static void joy_ee_flush(void) {
  *
  * レイアウト (14 バイト):
  *   [0]    magic (JOY_CAL_EE_MAGIC)
- *   [1]    flags (bit0: 可動域も実測値。0 なら中心のみ実測で可動域は既定値)
- *   [2,3]  中心 X   [4,5]  中心 Y
- *   [6,7]  span X-  [8,9]  span X+  [10,11] span Y-  [12,13] span Y+
+ *   [1]    flags (bit0: 端も実測値。0 なら中心の参照値のみで端は既定値)
+ *   [2,3]  中心 X (参照値)   [4,5]  中心 Y (参照値)
+ *   [6,7]  X 端 min  [8,9]  X 端 max  [10,11] Y 端 min  [12,13] Y 端 max
+ * 中心の参照値は起動時に自動取得した中心の妥当性判定にだけ使う
+ * (挿すときにスティックに触れていた場合は参照値へフォールバック)。
  * ============================================================ */
 
 #ifndef JOY_CAL_EEPROM_ADDR
 #    error "JOY_CAL_EEPROM_ADDR must be defined in config.h"
 #endif
 
-#define JOY_CAL_EE_MAGIC        0xC6  /* 0xC5 = flags 無しの旧形式 (未リリース) */
+#define JOY_CAL_EE_MAGIC        0xC7  /* 0xC5/0xC6 = span 保存の旧形式 (未リリース) */
 #define JOY_CAL_EE_FLAG_SPAN    0x01
 
 #define JOY_CAL_PHASE_IDLE      0
@@ -405,9 +418,9 @@ static void joy_ee_flush(void) {
 #define JOY_CAL_CENTER_MS       500   /* 中心フェーズの長さ */
 #define JOY_CAL_RANGE_TIMEOUT_MS 30000 /* 可動域フェーズを放置したときの中断 */
 #define JOY_CAL_MOVE_THRESHOLD  48    /* これ以上中心から離れたら「動かした」(ADC カウント) */
-#define JOY_CAL_SPAN_MIN_PCT    50    /* 実測可動域が config.h の既定値 (JOY_*_SPAN_*) の 50% 未満なら失敗 */
-#define JOY_CAL_CENTER_TOL_PCT  50    /* 中心が ADC 中央から「既定可動域の最小値 x 50%」以上ずれていたら失敗 (中心取得中に触れていた) */
-#define JOY_CAL_SPAN_MARGIN_PCT 97    /* 実測値の 97% を保存 (config.h の「実測より 2〜3% 内側」と同じ方針) */
+#define JOY_CAL_SPAN_MIN_PCT    50    /* 実測可動域が config.h の既定端から求めた可動域の 50% 未満なら失敗 */
+#define JOY_CAL_CENTER_TOL_PCT  50    /* 中心が参照位置から「既定可動域の最小値 x 50%」以上ずれていたら異常 (触れていた) */
+#define JOY_CAL_SPAN_MARGIN_PCT 97    /* 中心→端の距離の 97% を span にする (端の少し手前でフルスケール) */
 #define JOY_CAL_LONG_PRESS_MS   2000  /* 長押しリセットのしきい値 */
 #define JOY_CAL_RESULT_SHOW_MS  5000  /* OLED に直前の結果を出しておく時間 */
 
@@ -415,38 +428,71 @@ typedef struct {
     uint8_t  magic;
     uint8_t  flags;
     uint16_t cx, cy;
-    uint16_t xn, xp, yn, yp;
+    uint16_t xmin, xmax, ymin, ymax;
 } __attribute__((packed)) joy_cal_ee_t;
 
-/* 方向ごとの妥当性: config.h の既定値 (作者実測) の JOY_CAL_SPAN_MIN_PCT % 以上あること。
- * 端まで倒していない / 別の個体の値を読んだ、などを弾く。 */
+/* 既定の端 (config.h) から、ADC 中央を中心と仮定したときの 4 方向の可動域の最小値。
+ * 妥当性判定の基準に使う。 */
 static uint16_t joy_cal_min_default_span(void) {
-    uint16_t m = JOY_X_SPAN_NEG;
-    if (JOY_X_SPAN_POS < m) m = JOY_X_SPAN_POS;
-    if (JOY_Y_SPAN_NEG < m) m = JOY_Y_SPAN_NEG;
-    if (JOY_Y_SPAN_POS < m) m = JOY_Y_SPAN_POS;
+    uint16_t m = JOY_ADC_CENTER_DEFAULT - JOY_X_MIN;
+    if (JOY_X_MAX - JOY_ADC_CENTER_DEFAULT < m) m = JOY_X_MAX - JOY_ADC_CENTER_DEFAULT;
+    if (JOY_ADC_CENTER_DEFAULT - JOY_Y_MIN < m) m = JOY_ADC_CENTER_DEFAULT - JOY_Y_MIN;
+    if (JOY_Y_MAX - JOY_ADC_CENTER_DEFAULT < m) m = JOY_Y_MAX - JOY_ADC_CENTER_DEFAULT;
     return m;
 }
 
-static bool joy_cal_span_ok(uint16_t v, uint16_t dflt) {
-    return v >= (uint16_t)((uint32_t)dflt * JOY_CAL_SPAN_MIN_PCT / 100) && v <= JOY_ADC_MAX;
+/* 「中心→端」の距離が、既定端から求めた距離の JOY_CAL_SPAN_MIN_PCT % 以上あること。
+ * 端まで倒していない / 別の個体の値 / 壊れた EEPROM を弾く。 */
+static bool joy_cal_span_ok(int16_t measured, int16_t dflt) {
+    return measured >= (int16_t)((int32_t)dflt * JOY_CAL_SPAN_MIN_PCT / 100) && measured <= JOY_ADC_MAX;
 }
 
-/* EEPROM の実測値を読み込む。有効なら joy の中心/可動域を上書きして true */
+static bool joy_cal_extremes_ok(uint16_t cx, uint16_t cy, uint16_t xmin, uint16_t xmax, uint16_t ymin, uint16_t ymax) {
+    if (xmin >= cx || xmax <= cx || ymin >= cy || ymax <= cy) return false;
+    return joy_cal_span_ok((int16_t)(cx - xmin), JOY_ADC_CENTER_DEFAULT - JOY_X_MIN) &&
+           joy_cal_span_ok((int16_t)(xmax - cx), JOY_X_MAX - JOY_ADC_CENTER_DEFAULT) &&
+           joy_cal_span_ok((int16_t)(cy - ymin), JOY_ADC_CENTER_DEFAULT - JOY_Y_MIN) &&
+           joy_cal_span_ok((int16_t)(ymax - cy), JOY_Y_MAX - JOY_ADC_CENTER_DEFAULT);
+}
+
+/* 現在の中心と端から span を計算する。中心が端の外側にあるなど不正なら、
+ * その方向は 1 以上に丸めて 0 除算を避ける。 */
+static uint16_t joy_span_from(int16_t d) {
+    if (d < 2) return 1;
+    return (uint16_t)((uint32_t)d * JOY_CAL_SPAN_MARGIN_PCT / 100);
+}
+static void joy_update_spans(void) {
+    joy.span_xn = joy_span_from((int16_t)(joy.x_center - joy.x_min));
+    joy.span_xp = joy_span_from((int16_t)(joy.x_max - joy.x_center));
+    joy.span_yn = joy_span_from((int16_t)(joy.y_center - joy.y_min));
+    joy.span_yp = joy_span_from((int16_t)(joy.y_max - joy.y_center));
+}
+
+/* 中心が参照位置から大きくずれていないか (触れていなかったか) */
+static bool joy_center_plausible(uint16_t cx, uint16_t cy, uint16_t ref_x, uint16_t ref_y) {
+    uint16_t tol = joy_cal_min_default_span() * JOY_CAL_CENTER_TOL_PCT / 100;
+    return abs((int16_t)cx - (int16_t)ref_x) <= tol && abs((int16_t)cy - (int16_t)ref_y) <= tol;
+}
+
+/* EEPROM の実測値を読み込む。有効なら joy の端 (と参照中心) を上書きして true。
+ * 中心そのものは呼び出し側が自動取得する。 */
+static uint16_t joy_cal_ref_cx, joy_cal_ref_cy;   /* 保存されていた参照中心 */
 static bool joy_cal_load(void) {
     joy_cal_ee_t c;
     eeprom_read_block(&c, (const void *)JOY_CAL_EEPROM_ADDR, sizeof(c));
     if (c.magic != JOY_CAL_EE_MAGIC) return false;
     if (c.cx > JOY_ADC_MAX || c.cy > JOY_ADC_MAX) return false;
-    if (!joy_cal_span_ok(c.xn, JOY_X_SPAN_NEG) || !joy_cal_span_ok(c.xp, JOY_X_SPAN_POS) ||
-        !joy_cal_span_ok(c.yn, JOY_Y_SPAN_NEG) || !joy_cal_span_ok(c.yp, JOY_Y_SPAN_POS)) return false;
-    joy.x_center = c.cx;
-    joy.y_center = c.cy;
-    joy.span_xn  = c.xn;
-    joy.span_xp  = c.xp;
-    joy.span_yn  = c.yn;
-    joy.span_yp  = c.yp;
-    joy.cal_span_saved = (c.flags & JOY_CAL_EE_FLAG_SPAN) != 0;
+    bool span = (c.flags & JOY_CAL_EE_FLAG_SPAN) != 0;
+    if (span && !joy_cal_extremes_ok(c.cx, c.cy, c.xmin, c.xmax, c.ymin, c.ymax)) return false;
+    joy_cal_ref_cx = c.cx;
+    joy_cal_ref_cy = c.cy;
+    if (span) {
+        joy.x_min = c.xmin;
+        joy.x_max = c.xmax;
+        joy.y_min = c.ymin;
+        joy.y_max = c.ymax;
+    }
+    joy.cal_span_saved = span;
     return true;
 }
 
@@ -455,11 +501,13 @@ static void joy_cal_save(void) {
         .magic = JOY_CAL_EE_MAGIC,
         .flags = joy.cal_span_saved ? JOY_CAL_EE_FLAG_SPAN : 0,
         .cx = joy.x_center, .cy = joy.y_center,
-        .xn = joy.span_xn,  .xp = joy.span_xp,
-        .yn = joy.span_yn,  .yp = joy.span_yp,
+        .xmin = joy.x_min, .xmax = joy.x_max,
+        .ymin = joy.y_min, .ymax = joy.y_max,
     };
     eeprom_update_block(&c, (void *)JOY_CAL_EEPROM_ADDR, sizeof(c));
-    joy.cal_saved = true;
+    joy_cal_ref_cx = joy.x_center;
+    joy_cal_ref_cy = joy.y_center;
+    joy.cal_saved  = true;
 }
 
 static void joy_cal_erase(void) {
@@ -769,16 +817,9 @@ static void cleanup_current_mode(void) {
  * 公開 API
  * ============================================================ */
 
-void joy_init(void) {
-    joy_ee_load();
-
-    /* EEPROM に実測キャリブレーションがあればそれを使い、起動時の
-     * 自動センタリングは行わない (挿すときにスティックに触れていても
-     * 中心がずれない)。無ければ従来どおり起動時に中心を自動取得する。 */
-    joy.cal_saved = joy_cal_load();
-    if (joy.cal_saved) return;
-
-    /* 複数回サンプリングして平均をセンター値とする */
+/* 起動時 (と長押しリセット時) の中心自動取得: 複数回サンプリングして平均を
+ * センター値とする。約 32ms ブロックする。 */
+static void joy_auto_center(void) {
     int32_t sum_x = 0;
     int32_t sum_y = 0;
     for (uint8_t i = 0; i < JOY_CALIB_SAMPLES; i++) {
@@ -788,6 +829,22 @@ void joy_init(void) {
     }
     joy.x_center = (uint16_t)(sum_x / JOY_CALIB_SAMPLES);
     joy.y_center = (uint16_t)(sum_y / JOY_CALIB_SAMPLES);
+}
+
+void joy_init(void) {
+    joy_ee_load();
+
+    /* 端: EEPROM に実測値があればそれ、無ければ config.h の既定値。
+     * 中心: 毎回起動時に自動取得 (静止位置は挿し直すたびに動くため)。
+     * ただし保存済みの参照中心から大きくずれていれば「挿すときに触れていた」
+     * とみなし、参照中心にフォールバックする。 */
+    joy.cal_saved = joy_cal_load();
+    joy_auto_center();
+    if (joy.cal_saved && !joy_center_plausible(joy.x_center, joy.y_center, joy_cal_ref_cx, joy_cal_ref_cy)) {
+        joy.x_center = joy_cal_ref_cx;
+        joy.y_center = joy_cal_ref_cy;
+    }
+    joy_update_spans();
 }
 
 /* ============================================================
@@ -821,18 +878,15 @@ static void joy_cal_poll(uint16_t x, uint16_t y) {
             if (timer_elapsed(joy.cal_at) < JOY_CAL_CENTER_MS) return;
             joy.x_center = (uint16_t)(joy.cal_sum_x / joy.cal_n);
             joy.y_center = (uint16_t)(joy.cal_sum_y / joy.cal_n);
-            /* 中心取得中にスティックに触れていた場合を弾く: ADC 中央からのずれが
-             * 既定可動域の最小値の JOY_CAL_CENTER_TOL_PCT % を超えていたら失敗。
-             * (静止時の個体差は数 % 程度なので誤検出しない) */
-            {
-                uint16_t tol = joy_cal_min_default_span() * JOY_CAL_CENTER_TOL_PCT / 100;
-                if (abs((int16_t)joy.x_center - JOY_ADC_CENTER_DEFAULT) > tol ||
-                    abs((int16_t)joy.y_center - JOY_ADC_CENTER_DEFAULT) > tol) {
-                    joy.x_center = joy.cal_prev_cx;
-                    joy.y_center = joy.cal_prev_cy;
-                    joy_cal_finish(JOY_CAL_RESULT_FAILED);
-                    return;
-                }
+            /* 中心取得中にスティックに触れていた場合を弾く: 開始前の中心からの
+             * ずれが既定可動域の最小値の JOY_CAL_CENTER_TOL_PCT % を超えていたら失敗。
+             * (静止位置のばらつきは 20〜30 カウント程度なので誤検出しない) */
+            if (!joy_center_plausible(joy.x_center, joy.y_center, joy.cal_prev_cx, joy.cal_prev_cy)) {
+                joy.x_center = joy.cal_prev_cx;
+                joy.y_center = joy.cal_prev_cy;
+                joy_update_spans();
+                joy_cal_finish(JOY_CAL_RESULT_FAILED);
+                return;
             }
             joy.cal_min_x = joy.cal_max_x = joy.x_center;
             joy.cal_min_y = joy.cal_max_y = joy.y_center;
@@ -845,6 +899,7 @@ static void joy_cal_poll(uint16_t x, uint16_t y) {
             if (timer_elapsed(joy.cal_at) >= JOY_CAL_RANGE_TIMEOUT_MS) {
                 joy.x_center = joy.cal_prev_cx;   /* 中断: 中心も開始前に戻す */
                 joy.y_center = joy.cal_prev_cy;
+                joy_update_spans();
                 joy_cal_finish(JOY_CAL_RESULT_FAILED);
                 return;
             }
@@ -864,10 +919,6 @@ static void joy_cal_poll(uint16_t x, uint16_t y) {
     }
 }
 
-static uint16_t joy_cal_margin(uint16_t v) {
-    return (uint16_t)((uint32_t)v * JOY_CAL_SPAN_MARGIN_PCT / 100);
-}
-
 /* JOY_CALIB 短押し: 開始 / 確定 */
 static void joy_cal_toggle(void) {
     switch (joy.cal_phase) {
@@ -884,29 +935,28 @@ static void joy_cal_toggle(void) {
 
         case JOY_CAL_PHASE_RANGE: {
             if (!joy.cal_moved) {
-                /* 中心だけ取り直したいケース: 可動域はそのまま */
+                /* 中心だけ取り直したいケース: 端はそのまま、中心を参照値として保存 */
+                joy_update_spans();
                 joy_cal_save();
                 joy_cal_finish(JOY_CAL_RESULT_CENTER);
                 break;
             }
-            uint16_t xn = joy_cal_margin(joy.x_center - joy.cal_min_x);
-            uint16_t xp = joy_cal_margin(joy.cal_max_x - joy.x_center);
-            uint16_t yn = joy_cal_margin(joy.y_center - joy.cal_min_y);
-            uint16_t yp = joy_cal_margin(joy.cal_max_y - joy.y_center);
-            if (!joy_cal_span_ok(xn, JOY_X_SPAN_NEG) || !joy_cal_span_ok(xp, JOY_X_SPAN_POS) ||
-                !joy_cal_span_ok(yn, JOY_Y_SPAN_NEG) || !joy_cal_span_ok(yp, JOY_Y_SPAN_POS)) {
-                /* 4 方向のどれかが既定値の半分に満たない (端まで回していない等)。
+            if (!joy_cal_extremes_ok(joy.x_center, joy.y_center,
+                                     joy.cal_min_x, joy.cal_max_x, joy.cal_min_y, joy.cal_max_y)) {
+                /* 4 方向のどれかが既定の半分に満たない (端まで回していない等)。
                  * 何も保存せず、中心も開始前の値に戻す。 */
                 joy.x_center = joy.cal_prev_cx;
                 joy.y_center = joy.cal_prev_cy;
+                joy_update_spans();
                 joy_cal_finish(JOY_CAL_RESULT_FAILED);
                 break;
             }
-            joy.span_xn = xn;
-            joy.span_xp = xp;
-            joy.span_yn = yn;
-            joy.span_yp = yp;
+            joy.x_min = joy.cal_min_x;
+            joy.x_max = joy.cal_max_x;
+            joy.y_min = joy.cal_min_y;
+            joy.y_max = joy.cal_max_y;
             joy.cal_span_saved = true;
+            joy_update_spans();
             joy_cal_save();
             joy_cal_finish(JOY_CAL_RESULT_OK);
             break;
@@ -920,12 +970,14 @@ static void joy_cal_toggle(void) {
 /* JOY_CALIB 2 秒長押し: 既定値に戻す */
 static void joy_cal_reset(void) {
     joy_cal_erase();
-    joy.span_xn = JOY_X_SPAN_NEG;
-    joy.span_xp = JOY_X_SPAN_POS;
-    joy.span_yn = JOY_Y_SPAN_NEG;
-    joy.span_yp = JOY_Y_SPAN_POS;
-    /* 中心は今の値を維持 (次回起動から自動取得に戻る) */
+    joy.x_min = JOY_X_MIN;
+    joy.x_max = JOY_X_MAX;
+    joy.y_min = JOY_Y_MIN;
+    joy.y_max = JOY_Y_MAX;
     cleanup_current_mode();
+    /* 中心もその場で取り直し、リセット直後を「挿し直した直後」と同じ状態にする */
+    joy_auto_center();
+    joy_update_spans();
     joy_cal_finish(JOY_CAL_RESULT_RESET);
 }
 
@@ -1123,6 +1175,17 @@ static void joy_send_dz_line(const char *label, uint8_t value, bool current) {
  *   deadzone analog 12%
  *   eeprom          saved
  */
+/* 4 値をスペース区切りで出力 (range / span 行用。コードサイズ節約のため共通化) */
+static void joy_send_dec4(uint16_t a, uint16_t b, uint16_t c, uint16_t d) {
+    joy_send_dec(a);
+    send_string_P(PSTR(" "));
+    joy_send_dec(b);
+    send_string_P(PSTR(" "));
+    joy_send_dec(c);
+    send_string_P(PSTR(" "));
+    joy_send_dec(d);
+}
+
 void joy_send_status(void) {
     send_string_P(PSTR("GBC24 joystick\n"));
 
@@ -1144,19 +1207,15 @@ void joy_send_status(void) {
     joy_send_dz_line(PSTR("deadzone mouse  "), joy.dz_mouse,   joy.mode == JOY_MODE_MOUSE);
     joy_send_dz_line(PSTR("deadzone analog "), joy.dz_analog,  joy.mode == JOY_MODE_ANALOG);
 
-    /* キャリブレーション: 中心 (x y)、可動域 (x- x+ y- y+)、状態 */
+    /* キャリブレーション: 中心 (x y)、端 (xmin xmax ymin ymax)、span (x- x+ y- y+)、状態 */
     send_string_P(PSTR("center          "));
     joy_send_dec(joy.x_center);
     send_string_P(PSTR(" "));
     joy_send_dec(joy.y_center);
+    send_string_P(PSTR("\nrange           "));
+    joy_send_dec4(joy.x_min, joy.x_max, joy.y_min, joy.y_max);
     send_string_P(PSTR("\nspan            "));
-    joy_send_dec(joy.span_xn);
-    send_string_P(PSTR(" "));
-    joy_send_dec(joy.span_xp);
-    send_string_P(PSTR(" "));
-    joy_send_dec(joy.span_yn);
-    send_string_P(PSTR(" "));
-    joy_send_dec(joy.span_yp);
+    joy_send_dec4(joy.span_xn, joy.span_xp, joy.span_yn, joy.span_yp);
     send_string_P(PSTR("\ncalib           "));
     if (joy.cal_phase != JOY_CAL_PHASE_IDLE) {
         send_string_P(PSTR("running\n"));

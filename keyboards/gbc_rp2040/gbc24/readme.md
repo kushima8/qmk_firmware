@@ -20,7 +20,7 @@ Adafruit KB2040 のピン対応表に従って変換している。
 | ジョイスティック X/Y | F6 / F7 (ADC) | GP27 / GP26 (ADC1/ADC0) |
 | PMW3360 SCK/MOSI/MISO/NCS | B1/B2/B3/F7 | GP18/GP19/GP20/GP26 (SPI0) |
 
-RP2040 の ADC は 12bit だが、QMK が 10bit に換算して返すため、`config.h` のジョイスティック可動域 (`JOY_X_SPAN_*` / `JOY_Y_SPAN_*`) は AVR 版と同じ値を使う。
+RP2040 の ADC は 12bit だが、QMK が 10bit に換算して返すため、`config.h` のジョイスティック可動域 (`JOY_X_MIN` / `JOY_X_MAX` / `JOY_Y_MIN` / `JOY_Y_MAX`、端の ADC 絶対値) は AVR 版と同じ値を使う。
 
 `EXTRAKEY_ENABLE` / `NKRO_ENABLE` は AVR 版と同じく無効(`no`)のままにしている。
 

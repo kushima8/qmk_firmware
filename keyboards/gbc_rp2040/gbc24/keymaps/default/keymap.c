@@ -224,8 +224,9 @@ bool oled_task_user(void) {
  *   deadzone digi   54%
  *   deadzone mouse  24%   <- current
  *   deadzone analog 12%
- *   center          512 511
- *   span            258 236 277 230
+ *   center          541 501
+ *   range           248 787 223 737
+ *   span            284 238 269 228
  *   calib           saved, last ok
  *   eeprom          saved
  *
