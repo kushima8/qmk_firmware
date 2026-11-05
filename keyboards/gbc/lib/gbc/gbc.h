@@ -73,7 +73,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define GBC_TX_GETINFO_MAXTRY 20
 #define GBC_TX_GETMOTION_INTERVAL 4
 
-#define GBC_OLED_MAX_PRESSING_KEYCODES 6
 
 //////////////////////////////////////////////////////////////////////////////
 // Types
@@ -130,6 +129,7 @@ typedef union {
         uint8_t _rsv2;
     };
 } gbc_config_t;
+_Static_assert(sizeof(gbc_config_t) == 4, "gbc_config_t must fit eeconfig_kb (4 bytes)");
 
 typedef struct {
     int16_t x;
@@ -162,13 +162,6 @@ typedef struct {
 #elif GBC_SCROLLSNAP_ENABLE == 2
     gbc_scrollsnap_mode_t scrollsnap_mode;
 #endif
-
-    uint16_t       last_kc;
-    keypos_t       last_pos;
-    report_mouse_t last_mouse;
-
-    // Buffer to indicate pressing keys.
-    char pressing_keys[GBC_OLED_MAX_PRESSING_KEYCODES + 1];
 } gbc_t;
 
 
@@ -193,19 +186,6 @@ void gbc_on_apply_motion_to_mouse_scroll(gbc_motion_t *m, report_mouse_t *r, boo
 
 //////////////////////////////////////////////////////////////////////////////
 // Public API functions
-
-/// gbc_oled_render_ballinfo renders ball information to OLED.
-/// It uses just 21 columns to show the info.
-void gbc_oled_render_ballinfo(void);
-
-/// gbc oled_render_keyinfo renders last processed key information to OLED.
-/// It shows column, row, key code, and key name (if available).
-void gbc_oled_render_keyinfo(void);
-
-/// gbc_oled_render_layerinfo renders current layer status information to
-/// OLED.  It shows layer mask with number (1~f) for active layers and '_' for
-/// inactive layers.
-void gbc_oled_render_layerinfo(void);
 
 /// gbc_send_status types current trackball settings to the host as text.
 /// It is intended for boards without OLED (see CFG_SHOW keycode).

@@ -84,6 +84,18 @@ void    joy_deadzone_reset(void);
 void joy_calib_key(bool pressed);   /* process_record_user から press/release 両方で呼ぶ */
 bool joy_cal_is_running(void);
 
+/* OLED 表示用の状態。確定/失敗/リセット後は約 5 秒間だけ結果を返し、その後 IDLE に戻る */
+typedef enum {
+    JOY_CAL_STATUS_IDLE = 0,
+    JOY_CAL_STATUS_CENTER,       /* 中心取得中 (触らない) */
+    JOY_CAL_STATUS_RANGE,        /* 可動域取得中 (回す) */
+    JOY_CAL_STATUS_OK,
+    JOY_CAL_STATUS_CENTER_ONLY,
+    JOY_CAL_STATUS_FAILED,
+    JOY_CAL_STATUS_RESET,
+} joy_cal_status_t;
+joy_cal_status_t joy_cal_status(void);
+
 /* ---- 設定値のテキスト出力 (CFG_SHOW キー用) ----
  * 現在のモード / マウス最大速度 / 3 モード分のデッドゾーン / EEPROM 保存状態を
  * 1 項目 1 行でキー入力としてホストへタイプする (先頭行 "GBC24 joystick")。

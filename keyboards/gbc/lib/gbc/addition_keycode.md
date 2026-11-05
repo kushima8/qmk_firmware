@@ -75,6 +75,7 @@ RemapまたはVIAでキーに割り当ててご使用ください（Vial版の�
 #### 中心位置だけ取り直す
 
 手順1のあとスティックを動かさずに手順3を行うと、可動域はそのままで中心位置だけ保存されます。  
+液晶付きモデルでは、測定中は `CAL` の下に `CTR`（中心取得中）／`RNG`（可動域取得中）、確定後5秒間は `OK`／`CTR ONLY`／`NG`／`RST` が表示されます。  
 
 #### 既定値に戻す
 
@@ -168,7 +169,7 @@ eeprom          saved
 | `<- current` | 現在のモードのデッドゾーンに付く印 | ― |
 | `center` | 中心位置（X Y） | ADC値（0〜1023） |
 | `span` | 可動域（X- X+ Y- Y+）：中心から端までの距離 | ADC値 |
-| `calib` | キャリブレーションの状態 | `default`（出荷時の可動域）／ `saved`（保存した実測値を使用中）／ `running`（測定中）。続けて直前の結果 `last ok`／`last center only`／`last failed`／`last reset` が付くことがあります |
+| `calib` | キャリブレーションの状態 | `default`（出荷時の可動域）／ `saved`（保存した実測値を使用中）／ `saved center only`（中心だけ実測、可動域は出荷時）／ `running`（測定中）。続けて直前の結果 `last ok`／`last center only`／`last failed`／`last reset` が付くことがあります |
 | `eeprom` | 保存状態 | `saved`（保存済み）／ `auto saving`（変更直後で、約2秒後に自動保存される） |
 
 #### 確認時の注意

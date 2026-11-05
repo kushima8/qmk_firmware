@@ -20,21 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "debounce.h"
 
-#ifdef SPLIT_KEYBOARD
-#    include "split_common/split_util.h"
-#    include "split_common/transactions.h"
-#endif
-
-#ifdef SPLIT_KEYBOARD
-#    define PINNUM_ROW (MATRIX_ROWS / 2)
-#    define ROWS_PER_HAND (MATRIX_ROWS / 2)
-#else
-#    define PINNUM_ROW (MATRIX_ROWS)
-#    define ROWS_PER_HAND (MATRIX_ROWS)
-#endif
+/* 単体キーボード専用 (keyball 由来の分割キーボード対応は削除) */
+#define PINNUM_ROW (MATRIX_ROWS)
+#define ROWS_PER_HAND (MATRIX_ROWS)
 #define PINNUM_COL (MATRIX_COLS / 2)
 
-#define MATRIXSIZE_PER_HAND (ROWS_PER_HAND * sizeof(matrix_row_t))
 
 static pin_t row_pins[PINNUM_ROW] = MATRIX_ROW_PINS;
 static pin_t col_pins[PINNUM_COL] = MATRIX_COL_PINS;
@@ -105,38 +95,10 @@ static bool duplex_scan(matrix_row_t current_matrix[]) {
     return changed;
 }
 
-#ifdef SPLIT_KEYBOARD
-static uint8_t thisHand, thatHand;
-#else
-#    define thisHand 0
-#endif
-
 void matrix_init_custom(void) {
-#ifdef SPLIT_KEYBOARD
-    split_pre_init();
-#endif
-
     set_pins_input(col_pins, PINNUM_COL);
     set_pins_input(row_pins, PINNUM_ROW);
-
-#ifdef SPLIT_KEYBOARD
-    thisHand = isLeftHand ? 0 : ROWS_PER_HAND;
-    thatHand = ROWS_PER_HAND - thisHand;
-
-    split_post_init();
-#endif
 }
-
-#ifdef SPLIT_KEYBOARD
-
-// user-defined overridable functions
-__attribute__((weak)) void matrix_slave_scan_kb(void) {
-    matrix_slave_scan_user();
-}
-
-__attribute__((weak)) void matrix_slave_scan_user(void) {}
-
-#endif
 
 // declare matrix buffers which defined in quantum/matrix_common.c
 extern matrix_row_t raw_matrix[MATRIX_ROWS];
@@ -145,32 +107,8 @@ extern matrix_row_t matrix[MATRIX_ROWS];
 uint8_t matrix_scan(void) {
     bool changed = duplex_scan(raw_matrix);
 
-    debounce(raw_matrix, matrix + thisHand, ROWS_PER_HAND, changed);
+    debounce(raw_matrix, matrix, ROWS_PER_HAND, changed);
 
-#ifdef SPLIT_KEYBOARD
-    if (!is_keyboard_master()) {
-        // send to primary.
-        transport_slave(matrix + thatHand, matrix + thisHand);
-        matrix_slave_scan_kb();
-        return changed;
-    }
-
-    // receive from secondary.
-    static bool   last_connected = false;
-    matrix_row_t* that_raw       = raw_matrix + ROWS_PER_HAND;
-    memset(that_raw, 0, MATRIXSIZE_PER_HAND);
-    if (transport_master_if_connected(matrix + thisHand, that_raw)) {
-        last_connected = true;
-        if (memcmp(matrix + thatHand, that_raw, MATRIXSIZE_PER_HAND) != 0) {
-            memcpy(matrix + thatHand, that_raw, MATRIXSIZE_PER_HAND);
-            changed = true;
-        }
-    } else if (last_connected) {
-        last_connected = false;
-        memset(matrix + thatHand, 0, MATRIXSIZE_PER_HAND);
-        changed = true;
-    }
-#endif
 
     matrix_scan_kb();
     return changed;

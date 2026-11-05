@@ -256,6 +256,8 @@ static struct {
     uint8_t    cal_phase;      /* JOY_CAL_PHASE_* */
     uint8_t    cal_result;     /* JOY_CAL_RESULT_* (CFG_SHOW 表示用) */
     bool       cal_saved;      /* EEPROM の実測値を使用中 */
+    bool       cal_span_saved; /* 可動域も実測値 (false なら中心のみ実測) */
+    uint16_t   cal_done_at;    /* 直前の確定/失敗/リセット時刻 (OLED 表示用) */
     bool       cal_moved;      /* 可動域フェーズ中にスティックが動いた */
     bool       cal_key_held;   /* JOY_CALIB 押下中 (長押し判定用) */
     bool       cal_key_long;   /* 長押しリセット済み (離したときの短押し動作を抑止) */
@@ -372,17 +374,19 @@ static void joy_ee_flush(void) {
  * JOY_CAL_EEPROM_SIZE だけ手前に下げ (マクロバッファが同量だけ縮む)、
  * 空いた末尾に書く。既存のキーマップ・マクロの先頭アドレスは変わらない。
  *
- * レイアウト (13 バイト):
+ * レイアウト (14 バイト):
  *   [0]    magic (JOY_CAL_EE_MAGIC)
- *   [1,2]  中心 X   [3,4]  中心 Y
- *   [5,6]  span X-  [7,8]  span X+  [9,10] span Y-  [11,12] span Y+
+ *   [1]    flags (bit0: 可動域も実測値。0 なら中心のみ実測で可動域は既定値)
+ *   [2,3]  中心 X   [4,5]  中心 Y
+ *   [6,7]  span X-  [8,9]  span X+  [10,11] span Y-  [12,13] span Y+
  * ============================================================ */
 
 #ifndef JOY_CAL_EEPROM_ADDR
 #    error "JOY_CAL_EEPROM_ADDR must be defined in config.h"
 #endif
 
-#define JOY_CAL_EE_MAGIC        0xC5
+#define JOY_CAL_EE_MAGIC        0xC6  /* 0xC5 = flags 無しの旧形式 (未リリース) */
+#define JOY_CAL_EE_FLAG_SPAN    0x01
 
 #define JOY_CAL_PHASE_IDLE      0
 #define JOY_CAL_PHASE_CENTER    1   /* 触らない状態で中心をサンプリング中 */
@@ -400,9 +404,11 @@ static void joy_ee_flush(void) {
 #define JOY_CAL_SPAN_MIN_PCT    50    /* 実測可動域が config.h の既定値 (JOY_*_SPAN_*) の 50% 未満なら失敗 */
 #define JOY_CAL_SPAN_MARGIN_PCT 97    /* 実測値の 97% を保存 (config.h の「実測より 2〜3% 内側」と同じ方針) */
 #define JOY_CAL_LONG_PRESS_MS   2000  /* 長押しリセットのしきい値 */
+#define JOY_CAL_RESULT_SHOW_MS  5000  /* OLED に直前の結果を出しておく時間 */
 
 typedef struct {
     uint8_t  magic;
+    uint8_t  flags;
     uint16_t cx, cy;
     uint16_t xn, xp, yn, yp;
 } __attribute__((packed)) joy_cal_ee_t;
@@ -427,12 +433,14 @@ static bool joy_cal_load(void) {
     joy.span_xp  = c.xp;
     joy.span_yn  = c.yn;
     joy.span_yp  = c.yp;
+    joy.cal_span_saved = (c.flags & JOY_CAL_EE_FLAG_SPAN) != 0;
     return true;
 }
 
 static void joy_cal_save(void) {
     joy_cal_ee_t c = {
         .magic = JOY_CAL_EE_MAGIC,
+        .flags = joy.cal_span_saved ? JOY_CAL_EE_FLAG_SPAN : 0,
         .cx = joy.x_center, .cy = joy.y_center,
         .xn = joy.span_xn,  .xp = joy.span_xp,
         .yn = joy.span_yn,  .yp = joy.span_yp,
@@ -443,7 +451,8 @@ static void joy_cal_save(void) {
 
 static void joy_cal_erase(void) {
     eeprom_update_byte((uint8_t *)JOY_CAL_EEPROM_ADDR, 0xFF);
-    joy.cal_saved = false;
+    joy.cal_saved      = false;
+    joy.cal_span_saved = false;
 }
 
 /* QMK が参照する軸定義 (2軸、どちらも仮想) */
@@ -779,8 +788,9 @@ void joy_init(void) {
  * ============================================================ */
 
 static void joy_cal_finish(uint8_t result) {
-    joy.cal_phase  = JOY_CAL_PHASE_IDLE;
-    joy.cal_result = result;
+    joy.cal_phase   = JOY_CAL_PHASE_IDLE;
+    joy.cal_result  = result;
+    joy.cal_done_at = timer_read();
     /* 中心/可動域が変わったので次回ポーリングで必ず再評価させる */
     joy.last_dir = DIR_CENTER;
     joy.last_ax  = JOY_JS_AXIS_MIN;
@@ -864,6 +874,7 @@ static void joy_cal_toggle(void) {
             joy.span_xp = xp;
             joy.span_yn = yn;
             joy.span_yp = yp;
+            joy.cal_span_saved = true;
             joy_cal_save();
             joy_cal_finish(JOY_CAL_RESULT_OK);
             break;
@@ -900,6 +911,20 @@ void joy_calib_key(bool pressed) {
 
 bool joy_cal_is_running(void) {
     return joy.cal_phase != JOY_CAL_PHASE_IDLE;
+}
+
+joy_cal_status_t joy_cal_status(void) {
+    if (joy.cal_phase == JOY_CAL_PHASE_CENTER) return JOY_CAL_STATUS_CENTER;
+    if (joy.cal_phase == JOY_CAL_PHASE_RANGE) return JOY_CAL_STATUS_RANGE;
+    if (joy.cal_result != JOY_CAL_RESULT_NONE && timer_elapsed(joy.cal_done_at) < JOY_CAL_RESULT_SHOW_MS) {
+        switch (joy.cal_result) {
+            case JOY_CAL_RESULT_OK:     return JOY_CAL_STATUS_OK;
+            case JOY_CAL_RESULT_CENTER: return JOY_CAL_STATUS_CENTER_ONLY;
+            case JOY_CAL_RESULT_FAILED: return JOY_CAL_STATUS_FAILED;
+            case JOY_CAL_RESULT_RESET:  return JOY_CAL_STATUS_RESET;
+        }
+    }
+    return JOY_CAL_STATUS_IDLE;
 }
 
 void joy_task(void) {
@@ -1101,7 +1126,7 @@ void joy_send_status(void) {
     if (joy.cal_phase != JOY_CAL_PHASE_IDLE) {
         send_string_P(PSTR("running\n"));
     } else {
-        send_string_P(joy.cal_saved ? PSTR("saved") : PSTR("default"));
+        send_string_P(!joy.cal_saved ? PSTR("default") : joy.cal_span_saved ? PSTR("saved") : PSTR("saved center only"));
         switch (joy.cal_result) {
             case JOY_CAL_RESULT_OK:     send_string_P(PSTR(", last ok\n"));          break;
             case JOY_CAL_RESULT_CENTER: send_string_P(PSTR(", last center only\n")); break;

@@ -120,7 +120,6 @@ static void oled_render_layer(void) {
     }
 }
 
-#ifdef JOYSTICK_ENABLE
 /* snprintf を使わない軽量な "X:nnn" 表示 (フラッシュ節約) */
 static void oled_write_tag_u8(char tag, uint8_t v) {
     char buf[6];
@@ -134,6 +133,7 @@ static void oled_write_tag_u8(char tag, uint8_t v) {
     oled_write_ln(buf, false);
 }
 
+#ifdef JOYSTICK_ENABLE
 static void oled_render_joystick(void) {
     oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("JOY"), false);
@@ -153,6 +153,37 @@ static void oled_render_joystick(void) {
     oled_write_tag_u8('S', joy_get_mouse_speed());
     /* 現在のモードのデッドゾーン (%) */
     oled_write_tag_u8('D', joy_get_deadzone());
+    /* キャリブレーション状態 (測定中と、確定後 5 秒間の結果) */
+    switch (joy_cal_status()) {
+        case JOY_CAL_STATUS_CENTER:      oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("CTR"), false); break;
+        case JOY_CAL_STATUS_RANGE:       oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("RNG"), false); break;
+        case JOY_CAL_STATUS_OK:          oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("OK"),  false); break;
+        case JOY_CAL_STATUS_CENTER_ONLY: oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("CTR"), false); oled_write_ln_P(PSTR("ONLY"), false); break;
+        case JOY_CAL_STATUS_FAILED:      oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("NG"),  false); break;
+        case JOY_CAL_STATUS_RESET:       oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("RST"), false); break;
+        default: break;
+    }
+}
+#endif
+
+#ifdef GBC_CORE_ENABLE
+/* トラックボール構成: CPI / スクロール除数 / モード / 自動マウスレイヤー / スナップ
+ * (液晶は縦向き 5 文字幅なので 1 項目 1〜2 行) */
+static void oled_render_trackball(void) {
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR("TRACK"), false);
+    /* CPI は 100 単位の内部値 (1..35) を表示: "C:35" = 3500 */
+    oled_write_tag_u8('C', gbc_get_cpi());
+    oled_write_tag_u8('D', gbc_get_scroll_div());
+    oled_write_ln_P(gbc_get_scroll_mode() ? PSTR("SCRL") : PSTR("MOVE"), false);
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+    oled_write_ln_P(get_auto_mouse_enable() ? PSTR("AML+") : PSTR("AML-"), false);
+#endif
+    switch (gbc_get_scrollsnap_mode()) {
+        case GBC_SCROLLSNAP_MODE_VERTICAL:   oled_write_ln_P(PSTR("SN:V"), false); break;
+        case GBC_SCROLLSNAP_MODE_HORIZONTAL: oled_write_ln_P(PSTR("SN:H"), false); break;
+        default:                             oled_write_ln_P(PSTR("SN:F"), false); break;
+    }
 }
 #endif
 
@@ -160,6 +191,9 @@ bool oled_task_user(void) {
     oled_render_layer();
 #ifdef JOYSTICK_ENABLE
     oled_render_joystick();
+#endif
+#ifdef GBC_CORE_ENABLE
+    oled_render_trackball();
 #endif
     return false;
 }

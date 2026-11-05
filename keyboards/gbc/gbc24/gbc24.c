@@ -42,25 +42,6 @@ void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
 }
 #endif /* JOYSTICK_ENABLE */
 
-#if defined(POINTING_DEVICE_ENABLE) && !defined(GBC_CORE_ENABLE)
-/* PMW3360 トラックボールの軸補正 (キーボード側で対応、ドライバは無修正)
- *
- * 同梱ドライバの pointing_device_driver_get_report() は
- *   x = d.y, y = d.x
- * を返すが、GBC24 のセンサ搭載向きではこれが
- *   上に転がす → 左 / 右に転がす → 上
- * になってしまう。ドライバ出力 (ox, oy) に対して
- *   x = -oy, y = ox
- * の回転を掛けることで 上→上 / 右→右 に補正する。
- */
-report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
-    mouse_xy_report_t ox = mouse_report.x;
-    mouse_xy_report_t oy = mouse_report.y;
-    mouse_report.x = -oy;
-    mouse_report.y = ox;
-    return pointing_device_task_user(mouse_report);
-}
-#endif
 /* GBC_CORE_ENABLE (lib/gbc/gbc.c 経由) の場合、gbc.c の
  * gbc_on_apply_motion_to_mouse_move() が x = -d.x, y = d.y を出力する。
  * これは「旧ドライバ出力 (x=d.y, y=d.x) + 上記回転補正」の最終結果と同一の
