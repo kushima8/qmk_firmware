@@ -7,8 +7,9 @@ This restriction is called "scroll snap".
 
 The direction of restriction can be changed using special key codes.
 You can also release this restriction.
-It is called as "scroll snap mode"
-The current mode is displayed on the OLED.
+It is called "scroll snap mode".
+The current mode is displayed on the OLED when the keymap calls `gbc_oled_render_ballinfo()`.
+It can also be checked as text with the `CFG_SHOW` key code (`scroll snap` line).
 
 There are 3 modes for scroll snap.
 
@@ -17,7 +18,8 @@ There are 3 modes for scroll snap.
 3. Free: key code is `SSNP_FRE`, indicated as `SCR`.
 
 The scroll snap mode at startup is vertical,
-but you can change it by saving the current mode with `KBC_SAVE`
+but you can change it by saving the current mode with `REC_SAVE`.
+Note that `REC_RST` does not reset the scroll snap mode.
 
 ## MEMO
 
@@ -40,6 +42,8 @@ please make pull requests to share it us.
 * スナップしない自由スクロール
 
 以上を `SSNP_VRT`, `SSNP_HOR`, `SSNP_FRE` の独自キーコードを用いて手動で切り替える。
+現在のモードは `REC_SAVE` で EEPROM に保存され、次回起動時に復元される。
+`REC_RST` ではスクロールスナップのモードは初期値に戻らない。
 
 #### up to 1.3.2
 
@@ -108,9 +112,9 @@ $n$ の初期値は 4 で 1/8 になることを意味する。
 
 トラックボールの移動量をポインタに適用するかスクロールに適用するか、
 GBCは内部にスクロールモードという名のモードで管理している。
-スクロールモードはキーコードやAPI呼び出しの任意のタイミングで切り替えられる。
-デフォルトのキーマップでは特定のレイヤーの状態を
-スクロールモードのオンオフに適用している。
+スクロールモードはキーコード (`SCRL_TO` / `SCRL_MO`) や
+API (`gbc_set_scroll_mode()`) 呼び出しの任意のタイミングで切り替えられる。
+スクロールモードの状態は EEPROM に保存されず、起動時は常にオフになる。
 
 当初はスクロールモードの切り替え直後に、
 トラックボールの移動が意図しない適用先に適用されることが頻発した。
