@@ -258,6 +258,9 @@ static struct {
     bool       cal_saved;      /* EEPROM の実測値を使用中 */
     bool       cal_span_saved; /* 可動域も実測値 (false なら中心のみ実測) */
     uint16_t   cal_done_at;    /* 直前の確定/失敗/リセット時刻 (OLED 表示用) */
+    bool       cal_show;       /* OLED に結果を表示中 (表示期間が過ぎたら false)。
+                                * timer_elapsed() は 16bit で約 65 秒ごとに巻き戻るため、
+                                * 時刻比較だけで判定すると 65 秒おきに結果が再表示される */
     bool       cal_moved;      /* 可動域フェーズ中にスティックが動いた */
     bool       cal_key_held;   /* JOY_CALIB 押下中 (長押し判定用) */
     bool       cal_key_long;   /* 長押しリセット済み (離したときの短押し動作を抑止) */
@@ -268,6 +271,7 @@ static struct {
     int32_t    cal_sum_y;
     uint16_t   cal_min_x, cal_max_x;
     uint16_t   cal_min_y, cal_max_y;
+    uint16_t   cal_prev_cx, cal_prev_cy; /* 開始前の中心 (失敗時に戻す) */
 } joy = {
     .mode            = JOY_MODE_DIGITAL,
     .x_center        = JOY_ADC_CENTER_DEFAULT,
@@ -402,6 +406,7 @@ static void joy_ee_flush(void) {
 #define JOY_CAL_RANGE_TIMEOUT_MS 30000 /* 可動域フェーズを放置したときの中断 */
 #define JOY_CAL_MOVE_THRESHOLD  48    /* これ以上中心から離れたら「動かした」(ADC カウント) */
 #define JOY_CAL_SPAN_MIN_PCT    50    /* 実測可動域が config.h の既定値 (JOY_*_SPAN_*) の 50% 未満なら失敗 */
+#define JOY_CAL_CENTER_TOL_PCT  50    /* 中心が ADC 中央から「既定可動域の最小値 x 50%」以上ずれていたら失敗 (中心取得中に触れていた) */
 #define JOY_CAL_SPAN_MARGIN_PCT 97    /* 実測値の 97% を保存 (config.h の「実測より 2〜3% 内側」と同じ方針) */
 #define JOY_CAL_LONG_PRESS_MS   2000  /* 長押しリセットのしきい値 */
 #define JOY_CAL_RESULT_SHOW_MS  5000  /* OLED に直前の結果を出しておく時間 */
@@ -415,6 +420,14 @@ typedef struct {
 
 /* 方向ごとの妥当性: config.h の既定値 (作者実測) の JOY_CAL_SPAN_MIN_PCT % 以上あること。
  * 端まで倒していない / 別の個体の値を読んだ、などを弾く。 */
+static uint16_t joy_cal_min_default_span(void) {
+    uint16_t m = JOY_X_SPAN_NEG;
+    if (JOY_X_SPAN_POS < m) m = JOY_X_SPAN_POS;
+    if (JOY_Y_SPAN_NEG < m) m = JOY_Y_SPAN_NEG;
+    if (JOY_Y_SPAN_POS < m) m = JOY_Y_SPAN_POS;
+    return m;
+}
+
 static bool joy_cal_span_ok(uint16_t v, uint16_t dflt) {
     return v >= (uint16_t)((uint32_t)dflt * JOY_CAL_SPAN_MIN_PCT / 100) && v <= JOY_ADC_MAX;
 }
@@ -791,6 +804,7 @@ static void joy_cal_finish(uint8_t result) {
     joy.cal_phase   = JOY_CAL_PHASE_IDLE;
     joy.cal_result  = result;
     joy.cal_done_at = timer_read();
+    joy.cal_show    = true;
     /* 中心/可動域が変わったので次回ポーリングで必ず再評価させる */
     joy.last_dir = DIR_CENTER;
     joy.last_ax  = JOY_JS_AXIS_MIN;
@@ -807,6 +821,19 @@ static void joy_cal_poll(uint16_t x, uint16_t y) {
             if (timer_elapsed(joy.cal_at) < JOY_CAL_CENTER_MS) return;
             joy.x_center = (uint16_t)(joy.cal_sum_x / joy.cal_n);
             joy.y_center = (uint16_t)(joy.cal_sum_y / joy.cal_n);
+            /* 中心取得中にスティックに触れていた場合を弾く: ADC 中央からのずれが
+             * 既定可動域の最小値の JOY_CAL_CENTER_TOL_PCT % を超えていたら失敗。
+             * (静止時の個体差は数 % 程度なので誤検出しない) */
+            {
+                uint16_t tol = joy_cal_min_default_span() * JOY_CAL_CENTER_TOL_PCT / 100;
+                if (abs((int16_t)joy.x_center - JOY_ADC_CENTER_DEFAULT) > tol ||
+                    abs((int16_t)joy.y_center - JOY_ADC_CENTER_DEFAULT) > tol) {
+                    joy.x_center = joy.cal_prev_cx;
+                    joy.y_center = joy.cal_prev_cy;
+                    joy_cal_finish(JOY_CAL_RESULT_FAILED);
+                    return;
+                }
+            }
             joy.cal_min_x = joy.cal_max_x = joy.x_center;
             joy.cal_min_y = joy.cal_max_y = joy.y_center;
             joy.cal_moved = false;
@@ -816,6 +843,8 @@ static void joy_cal_poll(uint16_t x, uint16_t y) {
 
         case JOY_CAL_PHASE_RANGE:
             if (timer_elapsed(joy.cal_at) >= JOY_CAL_RANGE_TIMEOUT_MS) {
+                joy.x_center = joy.cal_prev_cx;   /* 中断: 中心も開始前に戻す */
+                joy.y_center = joy.cal_prev_cy;
                 joy_cal_finish(JOY_CAL_RESULT_FAILED);
                 return;
             }
@@ -844,6 +873,8 @@ static void joy_cal_toggle(void) {
     switch (joy.cal_phase) {
         case JOY_CAL_PHASE_IDLE:
             cleanup_current_mode();
+            joy.cal_prev_cx = joy.x_center;
+            joy.cal_prev_cy = joy.y_center;
             joy.cal_sum_x = 0;
             joy.cal_sum_y = 0;
             joy.cal_n     = 0;
@@ -865,8 +896,9 @@ static void joy_cal_toggle(void) {
             if (!joy_cal_span_ok(xn, JOY_X_SPAN_NEG) || !joy_cal_span_ok(xp, JOY_X_SPAN_POS) ||
                 !joy_cal_span_ok(yn, JOY_Y_SPAN_NEG) || !joy_cal_span_ok(yp, JOY_Y_SPAN_POS)) {
                 /* 4 方向のどれかが既定値の半分に満たない (端まで回していない等)。
-                 * 中心も含めて保存しない (joy の中心は新しい値のままだが、
-                 * 次回起動で保存値または自動取得に戻る)。 */
+                 * 何も保存せず、中心も開始前の値に戻す。 */
+                joy.x_center = joy.cal_prev_cx;
+                joy.y_center = joy.cal_prev_cy;
                 joy_cal_finish(JOY_CAL_RESULT_FAILED);
                 break;
             }
@@ -916,7 +948,10 @@ bool joy_cal_is_running(void) {
 joy_cal_status_t joy_cal_status(void) {
     if (joy.cal_phase == JOY_CAL_PHASE_CENTER) return JOY_CAL_STATUS_CENTER;
     if (joy.cal_phase == JOY_CAL_PHASE_RANGE) return JOY_CAL_STATUS_RANGE;
-    if (joy.cal_result != JOY_CAL_RESULT_NONE && timer_elapsed(joy.cal_done_at) < JOY_CAL_RESULT_SHOW_MS) {
+    if (joy.cal_show && timer_elapsed(joy.cal_done_at) >= JOY_CAL_RESULT_SHOW_MS) {
+        joy.cal_show = false;   /* 期限切れを記録し、タイマー巻き戻りで再表示されないようにする */
+    }
+    if (joy.cal_show) {
         switch (joy.cal_result) {
             case JOY_CAL_RESULT_OK:     return JOY_CAL_STATUS_OK;
             case JOY_CAL_RESULT_CENTER: return JOY_CAL_STATUS_CENTER_ONLY;
