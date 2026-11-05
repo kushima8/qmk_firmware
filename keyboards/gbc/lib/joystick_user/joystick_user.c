@@ -23,6 +23,9 @@
 #include "analog.h"
 #include "host.h"
 #include "joystick.h"
+#ifdef MOUSEKEY_ENABLE
+#    include "mousekey.h"   /* mousekey_get_report (ドラッグ中のボタン状態) */
+#endif
 
 /* 必須設定チェック (config.h で定義) */
 #ifndef JOY_X_PIN
@@ -63,19 +66,21 @@
 #    define JOY_Y_SPAN_POS JOY_ADC_RANGE_HALF
 #endif
 
-/* 4軸方向のうち最小の可動量。デジタル/マウスモードの基準に使う。
- * (QMK 側の MIN マクロ有無に依存しないよう独自名で定義)
+/* 倒し量の正規化スケール: どの方向も、カバーに当たる位置 (span) まで倒すと
+ * JOY_NORM_FULL になる。デジタル / マウスモードはこのスケールで判定するため、
+ * 方向ごとに可動域が違っても「倒せる距離の何%か」で同じように反応する。
+ * (アナログモードは scale_axis() で同じ考え方の HID 軸スケールに変換する)
  */
-#define JOY_MIN2(a, b)   ((a) < (b) ? (a) : (b))
-#define JOY_SPAN_MIN     JOY_MIN2(JOY_MIN2(JOY_X_SPAN_NEG, JOY_X_SPAN_POS), \
-                                  JOY_MIN2(JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS))
+#define JOY_NORM_FULL         1024
 
 /* --- デッドゾーン (実行時可変) ---
  * 3 モードそれぞれのデッドゾーンを「割合(%)」として実行時に保持する。
  * JOY_DZ_UP / JOY_DZ_DN キーで現在のモードの値を増減し、EEPROM に保存する。
  *
- *   デジタル / マウス : JOY_SPAN_MIN (実可動域) に対する割合
- *   アナログ          : JOY_JS_AXIS_MAX (HID 軸フルスケール) に対する割合
+ *   どのモードも「倒した方向の実可動域 (中心からカバーに当たるまで)」に対する割合。
+ *   判定は倒した距離 (ベクトルの大きさ) で行う円形デッドゾーン。
+ *     デジタル / マウス : JOY_NORM_FULL (正規化スケール) 基準
+ *     アナログ          : JOY_JS_AXIS_MAX (HID 軸フルスケール = 可動域の端) 基準
  *
  * デジタルモードは 2 つのしきい値を持つ:
  *   DIAG = センター判定。これを超えた時点で必ず何らかの方向が確定するため、
@@ -88,35 +93,34 @@
 
 #define JOY_DZ_DIGITAL_MIN          6
 #define JOY_DZ_DIGITAL_MAX         90
-#define JOY_DZ_DIGITAL_DEFAULT     54   /* SPAN_MIN=230 で DIAG 92 / MAIN 158 */
+#define JOY_DZ_DIGITAL_DEFAULT     54   /* 可動域の 54% で入力開始 (MAIN は 92%) */
 
 #define JOY_DZ_MOUSE_MIN            4
 #define JOY_DZ_MOUSE_MAX           90
-#define JOY_DZ_MOUSE_DEFAULT       24   /* SPAN_MIN=230 で 55 */
+#define JOY_DZ_MOUSE_DEFAULT       24   /* 可動域の 24% で移動開始 */
 
 #define JOY_DZ_ANALOG_MIN           2
 #define JOY_DZ_ANALOG_MAX          90
 #define JOY_DZ_ANALOG_DEFAULT      12   /* AXIS_MAX=511 で 61 */
 
 /* 主方向しきい値 = 発火点 x 172% (旧固定値 120/70 の比率)
- * ただし JOY_SPAN_MIN で上限クランプする。発火点を高く設定すると
- * 素の 172% は実可動域を超え、主方向判定が一度も成立しなくなるため
- * (発火点 90% なら 207 x 1.72 = 356 > 可動域 239〜296)。
+ * ただし倒し切り (JOY_NORM_FULL) で上限クランプする。発火点を高く設定すると
+ * 素の 172% は可動域を超え、主方向判定が一度も成立しなくなるため。
  * クランプ後も MAIN > DIAG は保たれる (発火点の上限が 90% < 100% のため)。
  */
 #define JOY_DZ_MAIN_RATIO         172
 
-/* 実行時の絶対値 (ADC 生値 / HID 軸値)
+/* 実行時のしきい値 (正規化スケール / HID 軸値)
  * DIAG が発火点、MAIN はそこから導出する (旧版と定義が逆になっている点に注意)
  */
 /* AVR は int が 16bit のため、乗算は int32_t に広げてから行う
- * (span 未定義時 SPAN_MIN=512、16bit 解像度時 AXIS_MAX=32767 で桁溢れするため)
+ * (16bit 解像度時 AXIS_MAX=32767 で桁溢れするため)
  */
-#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)((int32_t)JOY_SPAN_MIN * joy.dz_digital / 100))
+#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)((int32_t)JOY_NORM_FULL * joy.dz_digital / 100))
 #define JOY_DEAD_DIGITAL_RAW   ((int32_t)JOY_DEAD_DIGITAL_DIAG * JOY_DZ_MAIN_RATIO / 100)
-#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_DEAD_DIGITAL_RAW > (int32_t)JOY_SPAN_MIN \
-                                          ? (int32_t)JOY_SPAN_MIN : JOY_DEAD_DIGITAL_RAW))
-#define JOY_DEAD_MOUSE         ((uint16_t)((int32_t)JOY_SPAN_MIN * joy.dz_mouse / 100))
+#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_DEAD_DIGITAL_RAW > (int32_t)JOY_NORM_FULL \
+                                          ? (int32_t)JOY_NORM_FULL : JOY_DEAD_DIGITAL_RAW))
+#define JOY_DEAD_MOUSE         ((uint16_t)((int32_t)JOY_NORM_FULL * joy.dz_mouse / 100))
 #define JOY_DEAD_ANALOG        ((int16_t)((int32_t)JOY_JS_AXIS_MAX * joy.dz_analog / 100))
 
 /* --- マウス最大速度 --- */
@@ -221,6 +225,11 @@ static struct {
     joy_dir_t  last_dir;
     int16_t    last_ax;       /* 解像度 > 8bit に対応するため int16_t */
     int16_t    last_ay;
+
+    /* マウスモードの移動量の端数 (1/256 カウント単位)。
+     * 1 ポーリングで 1 カウントに満たない移動を次回へ持ち越す。 */
+    int16_t    mouse_acc_x;
+    int16_t    mouse_acc_y;
 } joy = {
     .mode            = JOY_MODE_DIGITAL,
     .x_center        = JOY_ADC_CENTER_DEFAULT,
@@ -235,6 +244,8 @@ static struct {
     .last_dir        = DIR_CENTER,
     .last_ax         = 0,
     .last_ay         = 0,
+    .mouse_acc_x     = 0,
+    .mouse_acc_y     = 0,
 };
 
 /* ============================================================
@@ -243,6 +254,9 @@ static struct {
  * eeconfig_kb は gbc.c がトラックボール設定で使用中のため、
  * ユーザーデータブロック側を使う。
  * 書き込み回数を抑えるため、変更から一定時間後に 1 回だけ書く。
+ *
+ * 4 バイト目は下位 6bit がマウス最大速度 (1〜50)、上位 2bit が入力モード。
+ * 旧ファームの保存データは上位 2bit が 0 (= デジタル) なので、そのまま読める。
  * ============================================================ */
 
 #define JOY_EE_SAVE_DELAY_MS   2000
@@ -253,9 +267,12 @@ typedef union {
         uint8_t dz_digital;
         uint8_t dz_mouse;
         uint8_t dz_analog;
-        uint8_t mouse_speed;
+        uint8_t speed_mode;   /* bit0-5: マウス最大速度 / bit6-7: 入力モード */
     };
 } joy_eeconfig_t;
+
+#define JOY_EE_SPEED_MASK   0x3F
+#define JOY_EE_MODE_SHIFT   6
 
 static void joy_ee_load(void) {
     if (!eeconfig_is_enabled()) return;
@@ -272,8 +289,14 @@ static void joy_ee_load(void) {
     if (c.dz_analog >= JOY_DZ_ANALOG_MIN && c.dz_analog <= JOY_DZ_ANALOG_MAX) {
         joy.dz_analog = c.dz_analog;
     }
-    if (c.mouse_speed >= JOY_MOUSE_SPEED_MIN && c.mouse_speed <= JOY_MOUSE_SPEED_MAX) {
-        joy.mouse_speed_max = c.mouse_speed;
+    uint8_t speed = c.speed_mode & JOY_EE_SPEED_MASK;
+    if (speed >= JOY_MOUSE_SPEED_MIN && speed <= JOY_MOUSE_SPEED_MAX) {
+        joy.mouse_speed_max = speed;
+        /* 速度が有効なときだけモードも採用する (未初期化 0xFF を誤読しないため) */
+        uint8_t mode = c.speed_mode >> JOY_EE_MODE_SHIFT;
+        if (mode < JOY_MODE_COUNT) {
+            joy.mode = (joy_mode_t)mode;
+        }
     }
 }
 
@@ -293,7 +316,8 @@ static void joy_ee_flush(void) {
         .dz_digital  = joy.dz_digital,
         .dz_mouse    = joy.dz_mouse,
         .dz_analog   = joy.dz_analog,
-        .mouse_speed = joy.mouse_speed_max,
+        .speed_mode  = (uint8_t)((joy.mouse_speed_max & JOY_EE_SPEED_MASK) |
+                                 ((uint8_t)joy.mode << JOY_EE_MODE_SHIFT)),
     };
     eeconfig_update_user(c.raw);
 }
@@ -330,9 +354,56 @@ static void reset_analog_axes(void) {
     }
 }
 
+/* 現在押されているマウスボタン (KC_BTN1 など)。
+ * 移動レポートにボタン状態を載せないと、ホスト側でボタンが離されたことになり
+ * ドラッグが途切れるため、MOUSEKEY が保持している状態を引き継ぐ。
+ */
+static uint8_t current_mouse_buttons(void) {
+#ifdef MOUSEKEY_ENABLE
+    return mousekey_get_report().buttons;
+#else
+    return 0;
+#endif
+}
+
+static void reset_mouse_accum(void) {
+    joy.mouse_acc_x = 0;
+    joy.mouse_acc_y = 0;
+}
+
 static void stop_mouse(void) {
+    reset_mouse_accum();
     report_mouse_t report = {0};
+    report.buttons = current_mouse_buttons();
     host_mouse_send(&report);
+}
+
+/* ベクトルの大きさの近似: max(|a|,|b|) + 3/8 * min(|a|,|b|)
+ * sqrt 不要、誤差最大約 4%
+ */
+static uint16_t joy_magnitude(int16_t a, int16_t b) {
+    uint16_t aa = (uint16_t)abs(a);
+    uint16_t ab = (uint16_t)abs(b);
+    return (aa > ab) ? (uint16_t)(aa + ab * 3 / 8) : (uint16_t)(ab + aa * 3 / 8);
+}
+
+/* ADC 差分を方向ごとの可動域で正規化する (span 位置で ±JOY_NORM_FULL)。
+ * 可動域が方向によって違っても、倒し切ったときの速さが揃う。
+ */
+static int16_t joy_norm_axis(int16_t delta, uint16_t span_neg, uint16_t span_pos) {
+    uint16_t span = (delta < 0) ? span_neg : span_pos;
+    if (span == 0) span = 1;
+    int32_t v = (int32_t)delta * JOY_NORM_FULL / (int32_t)span;
+    return (int16_t)JOY_CLAMP(v, -2 * JOY_NORM_FULL, 2 * JOY_NORM_FULL);
+}
+
+/* 1/256 単位の移動量を端数ごと積算し、整数カウント分だけ取り出す */
+static int8_t joy_take_mouse_count(int16_t *acc, int32_t v_q8) {
+    int32_t a   = (int32_t)*acc + v_q8;
+    int32_t out = a / 256;                 /* 0 方向へ切り捨て、残りは持ち越し */
+    out         = JOY_CLAMP(out, JOY_MOUSE_AXIS_MIN, JOY_MOUSE_AXIS_MAX);
+    *acc        = (int16_t)(a - out * 256);
+    return (int8_t)out;
 }
 
 /* ADC 生値の符号付き差分を、実測した可動域 (span) を基準に HID 軸値へ線形変換。
@@ -362,21 +433,24 @@ static joy_dir_t compute_direction(uint16_t x, uint16_t y) {
     int16_t dx = (int16_t)x - (int16_t)joy.x_center;
     int16_t dy = (int16_t)y - (int16_t)joy.y_center;
 
-    /* センター判定: どの軸も斜め許容値を超えていない */
-    if (abs(dx) <= JOY_DEAD_DIGITAL_DIAG &&
-        abs(dy) <= JOY_DEAD_DIGITAL_DIAG) {
+    /* 方向ごとの可動域で正規化 (どの方向も倒し切りで JOY_NORM_FULL) */
+    int16_t nx = joy_norm_axis(dx, JOY_X_SPAN_NEG, JOY_X_SPAN_POS);
+    int16_t ny = joy_norm_axis(dy, JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS);
+
+    /* センター判定: 倒した距離が発火点以下 (円形デッドゾーン、斜めも同じ距離で反応) */
+    if (joy_magnitude(nx, ny) <= (uint16_t)JOY_DEAD_DIGITAL_DIAG) {
         return DIR_CENTER;
     }
 
     /* メイン方向: しきい値を明確に超えている軸を優先 */
-    if (dy >  JOY_DEAD_DIGITAL) return DIR_N;
-    if (dy < -JOY_DEAD_DIGITAL) return DIR_S;
-    if (dx >  JOY_DEAD_DIGITAL) return DIR_E;
-    if (dx < -JOY_DEAD_DIGITAL) return DIR_W;
+    if (ny >  JOY_DEAD_DIGITAL) return DIR_N;
+    if (ny < -JOY_DEAD_DIGITAL) return DIR_S;
+    if (nx >  JOY_DEAD_DIGITAL) return DIR_E;
+    if (nx < -JOY_DEAD_DIGITAL) return DIR_W;
 
     /* 斜め領域: 偏差が大きい方の軸で採決 */
-    if (abs(dx) > abs(dy)) return (dx > 0) ? DIR_E : DIR_W;
-    else                   return (dy > 0) ? DIR_N : DIR_S;
+    if (abs(nx) > abs(ny)) return (nx > 0) ? DIR_E : DIR_W;
+    else                   return (ny > 0) ? DIR_N : DIR_S;
 }
 
 static void process_digital(uint16_t x, uint16_t y) {
@@ -394,12 +468,14 @@ static void process_digital(uint16_t x, uint16_t y) {
 /* ============================================================
  * マウスモード: 倒し量比例速度、円形デッドゾーン
  *
- * magnitude 近似:
- *   mag ≈ max(|dx|,|dy|) + 3/8 * min(|dx|,|dy|)
- *   sqrt 不要、誤差最大約 4%
+ * - 倒し量は方向ごとの可動域で正規化する (どの方向も倒し切りで最大速度)
+ * - 速度は 1/256 カウント単位で計算し、端数を次回へ持ち越す
+ *   (低速時や斜め方向でも移動が切り捨てで消えない)
+ * - 速度は mouse_speed_max を超えない
+ * - 移動レポートには現在のマウスボタン状態を載せる (ドラッグ対応)
  *
  * マウス HID は int8_t 固定 (±127) なので JOYSTICK_AXIS_RESOLUTION の
- * 影響を受けない。速度は JOY_SPAN_MIN (実可動域) を基準に正規化する。
+ * 影響を受けない。
  * ============================================================ */
 
 static void process_mouse(uint16_t x, uint16_t y) {
@@ -409,37 +485,36 @@ static void process_mouse(uint16_t x, uint16_t y) {
     int16_t dx = (int16_t)x - (int16_t)joy.x_center;
     int16_t dy = (int16_t)y - (int16_t)joy.y_center;
 
-    uint16_t adx = abs(dx);
-    uint16_t ady = abs(dy);
-    uint16_t mag = (adx > ady) ? (adx + (ady * 3 / 8))
-                               : (ady + (adx * 3 / 8));
+    int16_t  nx  = joy_norm_axis(dx, JOY_X_SPAN_NEG, JOY_X_SPAN_POS);
+    int16_t  ny  = joy_norm_axis(dy, JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS);
+    uint16_t mag = joy_magnitude(nx, ny);
 
-    if (mag <= JOY_DEAD_MOUSE) return;
+    if (mag <= JOY_DEAD_MOUSE) {
+        reset_mouse_accum();
+        return;
+    }
 
-    /* デッドゾーン境界=速度 1、フル傾倒=mouse_speed_max */
+    /* デッドゾーン境界 = 速度 1、倒し切り = mouse_speed_max (超えない) */
+    uint16_t max_eff = JOY_NORM_FULL - JOY_DEAD_MOUSE;   /* デッドゾーン上限 90% でも > 0 */
     uint16_t eff     = mag - JOY_DEAD_MOUSE;
-    /* 分母は実可動域。旧コードは ±512 前提だったため、カバーで可動域を
-     * 制限していると mouse_speed_max に到達できなかった。
-     */
-    uint16_t max_eff = (JOY_DEAD_MOUSE < JOY_SPAN_MIN)
-                           ? (uint16_t)(JOY_SPAN_MIN - JOY_DEAD_MOUSE)
-                           : 1;   /* 0 除算防止 */
-    int16_t  speed   = (int16_t)((uint32_t)eff * joy.mouse_speed_max / max_eff);
-    if (speed < 1) speed = 1;
+    if (eff > max_eff) eff = max_eff;
 
-    /* dx/mag, dy/mag で正規化 → speed 倍。Y は反転 (上=カーソル上)。 */
-    int8_t mx = (int8_t)JOY_CLAMP(
-        (int32_t)dx * speed / (int32_t)mag,
-        JOY_MOUSE_AXIS_MIN, JOY_MOUSE_AXIS_MAX);
-    int8_t my = (int8_t)JOY_CLAMP(
-        (int32_t)(-dy) * speed / (int32_t)mag,
-        JOY_MOUSE_AXIS_MIN, JOY_MOUSE_AXIS_MAX);
+    int32_t speed_q8 = (int32_t)eff * joy.mouse_speed_max * 256 / max_eff;
+    if (speed_q8 < 256) speed_q8 = 256;
+
+    /* 方向は nx/mag, ny/mag。Y は反転 (上 = カーソル上)。 */
+    int32_t vx_q8 = (int32_t)nx * speed_q8 / (int32_t)mag;
+    int32_t vy_q8 = (int32_t)(-ny) * speed_q8 / (int32_t)mag;
+
+    int8_t mx = joy_take_mouse_count(&joy.mouse_acc_x, vx_q8);
+    int8_t my = joy_take_mouse_count(&joy.mouse_acc_y, vy_q8);
 
     if (mx == 0 && my == 0) return;
 
     report_mouse_t report = {0};
-    report.x = mx;
-    report.y = my;
+    report.x       = mx;
+    report.y       = my;
+    report.buttons = current_mouse_buttons();
     host_mouse_send(&report);
 }
 
@@ -470,9 +545,24 @@ static void process_analog(uint16_t x, uint16_t y) {
     ay = (int16_t)JOY_CLAMP(-(int32_t)ay, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
 #endif
 
-    /* 変換後デッドゾーン (HID 軸スケール) */
-    if (ax > -JOY_DEAD_ANALOG && ax < JOY_DEAD_ANALOG) ax = 0;
-    if (ay > -JOY_DEAD_ANALOG && ay < JOY_DEAD_ANALOG) ay = 0;
+    /* 円形デッドゾーン + 引き伸ばし (HID 軸スケール)
+     *   - 倒した距離で判定するため、浅い斜めの入力も片軸が 0 に張り付かない
+     *   - デッドゾーンを超えた分を 0〜フルスケールへ引き伸ばすため、
+     *     出力は 0 から連続的に始まる (段差が出ない)
+     * 演算順は 16bit 解像度・デッドゾーン 90% でも int32_t に収まるようにしている。
+     */
+    uint16_t mag = joy_magnitude(ax, ay);
+    if (mag <= JOY_DEAD_ANALOG) {
+        ax = 0;
+        ay = 0;
+    } else {
+        int32_t num = (int32_t)mag - JOY_DEAD_ANALOG;
+        int32_t den = (int32_t)JOY_JS_AXIS_MAX - JOY_DEAD_ANALOG;
+        int32_t sx  = (int32_t)ax * num / (int32_t)mag * JOY_JS_AXIS_MAX / den;
+        int32_t sy  = (int32_t)ay * num / (int32_t)mag * JOY_JS_AXIS_MAX / den;
+        ax = (int16_t)JOY_CLAMP(sx, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
+        ay = (int16_t)JOY_CLAMP(sy, JOY_JS_AXIS_MIN, JOY_JS_AXIS_MAX);
+    }
 
     /* 前回と同値なら USB レポートを省略 */
     if (ax == joy.last_ax && ay == joy.last_ay) return;
@@ -543,6 +633,7 @@ void joy_set_mode(joy_mode_t mode) {
     if (mode >= JOY_MODE_COUNT || mode == joy.mode) return;
     cleanup_current_mode();
     joy.mode = mode;
+    joy_ee_mark_dirty();   /* 入力モードも約 2 秒後に EEPROM へ保存 */
 }
 
 uint8_t joy_get_mouse_speed(void) {
@@ -613,10 +704,14 @@ void joy_deadzone_down(void) {
     joy_dz_adjust(-JOY_DZ_STEP);
 }
 
+/* 現在のモードのデッドゾーンだけを既定値に戻す (JOY_DZ_UP / DN と同じく現在のモードに作用) */
 void joy_deadzone_reset(void) {
-    joy.dz_digital = JOY_DZ_DIGITAL_DEFAULT;
-    joy.dz_mouse   = JOY_DZ_MOUSE_DEFAULT;
-    joy.dz_analog  = JOY_DZ_ANALOG_DEFAULT;
+    switch (joy.mode) {
+        case JOY_MODE_MOUSE:  joy.dz_mouse   = JOY_DZ_MOUSE_DEFAULT;   break;
+        case JOY_MODE_ANALOG: joy.dz_analog  = JOY_DZ_ANALOG_DEFAULT;  break;
+        case JOY_MODE_DIGITAL:
+        default:              joy.dz_digital = JOY_DZ_DIGITAL_DEFAULT; break;
+    }
     joy_dz_adjust(0);
 }
 
