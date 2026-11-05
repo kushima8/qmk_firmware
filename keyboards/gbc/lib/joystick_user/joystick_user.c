@@ -550,16 +550,18 @@ uint8_t joy_get_mouse_speed(void) {
 }
 
 void joy_mouse_speed_up(void) {
-    int16_t next = (int16_t)joy.mouse_speed_max + JOY_MOUSE_SPEED_STEP;
-    joy.mouse_speed_max = (uint8_t)JOY_CLAMP(
-        next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
+    uint8_t cur  = joy.mouse_speed_max;
+    int16_t next = (int16_t)(cur / JOY_MOUSE_SPEED_STEP + 1) * JOY_MOUSE_SPEED_STEP;
+    joy.mouse_speed_max = (uint8_t)JOY_CLAMP(next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
     joy_ee_mark_dirty();
 }
 
 void joy_mouse_speed_down(void) {
-    int16_t next = (int16_t)joy.mouse_speed_max - JOY_MOUSE_SPEED_STEP;
-    joy.mouse_speed_max = (uint8_t)JOY_CLAMP(
-        next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
+    uint8_t cur  = joy.mouse_speed_max;
+    int16_t next = (cur % JOY_MOUSE_SPEED_STEP)
+                       ? (int16_t)(cur / JOY_MOUSE_SPEED_STEP) * JOY_MOUSE_SPEED_STEP
+                       : (int16_t)cur - JOY_MOUSE_SPEED_STEP;
+    joy.mouse_speed_max = (uint8_t)JOY_CLAMP(next, JOY_MOUSE_SPEED_MIN, JOY_MOUSE_SPEED_MAX);
     joy_ee_mark_dirty();
 }
 
