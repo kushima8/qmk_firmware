@@ -153,16 +153,22 @@ static void oled_render_joystick(void) {
     oled_write_tag_u8('S', joy_get_mouse_speed());
     /* 現在のモードのデッドゾーン (%) */
     oled_write_tag_u8('D', joy_get_deadzone());
-    /* キャリブレーション状態 (測定中と、確定後 5 秒間の結果) */
+    /* キャリブレーション状態 (測定中と、確定後 5 秒間の結果)。
+     * oled_task_user は画面をクリアせず上書きするだけなので、表示する行数を
+     * 常に 3 行に固定し、不要な行は空行で上書きして古い表示を残さない。 */
+    const char *l1 = PSTR(""), *l2 = PSTR(""), *l3 = PSTR("");
     switch (joy_cal_status()) {
-        case JOY_CAL_STATUS_CENTER:      oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("CTR"), false); break;
-        case JOY_CAL_STATUS_RANGE:       oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("RNG"), false); break;
-        case JOY_CAL_STATUS_OK:          oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("OK"),  false); break;
-        case JOY_CAL_STATUS_CENTER_ONLY: oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("CTR"), false); oled_write_ln_P(PSTR("ONLY"), false); break;
-        case JOY_CAL_STATUS_FAILED:      oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("NG"),  false); break;
-        case JOY_CAL_STATUS_RESET:       oled_write_ln_P(PSTR("CAL"), false); oled_write_ln_P(PSTR("RST"), false); break;
+        case JOY_CAL_STATUS_CENTER:      l1 = PSTR("CAL"); l2 = PSTR("CTR"); break;
+        case JOY_CAL_STATUS_RANGE:       l1 = PSTR("CAL"); l2 = PSTR("RNG"); break;
+        case JOY_CAL_STATUS_OK:          l1 = PSTR("CAL"); l2 = PSTR("OK");  break;
+        case JOY_CAL_STATUS_CENTER_ONLY: l1 = PSTR("CAL"); l2 = PSTR("CTR"); l3 = PSTR("ONLY"); break;
+        case JOY_CAL_STATUS_FAILED:      l1 = PSTR("CAL"); l2 = PSTR("NG");  break;
+        case JOY_CAL_STATUS_RESET:       l1 = PSTR("CAL"); l2 = PSTR("RST"); break;
         default: break;
     }
+    oled_write_ln_P(l1, false);
+    oled_write_ln_P(l2, false);
+    oled_write_ln_P(l3, false);
 }
 #endif
 
