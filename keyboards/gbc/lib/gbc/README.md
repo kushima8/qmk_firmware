@@ -8,18 +8,18 @@ This restriction is called "scroll snap".
 The direction of restriction can be changed using special key codes.
 You can also release this restriction.
 It is called "scroll snap mode".
-The current mode is displayed on the OLED when the keymap calls `gbc_oled_render_ballinfo()`.
+The current mode is displayed on the OLED (`SN:V` / `SN:H` / `SN:F` line, see `oled_render_trackball()` in keymap.c).
 It can also be checked as text with the `CFG_SHOW` key code (`scroll snap` line).
 
 There are 3 modes for scroll snap.
 
-1. Vertical (default): key code is `SSNP_VRT`, indicated as `VT`.
-2. Horizontal: key code is `SSNP_HOR`, indicated as `HO`.
-3. Free: key code is `SSNP_FRE`, indicated as `SCR`.
+1. Vertical (default): key code is `SSNP_VRT`, indicated as `SN:V`.
+2. Horizontal: key code is `SSNP_HOR`, indicated as `SN:H`.
+3. Free: key code is `SSNP_FRE`, indicated as `SN:F`.
 
 The scroll snap mode at startup is vertical,
 but you can change it by saving the current mode with `REC_SAVE`.
-Note that `REC_RST` does not reset the scroll snap mode.
+`REC_RST` also resets the scroll snap mode to vertical.
 
 ## MEMO
 
@@ -43,7 +43,7 @@ please make pull requests to share it us.
 
 以上を `SSNP_VRT`, `SSNP_HOR`, `SSNP_FRE` の独自キーコードを用いて手動で切り替える。
 現在のモードは `REC_SAVE` で EEPROM に保存され、次回起動時に復元される。
-`REC_RST` ではスクロールスナップのモードは初期値に戻らない。
+`REC_RST` でスクロールスナップのモードも初期値 (垂直) に戻る。
 
 #### up to 1.3.2
 

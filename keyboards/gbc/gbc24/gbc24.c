@@ -42,11 +42,8 @@ void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
 }
 #endif /* JOYSTICK_ENABLE */
 
-/* GBC_CORE_ENABLE (lib/gbc/gbc.c 経由) の場合、gbc.c の
- * gbc_on_apply_motion_to_mouse_move() が x = -d.x, y = d.y を出力する。
- * これは「旧ドライバ出力 (x=d.y, y=d.x) + 上記回転補正」の最終結果と同一の
- * マッピングであるため、キーボード側の追加補正は不要 (二重適用防止のため無効化)。
- */
+/* トラックボール構成の軸補正 (x = -d.x, y = d.y) は lib/gbc/gbc.c の
+ * gbc_on_apply_motion_to_mouse_move() で行う。キーボード側では何もしない。 */
 
 /* ---- Magic 機能のスタブ (MAGIC_ENABLE = no) ----
  * keycode_config() / mod_config() は Ctrl⇔Caps 入れ替えなどの Magic 設定を
