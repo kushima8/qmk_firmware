@@ -129,7 +129,7 @@
 #define JOY_CALIB_SAMPLES         16
 #define JOY_CALIB_WAIT_MS          2
 
-/* --- ポーリング間隔 --- */
+/* --- ポーリング間隔 (デジタルモード) --- */
 #define JOY_POLL_INTERVAL_MS      10
 
 /* マウスモードだけは短い間隔で読み取り・送信し、カーソルを滑らかに動かす。
@@ -140,6 +140,12 @@
  * 1 回に扱う経過時間は JOY_MOUSE_DT_MAX_MS で頭打ちにする。
  */
 #define JOY_MOUSE_POLL_INTERVAL_MS 4    /* 250Hz */
+
+/* アナログモード (ゲーム向け) も入力遅延を抑えるため 4ms ごとに更新する。
+ * 倒し具合をそのまま送るだけなので、間隔を変えても出力値は変わらない。
+ * (値が変わったときだけ QMK 本体のメインループが HID レポートを送る)
+ */
+#define JOY_ANALOG_POLL_INTERVAL_MS 4   /* 250Hz */
 #define JOY_MOUSE_SPEED_BASE_MS   10
 #define JOY_MOUSE_DT_MAX_MS       20
 
@@ -649,8 +655,9 @@ void joy_init(void) {
 void joy_task(void) {
     joy_ee_flush();
 
-    uint16_t interval = (joy.mode == JOY_MODE_MOUSE) ? JOY_MOUSE_POLL_INTERVAL_MS
-                                                     : JOY_POLL_INTERVAL_MS;
+    uint16_t interval = (joy.mode == JOY_MODE_MOUSE)  ? JOY_MOUSE_POLL_INTERVAL_MS
+                      : (joy.mode == JOY_MODE_ANALOG) ? JOY_ANALOG_POLL_INTERVAL_MS
+                                                      : JOY_POLL_INTERVAL_MS;
     uint16_t elapsed  = timer_elapsed(joy.last_poll);
     if (elapsed < interval) return;
     joy.last_poll = timer_read();
