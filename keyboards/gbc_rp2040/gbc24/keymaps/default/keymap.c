@@ -224,6 +224,9 @@ bool oled_task_user(void) {
  *   deadzone digi   54%
  *   deadzone mouse  24%   <- current
  *   deadzone analog 12%
+ *   center          512 511
+ *   span            258 236 277 230
+ *   calib           saved, last ok
  *   eeprom          saved
  *
  * 出力例 (トラックボール構成):
