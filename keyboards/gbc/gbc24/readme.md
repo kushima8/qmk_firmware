@@ -28,15 +28,16 @@
     # 【A】アナログジョイスティック構成 (デフォルト)
     #JOYSTICK_ENABLE = yes
 
-    # 【B】PMW3360 トラックボール構成
+    # 【B】PMW3360 トラックボール構成 (lib/gbc 経由)
     JOYSTICK_ENABLE = no
     POINTING_DEVICE_ENABLE = yes
     POINTING_DEVICE_DRIVER = custom
     SRC += drivers/pmw3360/pmw3360.c
-    SRC += drivers/pmw3360/pmw3360_pointing_device_driver.c
+    SRC += lib/gbc/gbc.c
     QUANTUM_LIB_SRC += spi_master.c
     DIP_SWITCH_ENABLE = no
     LTO_ENABLE = yes
+    OPT_DEFS += -DGBC_CORE_ENABLE
 
 書き換え後は通常どおりビルドする:
 
@@ -45,7 +46,9 @@
 ### trackball ビルドでの注意点
 
 * ハードウェア SPI が B1(SCK)/B2(MOSI) を使用するため、**DIP スイッチ (B2, GND=B1) は併用不可**のため【B】ブロックで無効化している。
-* `JOYSTICK_ENABLE = no` になるため、JOY_DIGI / JOY_MOUS / JOY_ANLG / JOY_SPD_UP / JOY_SPD_DN キーコードは無効(キーマップは共通のままコンパイル可能)。
+* `JOYSTICK_ENABLE = no` になるため、JOY_DIGI / JOY_MOUS / JOY_ANLG / JOY_SPD_UP / JOY_SPD_DN / JOY_DZ_UP / JOY_DZ_DN / JOY_DZ_RST キーコードは無効(キーマップは共通のままコンパイル可能)。
+* センサーへのアクセスとトラックボール用キーコード (REC_RST など) の処理は `lib/gbc/gbc.c` が行う。gbc.c が custom pointing device driver を提供するため、`drivers/pmw3360/pmw3360_pointing_device_driver.c` は使わない。
+* `GBC_CORE_ENABLE` は gbc24.c 側の軸補正を無効化するためのフラグ (gbc.c 側で同じ向きの補正を行うため、二重に補正しないよう必ず定義する)。
 * トラックボールのカーソル移動はマウス HID として送信される。クリックは KC_MS_BTN1 等(MOUSEKEY)で行う。
 * フラッシュ節約のため LTO_ENABLE = yes を有効にする(【B】ブロックに含まれる)。
 * PMW3360 ドライバは同梱の `drivers/pmw3360/` を使用(NCS デフォルト = F7)。
@@ -53,8 +56,9 @@
 
 ## Bootloader
 
-Enter the bootloader in 3 ways:
+`BOOTMAGIC_ENABLE = no` のため Bootmagic reset は使えない。次のどちらかでブートローダーに入る。
 
-* **Bootmagic reset**: Hold down the key at (0,0) in the matrix and plug in the keyboard
-* **Physical reset button**: Briefly press the button on the back of the PCB
-* **Keycode in layout**: Press the key mapped to `QK_BOOT` if it is available
+* **Physical reset button**: 基板上面のリセットボタンを押す(Caterina ブートローダーの Pro Micro は素早く2回押す)。
+* **Keycode in layout**: `QK_BOOT` を割り当てたキーを押す。
+
+`rules.mk` は `BOOTLOADER = atmel-dfu` だが、一般的な Pro Micro には Caterina ブートローダーが書き込まれている。書き込む HEX ファイル自体はブートローダーの種類に依存しないが、`QK_BOOT` からブートローダーへの移行はブートローダーの種類によって動作が異なるため、うまくいかない場合は基板上面のリセットボタンを使う。
