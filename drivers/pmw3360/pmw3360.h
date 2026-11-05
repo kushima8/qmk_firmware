@@ -18,7 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h> /* size_t */
 #include "spi_master.h"
+#include "gpio.h"
+
+/* QMK 0.22 以前には gpio_set_pin_output() が無い (0.23 で setPinOutput() から改名)。
+ * 新旧どちらの QMK でもこのドライバを無修正で使えるよう、未定義なら旧 API に
+ * 読み替える。0.23 以降は gpio.h が定義済みなので何もしない。利用側キーボードの
+ * config.h で同じマクロを定義している場合も、既定義として扱われ衝突しない。 */
+#ifndef gpio_set_pin_output
+#    define gpio_set_pin_output(pin) setPinOutput(pin)
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Configurations

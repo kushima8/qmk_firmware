@@ -57,9 +57,25 @@ AVR 版と同じく `rules.mk` の【A】ジョイスティック /【B】トラ
 * `GBC_CORE_ENABLE` は gbc24.c 側の軸補正を無効化するためのフラグ (gbc.c 側で同じ向きの補正を行うため、二重に補正しないよう必ず定義する)。
 * RP2040 はフラッシュに余裕があるため LTO は不要。
 
-## Bootloader
+## Bootloader / Bootmagic
 
-* **Physical reset button**: 基板上面のリセットボタンを素早く2回押す(`RP2040_BOOTLOADER_DOUBLE_TAP_RESET` 有効、受付時間 200ms)。または、マイコンの BOOT ボタンを押しながら USB 接続する。
+ブートローダーに入る方法:
+
+* **Physical reset button**: 基板上面のリセットボタンを押す(Caterina ブートローダーの Pro Micro は素早く2回押す。RP2040 も素早く2回押しで RPI-RP2 ドライブが出る)。
 * **Keycode in layout**: `QK_BOOT` を割り当てたキーを押す。
+* **Bootmagic Lite**: 左上キー (マトリクス (0,0)) を押しながら USB を接続する。**EEPROM が初期化され (Remap/Vial のキー配置、ジョイスティック設定、トラックボール設定が消える)**、そのままブートローダーに入る。ジョイスティックのキャリブレーション値だけは消えない (消すには `JOY_CALIB` 2 秒長押し)。
 
-ブートローダーに入ると `RPI-RP2` ドライブとして認識されるので、UF2 ファイルをそのドライブへコピーして書き込む。
+`rules.mk` の `BOOTMAGIC_ENABLE` は `VIA_ENABLE = yes` によって強制的に `yes` にされるため、`no` と書いても無効化できない。
+## 機能セットの統一
+
+QMK(Remap/VIA) 版・Vial 版、AVR 版・RP2040 版の 4 構成で機能差を出さないため、
+マニュアルに記載のない次の機能はすべての構成で無効にしている (AVR 版のフラッシュ節約も兼ねる)。
+
+* Vial コンボ (`COMBO_ENABLE = no`)。VIA は元々非対応、Vial AVR 版はフラッシュに入らない
+* Magic キーコード (`MAGIC_ENABLE = no`)。`keycode_config()` / `mod_config()` はスタブ化 (gbc24.c / lib/gbc/gbc.c)
+* Space Cadet、Grave Esc、メカニカルロックキー (`LOCKING_SUPPORT_ENABLE`)
+* Vial QMK Settings (`QMK_SETTINGS = no`)
+
+ジョイスティックのキャリブレーション (`JOY_CALIB`) は 4 構成すべてで有効。保存先は EEPROM 末尾の
+16 バイトで、`DYNAMIC_KEYMAP_EEPROM_MAX_ADDR` を同じ量だけ手前に下げて確保している
+(VIA/Vial のマクロバッファが 16 バイト縮むだけで、既存のキーマップ / マクロの位置は変わらない)。

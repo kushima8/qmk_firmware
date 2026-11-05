@@ -68,6 +68,22 @@ void    joy_deadzone_up(void);
 void    joy_deadzone_down(void);
 void    joy_deadzone_reset(void);
 
+/* ---- キャリブレーション (JOY_CALIB キー用) ----
+ * 中心位置と可動域 (config.h の JOY_*_SPAN_*) を実機で測り直し、
+ * EEPROM 末尾の専用領域 (config.h の JOY_CAL_EEPROM_ADDR) に保存する。
+ * 保存済みなら起動時の自動センタリングは行わず保存値を使う。
+ *
+ *   短押し (IDLE 時)  : 開始。約 0.5 秒スティックに触らない → 中心を取得
+ *                        → そのままスティックを端に当てながら 2〜3 周回す
+ *   短押し (回した後) : 確定・保存。動かしていなければ中心だけ保存
+ *   2 秒長押し        : 保存値を消して既定値に戻す
+ *   30 秒放置         : 中断 (保存しない)
+ * 計測中は通常の入力 (デジタル/マウス/アナログ) を出さない。
+ * 結果は CFG_SHOW の center / span / calib 行で確認できる。
+ */
+void joy_calib_key(bool pressed);   /* process_record_user から press/release 両方で呼ぶ */
+bool joy_cal_is_running(void);
+
 /* ---- 設定値のテキスト出力 (CFG_SHOW キー用) ----
  * 現在のモード / マウス最大速度 / 3 モード分のデッドゾーン / EEPROM 保存状態を
  * 1 項目 1 行でキー入力としてホストへタイプする (先頭行 "GBC24 joystick")。

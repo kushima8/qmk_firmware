@@ -20,9 +20,8 @@
 #  include "lib/gbc/gbc.h"   /* gbc_send_status() (トラックボール構成) */
 #endif
 
-#ifdef OLED_ENABLE
-#  include <stdio.h>   /* snprintf */
-#endif
+/* NOTE: snprintf (avr-libc vfprintf) はフラッシュを約 1KB 消費するため、
+ * 数値表示は軽量な自前フォーマッタ (oled_write_tag_u8) で行う。 */
 
 /* ============================================================
  * レイヤー / カスタムキーコード
@@ -45,56 +44,47 @@ enum custom_keycodes {
     JOY_DZ_DN,               /* 現在のモードのデッドゾーン 狭める (敏感にする) */
     JOY_DZ_RST,              /* 現在のモードのデッドゾーンを既定値に戻す */
     CFG_SHOW,                /* 現在の設定値をテキストとしてタイプ出力 (QK_KB_24) */
+    JOY_CALIB,               /* ジョイスティック キャリブレーション 短押し:開始/確定 長押し:リセット (QK_KB_25) */
 };
-
-#ifdef JOYSTICK_ENABLE
-/* デバッグ用: 最後に受信したカスタム keycode 種別
- *   0 = 未受信
- *   1 = JOY_DIGI
- *   2 = JOY_MOUS
- *   3 = JOY_ANLG
- *   4 = JOY_SPD_UP
- *   5 = JOY_SPD_DN
- *   6 = JOY_DZ_UP
- *   7 = JOY_DZ_DN
- *   8 = JOY_DZ_RST
- */
-static uint8_t last_joy_event = 0;
-#endif
 
 /* ============================================================
  * キーマップ
  * ============================================================ */
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+    // 右側の 5 つ (UP / LEFT ENT RGHT / DOWN) はジョイスティックのデジタルモード 4 方向と押し込み。
     // ,--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------|
     [_0th] = LAYOUT(
         KC_A,    KC_B,    KC_C,    KC_D,    KC_E,    KC_F,    KC_G,
         KC_H,    KC_I,    KC_J,    KC_K,    KC_L,    KC_M,    KC_N,
-                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,
-                          KC_T,    KC_U,    KC_V,
-                                                              KC_W,    KC_X,    KC_Y
+                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,                      KC_UP,
+                          KC_T,    KC_U,    KC_V,                      KC_LEFT, KC_ENT,  KC_RGHT,
+                                                              KC_W,             KC_DOWN,
+                                                                       KC_X,    KC_Y
     ),
     [_1st] = LAYOUT(
         KC_A,    KC_B,    KC_C,    KC_D,    KC_E,    KC_F,    KC_G,
         KC_H,    KC_I,    KC_J,    KC_K,    KC_L,    KC_M,    KC_N,
-                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,
-                          KC_T,    KC_U,    KC_V,
-                                                              KC_W,    KC_X,    KC_Y
+                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,                      KC_UP,
+                          KC_T,    KC_U,    KC_V,                      KC_LEFT, KC_ENT,  KC_RGHT,
+                                                              KC_W,             KC_DOWN,
+                                                                       KC_X,    KC_Y
     ),
     [_2nd] = LAYOUT(
         KC_A,    KC_B,    KC_C,    KC_D,    KC_E,    KC_F,    KC_G,
         KC_H,    KC_I,    KC_J,    KC_K,    KC_L,    KC_M,    KC_N,
-                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,
-                          KC_T,    KC_U,    KC_V,
-                                                              KC_W,    KC_X,    KC_Y
+                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,                      KC_UP,
+                          KC_T,    KC_U,    KC_V,                      KC_LEFT, KC_ENT,  KC_RGHT,
+                                                              KC_W,             KC_DOWN,
+                                                                       KC_X,    KC_Y
     ),
     [_3rd] = LAYOUT(
         KC_A,    KC_B,    KC_C,    KC_D,    KC_E,    KC_F,    KC_G,
         KC_H,    KC_I,    KC_J,    KC_K,    KC_L,    KC_M,    KC_N,
-                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,
-                          KC_T,    KC_U,    KC_V,
-                                                              KC_W,    KC_X,    KC_Y
+                 KC_O,    KC_P,    KC_Q,    KC_R,    KC_S,                      KC_UP,
+                          KC_T,    KC_U,    KC_V,                      KC_LEFT, KC_ENT,  KC_RGHT,
+                                                              KC_W,             KC_DOWN,
+                                                                       KC_X,    KC_Y
     ),
     // `--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+--------'
 };
@@ -131,6 +121,19 @@ static void oled_render_layer(void) {
 }
 
 #ifdef JOYSTICK_ENABLE
+/* snprintf を使わない軽量な "X:nnn" 表示 (フラッシュ節約) */
+static void oled_write_tag_u8(char tag, uint8_t v) {
+    char buf[6];
+    uint8_t i = 0;
+    buf[i++] = tag;
+    buf[i++] = ':';
+    if (v >= 100) buf[i++] = (char)('0' + v / 100);
+    if (v >= 10) buf[i++] = (char)('0' + (v / 10) % 10);
+    buf[i++] = (char)('0' + v % 10);
+    buf[i]   = '\0';
+    oled_write_ln(buf, false);
+}
+
 static void oled_render_joystick(void) {
     oled_write_ln_P(PSTR(""), false);
     oled_write_ln_P(PSTR("JOY"), false);
@@ -147,15 +150,9 @@ static void oled_render_joystick(void) {
         default: break;
     }
     /* マウス速度は常に表示 (JOY_SPD_UP/DN の効果をどのモードでも確認可能) */
-    char buf[6];
-    snprintf(buf, sizeof(buf), "S:%u", joy_get_mouse_speed());
-    oled_write_ln(buf, false);
+    oled_write_tag_u8('S', joy_get_mouse_speed());
     /* 現在のモードのデッドゾーン (%) */
-    snprintf(buf, sizeof(buf), "D:%u", joy_get_deadzone());
-    oled_write_ln(buf, false);
-    /* デバッグ: 最後に受信した JOY 系 keycode の種別 */
-    snprintf(buf, sizeof(buf), "E:%u", last_joy_event);
-    oled_write_ln(buf, false);
+    oled_write_tag_u8('D', joy_get_deadzone());
 }
 #endif
 
@@ -241,18 +238,25 @@ void keyboard_post_init_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#ifdef JOYSTICK_ENABLE
+    /* 長押し判定のため press / release の両方を渡す */
+    if (keycode == JOY_CALIB) {
+        joy_calib_key(record->event.pressed);
+        return false;
+    }
+#endif
     if (!record->event.pressed) return true;
 
     switch (keycode) {
 #ifdef JOYSTICK_ENABLE
-        case JOY_DIGI:   joy_set_mode(JOY_MODE_DIGITAL); last_joy_event = 1; return false;
-        case JOY_MOUS:   joy_set_mode(JOY_MODE_MOUSE);   last_joy_event = 2; return false;
-        case JOY_ANLG:   joy_set_mode(JOY_MODE_ANALOG);  last_joy_event = 3; return false;
-        case JOY_SPD_UP: joy_mouse_speed_up();           last_joy_event = 4; return false;
-        case JOY_SPD_DN: joy_mouse_speed_down();         last_joy_event = 5; return false;
-        case JOY_DZ_UP:  joy_deadzone_up();              last_joy_event = 6; return false;
-        case JOY_DZ_DN:  joy_deadzone_down();            last_joy_event = 7; return false;
-        case JOY_DZ_RST: joy_deadzone_reset();           last_joy_event = 8; return false;
+        case JOY_DIGI:   joy_set_mode(JOY_MODE_DIGITAL); return false;
+        case JOY_MOUS:   joy_set_mode(JOY_MODE_MOUSE);   return false;
+        case JOY_ANLG:   joy_set_mode(JOY_MODE_ANALOG);  return false;
+        case JOY_SPD_UP: joy_mouse_speed_up();           return false;
+        case JOY_SPD_DN: joy_mouse_speed_down();         return false;
+        case JOY_DZ_UP:  joy_deadzone_up();              return false;
+        case JOY_DZ_DN:  joy_deadzone_down();            return false;
+        case JOY_DZ_RST: joy_deadzone_reset();           return false;
 #endif
         case CFG_SHOW:   send_config_status();                               return false;
         default: break;

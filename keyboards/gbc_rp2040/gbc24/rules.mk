@@ -5,8 +5,8 @@ MCU = RP2040
 BOOTLOADER = rp2040
 
 # Build Options
-BOOTMAGIC_ENABLE = no       # Enable Bootmagic Lite
-EXTRAKEY_ENABLE = no        # Audio control and System control (RP2040 has enough USB endpoints)
+BOOTMAGIC_ENABLE = yes      # VIA_ENABLE により強制 yes (no と書いても効かない)。左上キー (0,0) を押しながら USB 接続で EEPROM 初期化 + ブートローダー
+EXTRAKEY_ENABLE = yes       # メディアキー (音量など)。ATmega32u4 でもエンドポイントは足りる (KBD/MOUSE/EXTRA/RAW x2/JOYSTICK = 6)
 CONSOLE_ENABLE = no         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
 NKRO_ENABLE = no            # Enable N-Key Rollover
@@ -19,31 +19,32 @@ SRC += lib/duplexmatrix/duplexmatrix.c
 
 SPLIT_KEYBOARD = no
 
-# This is unnecessary for processing KC_MS_BTN*.
+# KC_MS_BTN* の処理と、ジョイスティックのマウスモードでのドラッグ
+# (mousekey_get_report でボタン状態を引き継ぐ) に必要。no にするとドラッグが切れる。
 MOUSEKEY_ENABLE = yes
 
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 
 # To support OLED
-OLED_ENABLE = yes               # Please Enable this in each keymaps.
+OLED_ENABLE = yes               # 液晶付きモデル用 (keyboard 側で有効化)
 
-# Disable other features to squeeze firmware size
-SPACE_CADET_ENABLE = yes
-MAGIC_ENABLE = yes
+# 4 構成で機能差を出さないため、マニュアル未記載の機能は無効にする
+SPACE_CADET_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)
+MAGIC_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)。keycode_config/mod_config は gbc24.c / gbc.c でスタブ化
 
 VIA_ENABLE = yes
 
-GRAVE_ESC_ENABLE = yes
+GRAVE_ESC_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)
 
 ENCODER_ENABLE = yes
 
 ENCODER_MAP_ENABLE = yes
 
-QMK_SETTINGS = yes 
+QMK_SETTINGS = no  # Vial 専用オプション。QMK Settings を有効にすると keycode_config のスタブが外れ AVR に入らなくなる
 
 TAP_DANCE_ENABLE = no
-COMBO_ENABLE = no
+COMBO_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)。VIA は非対応、Vial AVR はフラッシュに入らない
 KEY_OVERRIDE_ENABLE = no
 
 SRC += analog.c

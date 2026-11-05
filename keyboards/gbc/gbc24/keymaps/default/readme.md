@@ -1,1 +1,1 @@
-# The default keymap for hook69
+# The default keymap for gbc24

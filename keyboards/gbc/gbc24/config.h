@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define PRODUCT_ID   0x3635
 //#define DEVICE_VER   0x0001
 //#define MANUFACTURER kushima8
-//#define PRODUCT      HOOK64
+//#define PRODUCT      GBC24
 
 /* key matrix size */
 #define MATRIX_ROWS 5
@@ -101,6 +101,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define JOY_X_SPAN_POS 236
 #    define JOY_Y_SPAN_NEG 277
 #    define JOY_Y_SPAN_POS 230
+
+/* ---- キャリブレーション値の保存領域 (JOY_CALIB キー) ----
+ * EEPROM 末尾の JOY_CAL_EEPROM_SIZE バイトを確保する。VIA/Vial のマクロ
+ * バッファは末尾まで使う設計なので、DYNAMIC_KEYMAP_EEPROM_MAX_ADDR を
+ * 同じ量だけ手前に下げる (マクロバッファが 16 バイト縮むだけで、
+ * 既存のキーマップ / マクロの先頭アドレスは変わらない)。
+ */
+#    define JOY_CAL_EEPROM_SIZE 16
+#    define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (TOTAL_EEPROM_BYTE_COUNT - 1 - JOY_CAL_EEPROM_SIZE)
+#    define JOY_CAL_EEPROM_ADDR (DYNAMIC_KEYMAP_EEPROM_MAX_ADDR + 1)
 #endif
 
 /* ---- PMW3360 トラックボール構成 (POINTING_INPUT = trackball) ----
@@ -124,18 +134,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#    define AUTO_MOUSE_DELAY 200
 //#    define AUTO_MOUSE_DEBOUNCE 25
 
-/* ---- 同梱 pmw3360 ドライバを「無修正」で QMK 0.22.x でビルドするための互換対応 ----
- * (config.h は全ソースに -include されるため、ここに置けばドライバ側は変更不要)
- *
- * 1) pmw3360.h が size_t を使うが stddef.h を include していない
- *    → ここで強制 include (.S ファイルでは typedef が使えないため C のみ)
- * 2) pmw3360.c が新 GPIO API 名 gpio_set_pin_output() を使うが 0.22.x には無い
- *    → 旧 API setPinOutput() へのエイリアスを定義
- */
-#    ifndef __ASSEMBLER__
-#        include <stddef.h>
-#    endif
-#    define gpio_set_pin_output(pin) setPinOutput(pin)
+/* pmw3360 ドライバの QMK バージョン互換対応は drivers/pmw3360 側で行う
+ * (pmw3360.h が stddef.h と、QMK 0.22 向けの gpio_set_pin_output エイリアスを持つ)。
+ * config.h にハックは置かない。 */
 #endif
 
 //#define LED_NUM_LOCK_PIN B0
@@ -183,9 +184,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define MATRIX_HAS_GHOST
 
 /* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
-#define LOCKING_SUPPORT_ENABLE
+//#define LOCKING_SUPPORT_ENABLE   // メカニカルロックキー非対応 (4 構成で統一)
 /* Locking resynchronize hack */
-#define LOCKING_RESYNC_ENABLE
+//#define LOCKING_RESYNC_ENABLE
 
 /* If defined, GRAVE_ESC will always act as ESC when CTRL is held.
  * This is useful for the Windows task manager shortcut (ctrl+shift+esc).

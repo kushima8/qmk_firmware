@@ -66,3 +66,21 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
  * これは「旧ドライバ出力 (x=d.y, y=d.x) + 上記回転補正」の最終結果と同一の
  * マッピングであるため、キーボード側の追加補正は不要 (二重適用防止のため無効化)。
  */
+
+/* ---- Magic 機能のスタブ (MAGIC_ENABLE = no) ----
+ * keycode_config() / mod_config() は Ctrl⇔Caps 入れ替えなどの Magic 設定を
+ * 全キーに適用する関数で、QMK 本体では必ずリンクされる。Magic キーコードを
+ * 無効にすると設定を変える手段がなくなるので、「そのまま返す」スタブに
+ * 置き換えて約 570 バイト節約する (QMK 公式 "Squeezing AVR" の手法)。
+ * トラックボール構成では lib/gbc/gbc.c が同じスタブを定義しているため、
+ * ジョイスティック構成 (GBC_CORE_ENABLE 未定義) のときだけここで定義する。
+ */
+#if !defined(MAGIC_KEYCODE_ENABLE) && !defined(QMK_SETTINGS) && \
+    !defined(GBC_CORE_ENABLE) && !defined(GBC_KEEP_MAGIC_FUNCTIONS)
+uint16_t keycode_config(uint16_t keycode) {
+    return keycode;
+}
+uint8_t mod_config(uint8_t mod) {
+    return mod;
+}
+#endif

@@ -108,24 +108,28 @@ enum gbc_keycodes {
     GBC_SAFE_RANGE = QK_USER_0,
 };
 
+/* EEPROM (eeconfig_kb, 4 バイト) のレイアウト。
+ * 以前は uint8_t/uint16_t 混在のビットフィールドで、かつ #ifdef で
+ * フィールドの有無が変わっていたため、ビルド設定やコンパイラで配置が
+ * 変わり得た。全フィールドを常に確保し、バイト境界に揃えて固定する。
+ *   [0] cpi   (0 = 既定値, 1..CPI_MAX)
+ *   [1] bit0-2 sdiv / bit3 amle / bit4-5 ssnap / bit6-7 予約
+ *   [2] amlto (0 = 既定値, それ以外 (amlto+1)*50 ms)
+ *   [3] 予約
+ * 旧レイアウトとは互換がないため、更新後にトラックボール設定は
+ * 一度既定値に戻る (REC_SAVE で保存し直す)。 */
 typedef union {
     uint32_t raw;
     struct {
-        uint8_t cpi : 7;
+        uint8_t cpi;
         uint8_t sdiv : 3;  // scroll divider
-#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
         uint8_t amle : 1;  // automatic mouse layer enabled
-        uint16_t amlto : 5; // automatic mouse layer timeout
-#endif
-#if GBC_SCROLLSNAP_ENABLE == 2
         uint8_t ssnap : 2; // scroll snap mode
-#endif
+        uint8_t _rsv1 : 2;
+        uint8_t amlto;     // automatic mouse layer timeout
+        uint8_t _rsv2;
     };
 } gbc_config_t;
-
-typedef struct {
-    uint8_t ballcnt; // count of balls: support only 0 or 1, for now
-} gbc_info_t;
 
 typedef struct {
     int16_t x;
@@ -141,18 +145,14 @@ typedef enum {
 } gbc_scrollsnap_mode_t;
 
 typedef struct {
-    bool this_have_ball;
-    bool that_enable;
-    bool that_have_ball;
-	bool negotiated;
+    bool have_ball;      // PMW3360 の初期化に成功した
 
-    gbc_motion_t this_motion;
-    gbc_motion_t that_motion;
+    gbc_motion_t motion; // センサからの未処理の移動量 (レポート間隔ごとに消費)
 
     uint8_t cpi_value;
-    bool    cpi_changed;
 
     bool     scroll_mode;
+    bool     scroll_mode_before_mo; // SCRL_MO 押下前のスクロールモード (離したとき復元)
     uint32_t scroll_mode_changed;
     uint8_t  scroll_div;
 
@@ -171,11 +171,6 @@ typedef struct {
     char pressing_keys[GBC_OLED_MAX_PRESSING_KEYCODES + 1];
 } gbc_t;
 
-typedef enum {
-    GBC_ADJUST_PENDING   = 0,
-    GBC_ADJUST_PRIMARY   = 1,
-    GBC_ADJUST_SECONDARY = 2,
-} gbc_adjust_t;
 
 //////////////////////////////////////////////////////////////////////////////
 // Exported values (touch carefully)
@@ -185,8 +180,6 @@ extern gbc_t gbc;
 //////////////////////////////////////////////////////////////////////////////
 // Hook points
 
-/// gbc_on_adjust_layout is called when the keyboard layout adjustted
-void gbc_on_adjust_layout(gbc_adjust_t v);
 
 /// gbc_on_apply_motion_to_mouse_move applies trackball's motion m to r as
 /// mouse movement.

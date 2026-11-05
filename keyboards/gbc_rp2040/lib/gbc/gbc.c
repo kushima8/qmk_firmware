@@ -17,9 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "quantum.h"
-#ifdef SPLIT_KEYBOARD
-#    include "transactions.h"
-#endif
 
 #include "gbc.h"
 #include "drivers/pmw3360/pmw3360.h"
@@ -39,18 +36,12 @@ static const char LFSTR_ON[] PROGMEM = "\xB2\xB3";
 static const char LFSTR_OFF[] PROGMEM = "\xB4\xB5";
 
 gbc_t gbc = {
-    .this_have_ball = false,
-    .that_enable    = false,
-    .that_have_ball = false,
-    .negotiated     = false,
-
-    .this_motion = {0},
-    .that_motion = {0},
-
-    .cpi_value   = 0,
-    .cpi_changed = false,
+    .have_ball = false,
+    .motion    = {0},
+    .cpi_value = 0,
 
     .scroll_mode = false,
+    .scroll_mode_before_mo = false,
     .scroll_div  = 0,
 
     .pressing_keys = { BL, BL, BL, BL, BL, BL, 0 },
@@ -59,7 +50,6 @@ gbc_t gbc = {
 //////////////////////////////////////////////////////////////////////////////
 // Hook points
 
-__attribute__((weak)) void gbc_on_adjust_layout(gbc_adjust_t v) {}
 
 //////////////////////////////////////////////////////////////////////////////
 // Static utilities
@@ -138,8 +128,8 @@ static void add_scroll_div(int8_t delta) {
 void pointing_device_driver_init(void) {
     // 添付 pmw3360 ドライバはセンサー index を取る API のため、
     // 単一センサー構成の GBC24 では index 0 を指定する。
-    gbc.this_have_ball = pmw3360_init(0);
-    if (gbc.this_have_ball) {
+    gbc.have_ball = pmw3360_init(0);
+    if (gbc.have_ball) {
 #if defined(GBC_PMW3360_UPLOAD_SROM_ID)
 #    if GBC_PMW3360_UPLOAD_SROM_ID == 0x04
         pmw3360_srom_upload(0, pmw3360_srom_0x04);
@@ -228,10 +218,8 @@ static inline bool should_report(void) {
 #endif
 #if defined(GBC_SCROLLBALL_INHIVITOR) && GBC_SCROLLBALL_INHIVITOR > 0
     if (TIMER_DIFF_32(now, gbc.scroll_mode_changed) < GBC_SCROLLBALL_INHIVITOR) {
-        gbc.this_motion.x = 0;
-        gbc.this_motion.y = 0;
-        gbc.that_motion.x = 0;
-        gbc.that_motion.y = 0;
+        gbc.motion.x = 0;
+        gbc.motion.y = 0;
     }
 #endif
     return true;
@@ -239,117 +227,23 @@ static inline bool should_report(void) {
 
 report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
     // fetch from optical sensor.
-    if (gbc.this_have_ball) {
+    if (gbc.have_ball) {
         pmw3360_motion_t d = {0};
         if (pmw3360_motion_burst(0, &d)) {
             ATOMIC_BLOCK_FORCEON {
-                gbc.this_motion.x = add16(gbc.this_motion.x, d.x);
-                gbc.this_motion.y = add16(gbc.this_motion.y, d.y);
+                gbc.motion.x = add16(gbc.motion.x, d.x);
+                gbc.motion.y = add16(gbc.motion.y, d.y);
             }
         }
     }
-    // report mouse event, if keyboard is primary.
-    if (is_keyboard_master() && should_report()) {
+    if (should_report()) {
         // modify mouse report by PMW3360 motion.
-        motion_to_mouse(&gbc.this_motion, &rep, is_keyboard_left(), gbc.scroll_mode);
-        motion_to_mouse(&gbc.that_motion, &rep, !is_keyboard_left(), gbc.scroll_mode ^ gbc.this_have_ball);
+        motion_to_mouse(&gbc.motion, &rep, true, gbc.scroll_mode);
         // store mouse report for OLED.
         gbc.last_mouse = rep;
     }
     return rep;
 }
-
-//////////////////////////////////////////////////////////////////////////////
-// Split RPC
-
-#ifdef SPLIT_KEYBOARD
-
-static void rpc_get_info_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    gbc_info_t info = {
-        .ballcnt = gbc.this_have_ball ? 1 : 0,
-    };
-    *(gbc_info_t *)out_data = info;
-    gbc_on_adjust_layout(GBC_ADJUST_SECONDARY);
-}
-
-static void rpc_get_info_invoke(void) {
-    //static bool     negotiated = false;
-    static uint32_t last_sync  = 0;
-    static int      round      = 0;
-    uint32_t        now        = timer_read32();
-    static uint32_t boot = 0;
-    if (!boot) boot = timer_read32();
-    if (TIMER_DIFF_32(timer_read32(), boot) < 400) return; // 0.4秒待つ
-    if (gbc.negotiated || TIMER_DIFF_32(now, last_sync) < GBC_TX_GETINFO_INTERVAL) {
-        return;
-    }
-    last_sync = now;
-    round++;
-    gbc_info_t recv = {0};
-    if (!transaction_rpc_exec(GBC_GET_INFO, 0, NULL, sizeof(recv), &recv)) {
-        if (round < GBC_TX_GETINFO_MAXTRY) {
-            dprintf("gbc:rpc_get_info_invoke: missed #%d\n", round);
-            return;
-        }
-    }
-    gbc.negotiated     = true;
-    gbc.that_enable    = true;
-    gbc.that_have_ball = recv.ballcnt > 0;
-    dprintf("gbc:rpc_get_info_invoke: negotiated #%d %d\n", round, gbc.that_have_ball);
-
-    // split keyboard negotiation completed.
-
-#    ifdef VIA_ENABLE
-    // adjust VIA layout options according to current combination.
-    uint8_t  layouts = (gbc.this_have_ball ? (is_keyboard_left() ? 0x02 : 0x01) : 0x00) | (gbc.that_have_ball ? (is_keyboard_left() ? 0x01 : 0x02) : 0x00);
-    uint32_t curr    = via_get_layout_options();
-    uint32_t next    = (curr & ~0x3) | layouts;
-    if (next != curr) {
-        via_set_layout_options(next);
-    }
-#    endif
-
-    gbc_on_adjust_layout(GBC_ADJUST_PRIMARY);
-}
-
-static void rpc_get_motion_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    *(gbc_motion_t *)out_data = gbc.this_motion;
-    // clear motion
-    gbc.this_motion.x = 0;
-    gbc.this_motion.y = 0;
-}
-
-static void rpc_get_motion_invoke(void) {
-    static uint32_t last_sync = 0;
-    uint32_t        now       = timer_read32();
-    if (TIMER_DIFF_32(now, last_sync) < GBC_TX_GETMOTION_INTERVAL) {
-        return;
-    }
-    gbc_motion_t recv = {0};
-    if (transaction_rpc_exec(GBC_GET_MOTION, 0, NULL, sizeof(recv), &recv)) {
-        gbc.that_motion.x = add16(gbc.that_motion.x, recv.x);
-        gbc.that_motion.y = add16(gbc.that_motion.y, recv.y);
-    }
-    last_sync = now;
-    return;
-}
-
-static void rpc_set_cpi_handler(uint8_t in_buflen, const void *in_data, uint8_t out_buflen, void *out_data) {
-    gbc_set_cpi(*(gbc_cpi_t *)in_data);
-}
-
-static void rpc_set_cpi_invoke(void) {
-    if (!gbc.cpi_changed) {
-        return;
-    }
-    gbc_cpi_t req = gbc.cpi_value;
-    if (!transaction_rpc_send(GBC_SET_CPI, sizeof(req), &req)) {
-        return;
-    }
-    gbc.cpi_changed = false;
-}
-
-#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // OLED utility
@@ -388,7 +282,7 @@ void gbc_oled_render_ballinfo(void) {
     oled_write_P(PSTR("00 "), false);
 
     // indicate scroll snap mode: "VT" (vertical), "HN" (horiozntal), and "SCR" (free)
-#if 1 && GBC_SCROLLSNAP_ENABLE == 2
+#if GBC_SCROLLSNAP_ENABLE == 2
     switch (gbc_get_scrollsnap_mode()) {
         case GBC_SCROLLSNAP_MODE_VERTICAL:
             oled_write_P(PSTR("VT"), false);
@@ -559,7 +453,7 @@ void gbc_send_status(void) {
 
     // Stored CPI value v means v * 100 CPI.
     send_string_P(PSTR("cpi             "));
-    if (gbc.this_have_ball) {
+    if (gbc.have_ball) {
         send_dec((uint16_t)gbc_get_cpi() * 100);
         send_string_P(PSTR("\n"));
     } else {
@@ -655,9 +549,8 @@ void gbc_set_cpi(uint8_t cpi) {
     if (cpi > CPI_MAX) {
         cpi = CPI_MAX;
     }
-    gbc.cpi_value   = cpi;
-    gbc.cpi_changed = true;
-    if (gbc.this_have_ball) {
+    gbc.cpi_value = cpi;
+    if (gbc.have_ball) {
         pmw3360_cpi_set(cpi == 0 ? CPI_DEFAULT - 1 : cpi - 1);
     }
 }
@@ -666,15 +559,6 @@ void gbc_set_cpi(uint8_t cpi) {
 // Keyboard hooks
 
 void keyboard_post_init_kb(void) {
-#ifdef SPLIT_KEYBOARD
-    // register transaction handlers on secondary.
-    if (!is_keyboard_master()) {
-        transaction_register_rpc(GBC_GET_INFO, rpc_get_info_handler);
-        transaction_register_rpc(GBC_GET_MOTION, rpc_get_motion_handler);
-        transaction_register_rpc(GBC_SET_CPI, rpc_set_cpi_handler);
-    }
-#endif
-
     // read gbc configuration from EEPROM
     if (eeconfig_is_enabled()) {
         gbc_config_t c = {.raw = eeconfig_read_kb()};
@@ -689,21 +573,8 @@ void keyboard_post_init_kb(void) {
 #endif
     }
 
-    gbc_on_adjust_layout(GBC_ADJUST_PENDING);
     keyboard_post_init_user();
 }
-
-#if SPLIT_KEYBOARD
-void housekeeping_task_kb(void) {
-    if (is_keyboard_master()) {
-        rpc_get_info_invoke();
-        if (gbc.that_have_ball) {
-            rpc_get_motion_invoke();
-            rpc_set_cpi_invoke();
-        }
-    }
-}
-#endif
 
 static void pressing_keys_update(uint16_t keycode, keyrecord_t *record) {
     // Process only valid keycodes.
@@ -764,7 +635,14 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
         case SCRL_MO:
-            gbc_set_scroll_mode(record->event.pressed);
+            /* 押している間だけスクロール。離したら押下前の状態に戻す
+             * (SCRL_TO で ON にしていた場合は ON のまま)。 */
+            if (record->event.pressed) {
+                gbc.scroll_mode_before_mo = gbc.scroll_mode;
+                gbc_set_scroll_mode(true);
+            } else {
+                gbc_set_scroll_mode(gbc.scroll_mode_before_mo);
+            }
             // process_auto_mouse may use this in future, if changed order of
             // processes.
             return true;
@@ -779,6 +657,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
                 set_auto_mouse_enable(false);
                 set_auto_mouse_timeout(AUTO_MOUSE_TIME);
+#endif
+#if GBC_SCROLLSNAP_ENABLE == 2
+                gbc_set_scrollsnap_mode(GBC_SCROLLSNAP_MODE_VERTICAL);
 #endif
                 break;
             case REC_SAVE: {

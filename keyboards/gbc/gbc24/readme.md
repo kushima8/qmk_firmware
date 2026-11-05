@@ -3,7 +3,7 @@
 24キー + ロータリーエンコーダ + ポインティングデバイス(ジョイスティック / PMW3360トラックボール 交換式)のマクロパッド。
 
 * Keyboard Maintainer: [kushima8](https://github.com/kushima8)
-* MCU: ATmega32u4 / Bootloader: atmel-dfu
+* MCU: ATmega32u4 / Bootloader: caterina (Pro Micro)
 * ベースファームウェア: [kushima8/qmk_firmware](https://github.com/kushima8/qmk_firmware) (QMK 0.22.14ベース)
 
 ## ポインティング入力の切り替え (コンパイル時)
@@ -53,11 +53,25 @@
 * PMW3360 ドライバは同梱の `drivers/pmw3360/` を使用(NCS デフォルト = F7)。
 * 本ドライバ差し替えにより REEX 系キーボードはコンパイル不可になる場合がある(許容)。
 
-## Bootloader
+## Bootloader / Bootmagic
 
-`BOOTMAGIC_ENABLE = no` のため Bootmagic reset は使えない。次のどちらかでブートローダーに入る。
+ブートローダーに入る方法:
 
-* **Physical reset button**: 基板上面のリセットボタンを押す(Caterina ブートローダーの Pro Micro は素早く2回押す)。
+* **Physical reset button**: 基板上面のリセットボタンを押す(Caterina ブートローダーの Pro Micro は素早く2回押す。RP2040 も素早く2回押しで RPI-RP2 ドライブが出る)。
 * **Keycode in layout**: `QK_BOOT` を割り当てたキーを押す。
+* **Bootmagic Lite**: 左上キー (マトリクス (0,0)) を押しながら USB を接続する。**EEPROM が初期化され (Remap/Vial のキー配置、ジョイスティック設定、トラックボール設定が消える)**、そのままブートローダーに入る。ジョイスティックのキャリブレーション値だけは消えない (消すには `JOY_CALIB` 2 秒長押し)。
 
-`rules.mk` は `BOOTLOADER = atmel-dfu` だが、一般的な Pro Micro には Caterina ブートローダーが書き込まれている。書き込む HEX ファイル自体はブートローダーの種類に依存しないが、`QK_BOOT` からブートローダーへの移行はブートローダーの種類によって動作が異なるため、うまくいかない場合は基板上面のリセットボタンを使う。
+`rules.mk` の `BOOTMAGIC_ENABLE` は `VIA_ENABLE = yes` によって強制的に `yes` にされるため、`no` と書いても無効化できない。
+## 機能セットの統一
+
+QMK(Remap/VIA) 版・Vial 版、AVR 版・RP2040 版の 4 構成で機能差を出さないため、
+マニュアルに記載のない次の機能はすべての構成で無効にしている (AVR 版のフラッシュ節約も兼ねる)。
+
+* Vial コンボ (`COMBO_ENABLE = no`)。VIA は元々非対応、Vial AVR 版はフラッシュに入らない
+* Magic キーコード (`MAGIC_ENABLE = no`)。`keycode_config()` / `mod_config()` はスタブ化 (gbc24.c / lib/gbc/gbc.c)
+* Space Cadet、Grave Esc、メカニカルロックキー (`LOCKING_SUPPORT_ENABLE`)
+* Vial QMK Settings (`QMK_SETTINGS = no`)
+
+ジョイスティックのキャリブレーション (`JOY_CALIB`) は 4 構成すべてで有効。保存先は EEPROM 末尾の
+16 バイトで、`DYNAMIC_KEYMAP_EEPROM_MAX_ADDR` を同じ量だけ手前に下げて確保している
+(VIA/Vial のマクロバッファが 16 バイト縮むだけで、既存のキーマップ / マクロの位置は変わらない)。
