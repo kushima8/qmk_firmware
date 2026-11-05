@@ -48,8 +48,6 @@ KEY_OVERRIDE_ENABLE = no
 
 SRC += analog.c
 
-DIP_SWITCH_ENABLE = yes
-
 # =====================================================================
 # ポインティング入力の選択 (コメントアウトで切り替え)
 #
@@ -73,7 +71,8 @@ JOYSTICK_ENABLE = yes
 #       (pointing_device_driver_init / get_report / get_cpi / set_cpi)
 #       を提供するため、pmw3360_pointing_device_driver.c は使わない。
 #     ※ pmw3360.c は同梱ドライバ (drivers/pmw3360/) を無修正で使用。
-#     ※ GP18(SCK)/GP19(MOSI) をSPIが使うため DIP スイッチは併用不可 (= no にする)
+#     ※ GP18(SCK)/GP19(MOSI) をSPIが使うため、ジョイスティック押し込み
+#       (gbc24.c の duplex_scan_raw_post_kb, JOYSTICK_ENABLE 時のみ有効) は使えない
 #     ※ RP2040 はフラッシュに余裕があるため LTO は不要
 # ---------------------------------------------------------------------
 #JOYSTICK_ENABLE = no
@@ -82,7 +81,6 @@ JOYSTICK_ENABLE = yes
 #SRC += drivers/pmw3360/pmw3360.c
 #SRC += lib/gbc/gbc.c
 #QUANTUM_LIB_SRC += spi_master.c
-#DIP_SWITCH_ENABLE = no
 # gbc.c 使用時のフラグ (gbc24.c 側の軸補正を無効化するために使用)
 #OPT_DEFS += -DGBC_CORE_ENABLE
 

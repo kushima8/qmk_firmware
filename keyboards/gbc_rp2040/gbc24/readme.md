@@ -16,7 +16,7 @@ Adafruit KB2040 のピン対応表に従って変換している。
 | ROW | D4, C6, D7, E6, B4 | GP4, GP5, GP6, GP7, GP8 |
 | COL | B5, F4, F5, B6 | GP9, GP29, GP28, GP10 |
 | エンコーダ A/B | D3 / D2 | GP0 / GP1 |
-| DIPスイッチ (信号/GND) | B2 / B1 | GP19 / GP18 |
+| ジョイスティック押し込み (信号/GND) | B2 / B1 | GP19 / GP18 |
 | ジョイスティック X/Y | F6 / F7 (ADC) | GP27 / GP26 (ADC1/ADC0) |
 | PMW3360 SCK/MOSI/MISO/NCS | B1/B2/B3/F7 | GP18/GP19/GP20/GP26 (SPI0) |
 
@@ -43,7 +43,6 @@ AVR 版と同じく `rules.mk` の【A】ジョイスティック /【B】トラ
     SRC += drivers/pmw3360/pmw3360.c
     SRC += lib/gbc/gbc.c
     QUANTUM_LIB_SRC += spi_master.c
-    DIP_SWITCH_ENABLE = no
     OPT_DEFS += -DGBC_CORE_ENABLE
 
 ビルド:
@@ -52,7 +51,7 @@ AVR 版と同じく `rules.mk` の【A】ジョイスティック /【B】トラ
 
 ### trackball ビルドでの注意点
 
-* ハードウェア SPI0 が GP18(SCK)/GP19(MOSI) を使うため、**DIP スイッチ (GP19, GND=GP18) は併用不可**(【B】ブロックで無効化)。
+* ハードウェア SPI が GP18(SCK)/GP19(MOSI) を使用するため、**ジョイスティックの押し込みスイッチ (GP19, GND=GP18) は併用不可**。押し込みの読み取り (`gbc24.c` の `matrix_init_kb` / `duplex_scan_raw_post_kb`) は `JOYSTICK_ENABLE` 時のみコンパイルされる。
 * `JOYSTICK_ENABLE = no` になるため、JOY_DIGI / JOY_MOUS / JOY_ANLG / JOY_SPD_UP / JOY_SPD_DN / JOY_DZ_UP / JOY_DZ_DN / JOY_DZ_RST キーコードは無効(キーマップは共通のままコンパイル可能)。
 * センサーへのアクセスとトラックボール用キーコード (REC_RST など) の処理は `lib/gbc/gbc.c` が行う。gbc.c が custom pointing device driver を提供するため、`drivers/pmw3360/pmw3360_pointing_device_driver.c` は使わない。
 * `GBC_CORE_ENABLE` は gbc24.c 側の軸補正を無効化するためのフラグ (gbc.c 側で同じ向きの補正を行うため、二重に補正しないよう必ず定義する)。

@@ -35,7 +35,6 @@
     SRC += drivers/pmw3360/pmw3360.c
     SRC += lib/gbc/gbc.c
     QUANTUM_LIB_SRC += spi_master.c
-    DIP_SWITCH_ENABLE = no
     LTO_ENABLE = yes
     OPT_DEFS += -DGBC_CORE_ENABLE
 
@@ -45,7 +44,7 @@
 
 ### trackball ビルドでの注意点
 
-* ハードウェア SPI が B1(SCK)/B2(MOSI) を使用するため、**DIP スイッチ (B2, GND=B1) は併用不可**のため【B】ブロックで無効化している。
+* ハードウェア SPI が B1(SCK)/B2(MOSI) を使用するため、**ジョイスティックの押し込みスイッチ (B2, GND=B1) は併用不可**。押し込みの読み取り (`gbc24.c` の `matrix_init_kb` / `duplex_scan_raw_post_kb`) は `JOYSTICK_ENABLE` 時のみコンパイルされる。
 * `JOYSTICK_ENABLE = no` になるため、JOY_DIGI / JOY_MOUS / JOY_ANLG / JOY_SPD_UP / JOY_SPD_DN / JOY_DZ_UP / JOY_DZ_DN / JOY_DZ_RST キーコードは無効(キーマップは共通のままコンパイル可能)。
 * センサーへのアクセスとトラックボール用キーコード (REC_RST など) の処理は `lib/gbc/gbc.c` が行う。gbc.c が custom pointing device driver を提供するため、`drivers/pmw3360/pmw3360_pointing_device_driver.c` は使わない。
 * `GBC_CORE_ENABLE` は gbc24.c 側の軸補正を無効化するためのフラグ (gbc.c 側で同じ向きの補正を行うため、二重に補正しないよう必ず定義する)。

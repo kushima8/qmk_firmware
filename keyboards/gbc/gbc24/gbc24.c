@@ -15,6 +15,32 @@
  */
 
 #include "gbc24.h"
+#include "lib/duplexmatrix/duplexmatrix.h"
+
+#ifdef JOYSTICK_ENABLE
+/* ジョイスティック押し込みスイッチ (config.h の JOY_SW_* 参照)
+ *
+ * matrix_init_kb() は matrix_init() の末尾で呼ばれ、quantum_init() →
+ * bootmagic() の最初の matrix_scan() より前に実行されるため、
+ * ここでピンを設定しておけば初回スキャンから正しい値が読める。
+ */
+void matrix_init_kb(void) {
+    setPinOutput(JOY_SW_GND_PIN);
+    writePinLow(JOY_SW_GND_PIN);
+    setPinInputHigh(JOY_SW_PIN);
+    matrix_init_user();
+}
+
+/* duplex_scan_raw() の末尾で毎スキャン呼ばれる。生マトリクスに押し込み
+ * スイッチの状態を合流させるだけで、デバウンスは matrix_scan() 側の
+ * debounce() が通常キーと同じように行う。
+ */
+void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
+    if (!readPin(JOY_SW_PIN)) {
+        out_matrix[JOY_SW_ROW] |= (matrix_row_t)1 << JOY_SW_COL;
+    }
+}
+#endif /* JOYSTICK_ENABLE */
 
 #if defined(POINTING_DEVICE_ENABLE) && !defined(GBC_CORE_ENABLE)
 /* PMW3360 トラックボールの軸補正 (キーボード側で対応、ドライバは無修正)

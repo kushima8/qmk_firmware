@@ -169,32 +169,8 @@ bool oled_task_user(void) {
 
 #endif /* OLED_ENABLE */
 
-/* ============================================================
- * DIP スイッチ
- * DIP0 を切り替えると、VIA 編集可能な仮想キー位置
- * (DIP0_ROW, DIP0_COL) にキーイベントが発生する。
- * ============================================================ */
-
-#ifdef DIP_SWITCH_ENABLE
-
-#define DIP0_ROW 4
-#define DIP0_COL 3
-
-bool dip_switch_update_kb(uint8_t index, bool active) {
-    if (!dip_switch_update_user(index, active)) {
-        return false;
-    }
-    switch (index) {
-        case 0:
-            action_exec(MAKE_KEYEVENT(DIP0_ROW, DIP0_COL, active));
-            break;
-        default:
-            break;
-    }
-    return false;
-}
-
-#endif /* DIP_SWITCH_ENABLE */
+/* ジョイスティック押し込みスイッチは gbc24.c (duplex_scan_raw_post_kb) で
+ * 生マトリクスの (4,3) に合流させている。keymap 側の処理は不要。 */
 
 /* ============================================================
  * 設定値のテキスト出力 (CFG_SHOW)
@@ -285,16 +261,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void housekeeping_task_user(void) {
-#ifdef DIP_SWITCH_ENABLE
-    /* 初回のみ B1 を出力 Low に設定 (ハードウェア初期化) */
-    static bool dip_init_done = false;
-    if (!dip_init_done) {
-        setPinOutput(B1);
-        writePinLow(B1);
-        dip_init_done = true;
-    }
-#endif
-
 #ifdef JOYSTICK_ENABLE
     joy_task();
 #endif

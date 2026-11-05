@@ -60,14 +60,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ENCODERS_PAD_B { GP1 }
 #define ENCODER_RESOLUTION 6
 
-#define DIP_SWITCH_PINS { GP19 }
-/* DIP スイッチの GND 側ピン (AVR 版の B1 に相当。KB2040 換算で GP18) */
-#define DIP_SWITCH_GND_PIN GP18
-
 /* ---- アナログジョイスティック構成 (POINTING_INPUT = joystick) ---- */
 #ifdef JOYSTICK_ENABLE
 #    define JOY_X_PIN GP27
 #    define JOY_Y_PIN GP26
+
+/* ---- ジョイスティック押し込みスイッチ ----
+ * GP19 をプルアップ入力、GP18 を GND 代わりの Low 出力として読み取り、
+ * duplex_scan_raw_post_kb() (gbc24.c) で生マトリクスの仮想位置
+ * (JOY_SW_ROW, JOY_SW_COL) に合流させる。これにより通常キーと同じ
+ * デバウンス・起動処理を通り、VIA/Vial からは従来どおり (4,3) として見える。
+ *
+ * 旧実装は DIP スイッチ機能 (DIP_SWITCH_PINS) 経由で action_exec() を
+ * 直接呼んでいたため、デバウンスなし・起動時に幽霊リリース・GND 側ピンの
+ * 初期化が最初の読み取りに間に合わない、という問題があった。
+ *
+ * トラックボール構成では GP18(SCK)/GP19(MOSI) を SPI が使うため、
+ * このブロックは JOYSTICK_ENABLE ごと無効になる。
+ */
+#    define JOY_SW_PIN     GP19
+#    define JOY_SW_GND_PIN GP18
+#    define JOY_SW_ROW     4
+#    define JOY_SW_COL     3
 #    define JOYSTICK_BUTTON_COUNT 32
 #    define JOYSTICK_AXIS_COUNT 2
 #    define JOYSTICK_AXIS_RESOLUTION 10
