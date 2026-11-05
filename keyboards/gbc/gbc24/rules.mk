@@ -33,8 +33,7 @@ OLED_ENABLE = yes               # 液晶付きモデル用 (keyboard 側で有�
 SPACE_CADET_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)
 MAGIC_ENABLE = no  # 4 構成 (QMK/Vial x AVR/RP2040) で機能差を出さないため無効 (AVR のフラッシュ節約も兼ねる)。keycode_config/mod_config は gbc24.c / gbc.c でスタブ化
 
-# デッドゾーン実行時可変 + EEPROM 永続化の追加で残フラッシュが 290 バイトまで
-# 減るため有効化。有効時 25086/28672 (87%) 程度まで回収できる。
+# AVR 版はフラッシュが厳しいため常に有効 (サイズの実測値は各 readme のビルド確認欄を参照)
 LTO_ENABLE = yes
 
 VIA_ENABLE = yes
