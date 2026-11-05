@@ -82,18 +82,19 @@
  *     デジタル / マウス : JOY_NORM_FULL (正規化スケール) 基準
  *     アナログ          : JOY_JS_AXIS_MAX (HID 軸フルスケール = 可動域の端) 基準
  *
- * デジタルモードは 2 つのしきい値を持つ:
- *   DIAG = センター判定。これを超えた時点で必ず何らかの方向が確定するため、
- *          「実際の発火点」はこちら。ユーザーが調整する値はこれを指す。
- *   MAIN = 主方向の明確判定。DIAG から固定比率で導出する。
- *          DIAG > MAIN になると compute_direction() の方向判定が壊れるため、
- *          独立して可変にはしない。
+ * デジタルモード:
+ *   デッドゾーン = 入力が始まる位置 (発火点)。方向は上下・左右のうち
+ *   大きく倒れているほうの軸で決める (45° が境目、上下左右に優先順位なし)。
+ *   境目でのチャタリングを防ぐため、JOY_DIGITAL_HYST の余裕 (ヒステリシス) を持つ:
+ *     - 入力中は、発火点より JOY_DIGITAL_HYST だけ内側に戻すまで離さない
+ *     - 方向の切り替えは、新しい方向の成分が今の方向より JOY_DIGITAL_HYST 以上
+ *       大きくなるまで行わない
  */
 #define JOY_DZ_STEP                 2   /* キー 1 回あたりの増減量 (%) */
 
 #define JOY_DZ_DIGITAL_MIN          6
 #define JOY_DZ_DIGITAL_MAX         90
-#define JOY_DZ_DIGITAL_DEFAULT     54   /* 可動域の 54% で入力開始 (MAIN は 92%) */
+#define JOY_DZ_DIGITAL_DEFAULT     54   /* 可動域の 54% で入力開始 */
 
 #define JOY_DZ_MOUSE_MIN            4
 #define JOY_DZ_MOUSE_MAX           90
@@ -103,23 +104,18 @@
 #define JOY_DZ_ANALOG_MAX          90
 #define JOY_DZ_ANALOG_DEFAULT      12   /* AXIS_MAX=511 で 61 */
 
-/* 主方向しきい値 = 発火点 x 172% (旧固定値 120/70 の比率)
- * ただし倒し切り (JOY_NORM_FULL) で上限クランプする。発火点を高く設定すると
- * 素の 172% は可動域を超え、主方向判定が一度も成立しなくなるため。
- * クランプ後も MAIN > DIAG は保たれる (発火点の上限が 90% < 100% のため)。
+/* デジタルモードのヒステリシス幅 (可動域の %)。
+ * ADC の読み取りの揺れ (正規化スケールで数カウント〜十数カウント) より十分大きく、
+ * 操作感を損なわない程度の値。最小デッドゾーン 6% より小さいこと。
  */
-#define JOY_DZ_MAIN_RATIO         172
+#define JOY_DIGITAL_HYST_PCT        4
 
 /* 実行時のしきい値 (正規化スケール / HID 軸値)
- * DIAG が発火点、MAIN はそこから導出する (旧版と定義が逆になっている点に注意)
- */
-/* AVR は int が 16bit のため、乗算は int32_t に広げてから行う
+ * AVR は int が 16bit のため、乗算は int32_t に広げてから行う
  * (16bit 解像度時 AXIS_MAX=32767 で桁溢れするため)
  */
-#define JOY_DEAD_DIGITAL_DIAG  ((int16_t)((int32_t)JOY_NORM_FULL * joy.dz_digital / 100))
-#define JOY_DEAD_DIGITAL_RAW   ((int32_t)JOY_DEAD_DIGITAL_DIAG * JOY_DZ_MAIN_RATIO / 100)
-#define JOY_DEAD_DIGITAL       ((int16_t)(JOY_DEAD_DIGITAL_RAW > (int32_t)JOY_NORM_FULL \
-                                          ? (int32_t)JOY_NORM_FULL : JOY_DEAD_DIGITAL_RAW))
+#define JOY_DEAD_DIGITAL       ((int16_t)((int32_t)JOY_NORM_FULL * joy.dz_digital / 100))
+#define JOY_DIGITAL_HYST       ((int16_t)((int32_t)JOY_NORM_FULL * JOY_DIGITAL_HYST_PCT / 100))
 #define JOY_DEAD_MOUSE         ((uint16_t)((int32_t)JOY_NORM_FULL * joy.dz_mouse / 100))
 #define JOY_DEAD_ANALOG        ((int16_t)((int32_t)JOY_JS_AXIS_MAX * joy.dz_analog / 100))
 
@@ -135,6 +131,17 @@
 
 /* --- ポーリング間隔 --- */
 #define JOY_POLL_INTERVAL_MS      10
+
+/* マウスモードだけは短い間隔で読み取り・送信し、カーソルを滑らかに動かす。
+ * 移動量は実際に経過した時間に比例させるため、間隔を変えても
+ * 1 秒あたりの移動量 (マウス最大速度の体感) は変わらない。
+ *   マウス最大速度 = 基準時間 JOY_MOUSE_SPEED_BASE_MS あたりの最大移動カウント
+ * 読み取りが遅れた場合 (EEPROM 書き込み中など) に一度に大きく飛ばないよう、
+ * 1 回に扱う経過時間は JOY_MOUSE_DT_MAX_MS で頭打ちにする。
+ */
+#define JOY_MOUSE_POLL_INTERVAL_MS 4    /* 250Hz */
+#define JOY_MOUSE_SPEED_BASE_MS   10
+#define JOY_MOUSE_DT_MAX_MS       20
 
 /* --- マウス HID レポート軸範囲 (int8_t 固定、解像度に依存しない) --- */
 #define JOY_MOUSE_AXIS_MAX       127
@@ -429,6 +436,17 @@ static inline int16_t scale_axis(int32_t delta, uint16_t span_neg, uint16_t span
  * デジタルモード: 4方向判定 + 仮想キー送信
  * ============================================================ */
 
+/* 指定した方向への倒し量 (正規化スケール、反対向きなら負) */
+static int16_t dir_component(joy_dir_t dir, int16_t nx, int16_t ny) {
+    switch (dir) {
+        case DIR_N: return ny;
+        case DIR_S: return (int16_t)-ny;
+        case DIR_E: return nx;
+        case DIR_W: return (int16_t)-nx;
+        default:    return 0;
+    }
+}
+
 static joy_dir_t compute_direction(uint16_t x, uint16_t y) {
     int16_t dx = (int16_t)x - (int16_t)joy.x_center;
     int16_t dy = (int16_t)y - (int16_t)joy.y_center;
@@ -437,20 +455,34 @@ static joy_dir_t compute_direction(uint16_t x, uint16_t y) {
     int16_t nx = joy_norm_axis(dx, JOY_X_SPAN_NEG, JOY_X_SPAN_POS);
     int16_t ny = joy_norm_axis(dy, JOY_Y_SPAN_NEG, JOY_Y_SPAN_POS);
 
-    /* センター判定: 倒した距離が発火点以下 (円形デッドゾーン、斜めも同じ距離で反応) */
-    if (joy_magnitude(nx, ny) <= (uint16_t)JOY_DEAD_DIGITAL_DIAG) {
+    /* センター判定: 倒した距離で判定 (円形デッドゾーン、斜めも同じ距離で反応)。
+     * 入力中は発火点より JOY_DIGITAL_HYST だけ内側に戻すまで離さない。
+     */
+    int16_t threshold = JOY_DEAD_DIGITAL;
+    if (joy.last_dir != DIR_CENTER) {
+        threshold -= JOY_DIGITAL_HYST;
+        if (threshold < 0) threshold = 0;
+    }
+    if (joy_magnitude(nx, ny) <= (uint16_t)threshold) {
         return DIR_CENTER;
     }
 
-    /* メイン方向: しきい値を明確に超えている軸を優先 */
-    if (ny >  JOY_DEAD_DIGITAL) return DIR_N;
-    if (ny < -JOY_DEAD_DIGITAL) return DIR_S;
-    if (nx >  JOY_DEAD_DIGITAL) return DIR_E;
-    if (nx < -JOY_DEAD_DIGITAL) return DIR_W;
+    /* 方向: 大きく倒れているほうの軸で決める (45° が境目、優先順位なし) */
+    joy_dir_t cand;
+    if (abs(nx) > abs(ny)) cand = (nx > 0) ? DIR_E : DIR_W;
+    else                   cand = (ny > 0) ? DIR_N : DIR_S;
 
-    /* 斜め領域: 偏差が大きい方の軸で採決 */
-    if (abs(nx) > abs(ny)) return (nx > 0) ? DIR_E : DIR_W;
-    else                   return (ny > 0) ? DIR_N : DIR_S;
+    /* 方向の切り替えは、新しい方向の成分が今の方向より
+     * JOY_DIGITAL_HYST 以上大きくなるまで行わない (45° 付近での入れ替わり防止)
+     */
+    if (joy.last_dir != DIR_CENTER && cand != joy.last_dir) {
+        int16_t cur = dir_component(joy.last_dir, nx, ny);
+        int16_t nxt = dir_component(cand, nx, ny);
+        if (cur > 0 && nxt - cur < JOY_DIGITAL_HYST) {
+            return joy.last_dir;
+        }
+    }
+    return cand;
 }
 
 static void process_digital(uint16_t x, uint16_t y) {
@@ -473,12 +505,13 @@ static void process_digital(uint16_t x, uint16_t y) {
  *   (低速時や斜め方向でも移動が切り捨てで消えない)
  * - 速度は mouse_speed_max を超えない
  * - 移動レポートには現在のマウスボタン状態を載せる (ドラッグ対応)
+ * - 4ms ごとに送信し、移動量は経過時間に比例させる (滑らかさと速度の両立)
  *
  * マウス HID は int8_t 固定 (±127) なので JOYSTICK_AXIS_RESOLUTION の
  * 影響を受けない。
  * ============================================================ */
 
-static void process_mouse(uint16_t x, uint16_t y) {
+static void process_mouse(uint16_t x, uint16_t y, uint16_t dt_ms) {
     release_last_dir();
     reset_analog_axes();
 
@@ -502,9 +535,14 @@ static void process_mouse(uint16_t x, uint16_t y) {
     int32_t speed_q8 = (int32_t)eff * joy.mouse_speed_max * 256 / max_eff;
     if (speed_q8 < 256) speed_q8 = 256;
 
-    /* 方向は nx/mag, ny/mag。Y は反転 (上 = カーソル上)。 */
-    int32_t vx_q8 = (int32_t)nx * speed_q8 / (int32_t)mag;
-    int32_t vy_q8 = (int32_t)(-ny) * speed_q8 / (int32_t)mag;
+    /* 方向は nx/mag, ny/mag。Y は反転 (上 = カーソル上)。
+     * speed_q8 は基準時間あたりの量なので、実際の経過時間に比例させる。
+     * (最大でも 2048 x 12800 x 20 ≒ 5.2e8 で int32_t に収まる)
+     */
+    if (dt_ms > JOY_MOUSE_DT_MAX_MS) dt_ms = JOY_MOUSE_DT_MAX_MS;
+    int32_t den   = (int32_t)mag * JOY_MOUSE_SPEED_BASE_MS;
+    int32_t vx_q8 = (int32_t)nx * speed_q8 * dt_ms / den;
+    int32_t vy_q8 = (int32_t)(-ny) * speed_q8 * dt_ms / den;
 
     int8_t mx = joy_take_mouse_count(&joy.mouse_acc_x, vx_q8);
     int8_t my = joy_take_mouse_count(&joy.mouse_acc_y, vy_q8);
@@ -611,7 +649,10 @@ void joy_init(void) {
 void joy_task(void) {
     joy_ee_flush();
 
-    if (timer_elapsed(joy.last_poll) < JOY_POLL_INTERVAL_MS) return;
+    uint16_t interval = (joy.mode == JOY_MODE_MOUSE) ? JOY_MOUSE_POLL_INTERVAL_MS
+                                                     : JOY_POLL_INTERVAL_MS;
+    uint16_t elapsed  = timer_elapsed(joy.last_poll);
+    if (elapsed < interval) return;
     joy.last_poll = timer_read();
 
     uint16_t x = analogReadPin(JOY_X_PIN);
@@ -619,7 +660,7 @@ void joy_task(void) {
 
     switch (joy.mode) {
         case JOY_MODE_DIGITAL: process_digital(x, y); break;
-        case JOY_MODE_MOUSE:   process_mouse(x, y);   break;
+        case JOY_MODE_MOUSE:   process_mouse(x, y, elapsed); break;
         case JOY_MODE_ANALOG:  process_analog(x, y);  break;
         default: break;
     }
