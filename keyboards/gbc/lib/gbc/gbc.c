@@ -36,9 +36,10 @@ gbc_t gbc = {
     .motion    = {0},
     .cpi_value = 0,
 
-    .scroll_mode = false,
-    .scroll_mode_before_mo = false,
-    .scroll_div  = 0,
+    .scroll_mode     = false,
+    .scroll_toggle   = false,
+    .scroll_mo_count = 0,
+    .scroll_div      = 0,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -334,11 +335,19 @@ bool gbc_get_scroll_mode(void) {
     return gbc.scroll_mode;
 }
 
-void gbc_set_scroll_mode(bool mode) {
+// apply_scroll_mode recomputes the effective scroll mode from the toggle
+// state (SCRL_TO) and the number of held SCRL_MO keys.
+static void apply_scroll_mode(void) {
+    bool mode = gbc.scroll_toggle || gbc.scroll_mo_count > 0;
     if (mode != gbc.scroll_mode) {
         gbc.scroll_mode_changed = timer_read32();
     }
     gbc.scroll_mode = mode;
+}
+
+void gbc_set_scroll_mode(bool mode) {
+    gbc.scroll_toggle = mode;
+    apply_scroll_mode();
 }
 
 gbc_scrollsnap_mode_t gbc_get_scrollsnap_mode(void) {
@@ -380,7 +389,8 @@ void gbc_set_cpi(uint8_t cpi) {
 //////////////////////////////////////////////////////////////////////////////
 // Keyboard hooks
 
-void keyboard_post_init_kb(void) {
+// Called from the keyboard's keyboard_post_init_kb().
+void gbc_keyboard_post_init(void) {
     // read gbc configuration from EEPROM
     if (eeconfig_is_enabled()) {
         gbc_config_t c = {.raw = eeconfig_read_kb()};
@@ -394,8 +404,6 @@ void keyboard_post_init_kb(void) {
         gbc_set_scrollsnap_mode(c.ssnap);
 #endif
     }
-
-    keyboard_post_init_user();
 }
 
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
@@ -408,12 +416,9 @@ bool is_mouse_record_kb(uint16_t keycode, keyrecord_t* record) {
 }
 #endif
 
-bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    // store last keycode, row, and col for OLED
-    if (!process_record_user(keycode, record)) {
-        return false;
-    }
-
+// Called from the keyboard's process_record_kb(), after process_record_user().
+// Returns false when the keycode was consumed here.
+bool gbc_process_record(uint16_t keycode, keyrecord_t *record) {
     // strip QK_MODS part.
     if (keycode >= QK_MODS && keycode <= QK_MODS_MAX) {
         keycode &= 0xff;
@@ -432,14 +437,15 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 #endif
 
         case SCRL_MO:
-            /* 押している間だけスクロール。離したら押下前の状態に戻す
-             * (SCRL_TO で ON にしていた場合は ON のまま)。 */
+            /* 押している間だけスクロール。押下中のキー数を数え、すべて離したら
+             * SCRL_TO の状態に戻す (SCRL_TO で ON にしていた場合は ON のまま)。
+             * 複数の SCRL_MO キーを重ねて押しても ON のまま残らない。 */
             if (record->event.pressed) {
-                gbc.scroll_mode_before_mo = gbc.scroll_mode;
-                gbc_set_scroll_mode(true);
-            } else {
-                gbc_set_scroll_mode(gbc.scroll_mode_before_mo);
+                gbc.scroll_mo_count++;
+            } else if (gbc.scroll_mo_count > 0) {
+                gbc.scroll_mo_count--;
             }
+            apply_scroll_mode();
             // process_auto_mouse may use this in future, if changed order of
             // processes.
             return true;
@@ -452,6 +458,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 gbc_set_cpi(0);
                 gbc_set_scroll_div(0);
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+                // 無効化すると QMK 本体はレイヤーを下ろさなくなるため、先に下ろす
+                auto_mouse_layer_off();
                 set_auto_mouse_enable(false);
                 set_auto_mouse_timeout(AUTO_MOUSE_TIME);
 #endif
@@ -488,7 +496,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 break;
 
             case SCRL_TO:
-                gbc_set_scroll_mode(!gbc.scroll_mode);
+                gbc_set_scroll_mode(!gbc.scroll_toggle);
                 break;
             case SCRL_DVI:
                 add_scroll_div(1);
@@ -511,6 +519,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
             case AML_TO:
+                // 無効化すると QMK 本体はレイヤーを下ろさなくなるため、先に下ろす
+                // (有効化するときは何もしない: auto_mouse_layer_off は有効時のみ動く)
+                auto_mouse_layer_off();
                 set_auto_mouse_enable(!get_auto_mouse_enable());
                 break;
             case AML_I50:

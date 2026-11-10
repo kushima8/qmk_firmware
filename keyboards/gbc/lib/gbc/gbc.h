@@ -151,8 +151,9 @@ typedef struct {
 
     uint8_t cpi_value;
 
-    bool     scroll_mode;
-    bool     scroll_mode_before_mo; // SCRL_MO 押下前のスクロールモード (離したとき復元)
+    bool     scroll_mode;     // 実際のスクロールモード (= scroll_toggle || scroll_mo_count > 0)
+    bool     scroll_toggle;   // SCRL_TO / gbc_set_scroll_mode() で切り替える状態
+    uint8_t  scroll_mo_count; // 押下中の SCRL_MO キーの数
     uint32_t scroll_mode_changed;
     uint8_t  scroll_div;
 
@@ -183,6 +184,18 @@ void gbc_on_apply_motion_to_mouse_move(gbc_motion_t *m, report_mouse_t *r, bool 
 /// as mouse scroll.
 /// You can change the default algorithm by override this function.
 void gbc_on_apply_motion_to_mouse_scroll(gbc_motion_t *m, report_mouse_t *r, bool is_left);
+
+//////////////////////////////////////////////////////////////////////////////
+// Keyboard hooks (call these from the keyboard's own *_kb functions)
+
+/// gbc_keyboard_post_init loads trackball settings from EEPROM.
+/// Call it from keyboard_post_init_kb().
+void gbc_keyboard_post_init(void);
+
+/// gbc_process_record handles the trackball keycodes (REC_RST .. SSNP_FRE).
+/// Call it from process_record_kb() after process_record_user(); it returns
+/// false when the keycode was consumed.
+bool gbc_process_record(uint16_t keycode, keyrecord_t *record);
 
 //////////////////////////////////////////////////////////////////////////////
 // Public API functions
@@ -219,24 +232,27 @@ uint8_t gbc_get_scroll_div(void);
 /// dividing it by a scroll divider.  The actual denominator is determined by
 /// the following formula:
 ///
-///   denominator = 2 ^ (div - 1) ^2
+///   denominator = 2 ^ (div - 1)      (1 -> 1/1, 4 -> 1/8, 7 -> 1/64)
 ///
-/// Valid values are between 1 and 7, GBC_SCROLL_DIV_DEFAULT is used when 0
-/// is specified.
+/// Valid values are between 1 and 7 (larger values are clamped to 7),
+/// GBC_SCROLL_DIV_DEFAULT is used when 0 is specified.
 void gbc_set_scroll_div(uint8_t div);
 
-/// gbc_get_cpi gets current CPI of trackball.
-/// The actual CPI value is the returned value +1 and multiplied by 100:
+/// gbc_get_cpi gets current CPI of trackball in units of 100 CPI.
+/// The actual CPI value is the returned value multiplied by 100:
 ///
-///     CPI = (v + 1) * 100
+///     CPI = v * 100                  (5 -> 500 CPI)
+///
+/// It never returns 0: GBC_CPI_DEFAULT / 100 is returned while the default
+/// is in use.
 uint8_t gbc_get_cpi(void);
 
 /// gbc_set_cpi changes CPI of trackball.
-/// Valid values are between 0 to 119, and the actual CPI value is the set
-/// value +1 and multiplied by 100:
+/// Valid values are between 1 and 35, and the actual CPI value is the set
+/// value multiplied by 100:
 ///
-///     CPI = (v + 1) * 100
+///     CPI = v * 100                  (1 -> 100 CPI, 35 -> 3500 CPI)
 ///
-/// In addition, if you do not upload SROM, the maximum value will be limited
-/// to 34 (3500CPI).
+/// 0 selects GBC_CPI_DEFAULT.  Values above 35 are clamped to 35, which is
+/// the limit of the bundled PMW3360 driver (pmw3360_MAXCPI + 1).
 void gbc_set_cpi(uint8_t cpi);

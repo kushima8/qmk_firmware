@@ -17,6 +17,23 @@
 #pragma once
 
 #include "quantum.h"
+#include "lib/gbc/gbc.h" /* トラックボール用キーコード REC_RST 〜 SSNP_FRE (QK_KB_0 〜 15) */
+
+/* ジョイスティック用・共通キーコード。VIA/Remap の gbc24.json (customKeycodes) と
+ * 同じ並びで、処理は gbc24.c の process_record_kb() が行う。
+ * どのキーマップからも QMK_KEYBOARD_H 経由で使える。 */
+enum gbc24_keycodes {
+    JOY_DIGI = QK_KB_16, /* ジョイスティック → デジタル 4 方向 */
+    JOY_MOUS,            /* ジョイスティック → マウス */
+    JOY_ANLG,            /* ジョイスティック → アナログ (ゲームパッド軸) */
+    JOY_SPD_UP,          /* マウス最大速度 上げる */
+    JOY_SPD_DN,          /* マウス最大速度 下げる */
+    JOY_DZ_UP,           /* 現在のモードのデッドゾーン 広げる (鈍くする) */
+    JOY_DZ_DN,           /* 現在のモードのデッドゾーン 狭める (敏感にする) */
+    JOY_DZ_RST,          /* 現在のモードのデッドゾーンを既定値に戻す */
+    CFG_SHOW,            /* 現在の設定値をテキストとしてタイプ出力 (QK_KB_24) */
+    JOY_CALIB,           /* キャリブレーション 短押し:開始/確定 長押し:リセット (QK_KB_25) */
+};
 
 /* This is a shortcut to help you visually see your layout.
  *
