@@ -108,11 +108,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * バッファは末尾まで使う設計なので、DYNAMIC_KEYMAP_EEPROM_MAX_ADDR を
  * 同じ量だけ手前に下げる (マクロバッファが 16 バイト縮むだけで、
  * 既存のキーマップ / マクロの先頭アドレスは変わらない)。
+ *
+ * この領域はトラックボール構成でも確保する (下の #endif の後ろで定義)。
+ * EEPROM の配置が 2 つの構成で同じになり、トラックボール用のファームウェアを
+ * 使っている間にマクロなどで上書きされない。
  */
-#    define JOY_CAL_EEPROM_SIZE 16
-#    define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (TOTAL_EEPROM_BYTE_COUNT - 1 - JOY_CAL_EEPROM_SIZE)
-#    define JOY_CAL_EEPROM_ADDR (DYNAMIC_KEYMAP_EEPROM_MAX_ADDR + 1)
 #endif
+
+#define JOY_CAL_EEPROM_SIZE 16
+#define DYNAMIC_KEYMAP_EEPROM_MAX_ADDR (TOTAL_EEPROM_BYTE_COUNT - 1 - JOY_CAL_EEPROM_SIZE)
+#define JOY_CAL_EEPROM_ADDR (DYNAMIC_KEYMAP_EEPROM_MAX_ADDR + 1)
 
 /* ---- PMW3360 トラックボール構成 (POINTING_INPUT = trackball) ----
  * ジョイスティック接続部を交換してトラックボールモジュールを装着する。

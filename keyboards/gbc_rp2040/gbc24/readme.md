@@ -63,7 +63,7 @@ AVR 版と同じく `rules.mk` の【A】ジョイスティック /【B】トラ
 
 * **Physical reset button**: 基板上面のリセットボタンを押す(Caterina ブートローダーの Pro Micro は素早く2回押す。RP2040 も素早く2回押しで RPI-RP2 ドライブが出る)。
 * **Keycode in layout**: `QK_BOOT` を割り当てたキーを押す。
-* **Bootmagic Lite**: 左上キー (マトリクス (0,0)) を押しながら USB を接続する。**EEPROM が初期化され (Remap/Vial のキー配置、ジョイスティック設定、トラックボール設定が消える)**、そのままブートローダーに入る。ジョイスティックのキャリブレーション値だけは消えない (消すには `JOY_CALIB` 2 秒長押し)。
+* **Bootmagic Lite**: 左上キー (マトリクス (0,0)) を押しながら USB を接続する。**EEPROM が初期化され (Remap/Vial のキー配置、ジョイスティック設定、トラックボール設定が消える)**、そのままブートローダーに入る。RP2040 版は EEPROM 全体を消去するため、ジョイスティックのキャリブレーション値も消える (AVR 版では残る)。
 
 `rules.mk` の `BOOTMAGIC_ENABLE` は `VIA_ENABLE = yes` によって強制的に `yes` にされるため、`no` と書いても無効化できない。
 ## 機能セットの統一

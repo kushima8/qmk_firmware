@@ -56,8 +56,8 @@ SRC += analog.c
 #   トラックボールを使う場合    : 【A】を全てコメントアウト、【B】を有効化
 #
 # ピン割り当て:
-#   joystick  : X=F6, Y=F7 (ADC)
-#   trackball : SCK=B1, MOSI=B2, MISO=B3, NCS=F7 (ハードウェアSPI)
+#   joystick  : X=GP27, Y=GP26 (ADC)
+#   trackball : SCK=GP18, MOSI=GP19, MISO=GP20, NCS=GP26 (ハードウェアSPI)
 # =====================================================================
 
 # ---------------------------------------------------------------------
@@ -86,7 +86,7 @@ JOYSTICK_ENABLE = yes
 #OPT_DEFS += -DGBC_CORE_ENABLE
 
 # lib/joystick_user is located one level up from the keyboard dir:
-#   keyboards/gbc/
+#   keyboards/gbc_rp2040/
 #   ├── gbc24/                (this keyboard)
 #   └── lib/joystick_user/
 # ソース全体が #ifdef JOYSTICK_ENABLE で括られているため、

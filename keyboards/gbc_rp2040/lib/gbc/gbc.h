@@ -50,6 +50,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    define GBC_SCROLLSNAP_TENSION_THRESHOLD 12
 #endif
 
+/// 自動マウスレイヤーを ON にするのに必要なボールの移動量。
+/// 単位は 1/100 インチ (約 0.25mm)。3 = 約 0.75mm。
+/// カウント数に直すと「この値 x CPI / 100」(CPI 500 なら 15 カウント) で、
+/// CPI を変えても同じ距離で反応する。0 にすると少しでも動けば反応する。
+/// QMK 版と Vial 版で同じ動作になるよう、判定は gbc.c の
+/// auto_mouse_activation() で行う (QMK 本体の AUTO_MOUSE_THRESHOLD は使わない)。
+#ifndef GBC_AML_ACTIVATE_DISTANCE
+#    define GBC_AML_ACTIVATE_DISTANCE 3
+#endif
+
+/// ボールがこの時間 (ms) 止まったら、それまでの移動量は数え直す。
+/// 間をおいた小さな揺れが積み重なってレイヤーが切り替わるのを防ぐ。
+#ifndef GBC_AML_IDLE_RESET_MS
+#    define GBC_AML_IDLE_RESET_MS 200
+#endif
+
 /// Specify SROM ID to be uploaded PMW3360DW (optical sensor).  It will be
 /// enabled high CPI setting or so.  Valid valus are 0x04 or 0x81.  Define this
 /// in your config.h to be enable.  Please note that using this option will

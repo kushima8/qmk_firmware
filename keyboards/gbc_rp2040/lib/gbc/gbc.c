@@ -104,13 +104,102 @@ void pointing_device_driver_init(void) {
     }
 }
 
+// QMK 本体の pointing_device_get_cpi() / pointing_device_set_cpi() は実際の CPI 値
+// (500 など) でやり取りする。gbc_get_cpi() / gbc_set_cpi() は 100 単位なので換算する。
 uint16_t pointing_device_driver_get_cpi(void) {
-    return gbc_get_cpi();
+    return (uint16_t)gbc_get_cpi() * 100;
 }
 
 void pointing_device_driver_set_cpi(uint16_t cpi) {
-    gbc_set_cpi(cpi);
+    uint16_t v = cpi / 100;
+    gbc_set_cpi(v < 1 ? 1 : (v > CPI_MAX ? CPI_MAX : v));
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// Auto mouse layer activation
+//
+// QMK 本体の auto_mouse_activation() (weak) を置き換える。
+// QMK 0.22 は「少しでも動けば ON」、vial-qmk は「合計 10 カウントで ON」と
+// 本体の動作が違うため、ここで判定して両方を同じ動作にする。
+//
+//   - レイヤーが OFF のとき: ボールが GBC_AML_ACTIVATE_DISTANCE 以上動いたら ON。
+//     移動量はセンサーの生の値で数えるので、スクロールモードや
+//     スクロール除数に関係なく同じ距離で反応する。
+//   - レイヤーが ON のとき: 少しでも動けば ON のまま (細かい位置合わせの
+//     途中でレイヤーが戻らないようにする)。
+//   - キー入力の直後など QMK 本体が「反応させない期間」の移動量は数えない。
+
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+
+// QMK 本体がこの時間 (ms) 以上この関数を呼ばなかったら「反応させない期間」
+// だったとみなす (本体のデバウンス 25ms より長く、キー入力後の 200ms より短い値)。
+#    define GBC_AML_STALE_MS 50
+
+static struct {
+    int16_t  pend_x, pend_y; // センサーから読んだ移動量のうち、まだ判定に使っていない分
+    int16_t  acc_x, acc_y;   // レイヤーを ON にするまでの累積移動量
+    uint32_t checked;        // auto_mouse_activation() が最後に呼ばれた時刻
+    uint32_t moved;          // 最後にボールが動いた時刻
+} aml = {0};
+
+// 累積値を int16_t の範囲に余裕を持って収める (abs() の桁あふれ防止)
+static int16_t aml_add(int16_t a, int16_t b) {
+    int32_t v = (int32_t)a + b;
+    return v > 16000 ? 16000 : (v < -16000 ? -16000 : (int16_t)v);
+}
+
+bool auto_mouse_activation(report_mouse_t mouse_report) {
+    uint32_t now = timer_read32();
+    int16_t  dx  = aml.pend_x;
+    int16_t  dy  = aml.pend_y;
+    aml.pend_x   = 0;
+    aml.pend_y   = 0;
+
+    if (TIMER_DIFF_32(now, aml.checked) > GBC_AML_STALE_MS) {
+        // 反応させない期間 (キー入力の直後など) の移動量は捨てる
+        dx        = 0;
+        dy        = 0;
+        aml.acc_x = 0;
+        aml.acc_y = 0;
+    }
+    aml.checked = now;
+
+    // マウスボタンを押している間は ON (QMK 本体と同じ)
+    if (mouse_report.buttons) {
+        return true;
+    }
+
+    bool moved = dx != 0 || dy != 0;
+
+    // すでにレイヤーが ON: 少しでも動けば維持
+    if (layer_state_is(AUTO_MOUSE_TARGET_LAYER)) {
+        aml.acc_x = 0;
+        aml.acc_y = 0;
+        return moved;
+    }
+
+    if (moved) {
+        aml.acc_x = aml_add(aml.acc_x, dx);
+        aml.acc_y = aml_add(aml.acc_y, dy);
+        aml.moved = now;
+    } else if (TIMER_DIFF_32(now, aml.moved) > GBC_AML_IDLE_RESET_MS) {
+        aml.acc_x = 0;
+        aml.acc_y = 0;
+    }
+
+    // 移動距離の近似: 大きいほう + 小さいほう / 2 (斜めでも誤差 12% 以内)
+    uint16_t ax   = (uint16_t)abs(aml.acc_x);
+    uint16_t ay   = (uint16_t)abs(aml.acc_y);
+    uint16_t dist = ax > ay ? ax + ay / 2 : ay + ax / 2;
+    if (dist > 0 && dist >= (uint16_t)GBC_AML_ACTIVATE_DISTANCE * gbc_get_cpi()) {
+        aml.acc_x = 0;
+        aml.acc_y = 0;
+        return true;
+    }
+    return false;
+}
+
+#endif // POINTING_DEVICE_AUTO_MOUSE_ENABLE
 
 __attribute__((weak)) void gbc_on_apply_motion_to_mouse_move(gbc_motion_t *m, report_mouse_t *r, bool is_left) {
     r->x = -clip2int8(m->x);
@@ -195,6 +284,11 @@ report_mouse_t pointing_device_driver_get_report(report_mouse_t rep) {
                 gbc.motion.x = add16(gbc.motion.x, d.x);
                 gbc.motion.y = add16(gbc.motion.y, d.y);
             }
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+            // 自動マウスレイヤーの判定用 (auto_mouse_activation() が使う)
+            aml.pend_x = aml_add(aml.pend_x, d.x);
+            aml.pend_y = aml_add(aml.pend_y, d.y);
+#endif
         }
     }
     if (should_report()) {
