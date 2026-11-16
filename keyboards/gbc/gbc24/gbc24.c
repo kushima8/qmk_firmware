@@ -43,6 +43,67 @@ void duplex_scan_raw_post_kb(matrix_row_t out_matrix[]) {
 }
 #endif /* JOYSTICK_ENABLE */
 
+/* ---- Bootmagic: 2 キー同時押しのときだけ動作させる ----
+ *
+ * 既定の Bootmagic は「左上キー (0,0) を押しながら USB 接続」で EEPROM を
+ * 初期化してブートローダーへ入る。1 キーだけでは、ケーブルを挿すときに
+ * たまたま触れただけで設定が消えるため、条件を次のように絞る。
+ *
+ *   上段の左端 (0,0) と 上段の右端 (1,2) の 2 キー「だけ」が押されている
+ *
+ * ほかのキーが 1 つでも押されていれば何もしない (手のひらでキー部全体を
+ * 押さえながらケーブルを挿した場合の誤動作を防ぐ)。左上キーだけを押して
+ * 接続した場合も、何もせず通常どおり起動する。
+ *
+ * QMK 版と Vial 版ではベースの QMK が異なり、上書きする関数名が違う。
+ *   古いベース (QMK 版) : bootmagic_lite() を丸ごと置き換える
+ *   新しいベース (Vial 版): bootmagic_scan() が bootmagic_should_reset() を呼ぶ
+ * 両方を定義しておけば同じソースを共有できる (使われないほうは LTO で消える)。
+ */
+/* マクロ名もベースで異なる: 古いベースは BOOTMAGIC_LITE、新しいベースは BOOTMAGIC_ENABLE */
+#if defined(BOOTMAGIC_ENABLE) || defined(BOOTMAGIC_LITE)
+#    define GBC24_BOOT_A_ROW 0 /* 上段の左端 (K00) */
+#    define GBC24_BOOT_A_COL 0
+#    define GBC24_BOOT_B_ROW 1 /* 上段の右端 (K12) */
+#    define GBC24_BOOT_B_COL 2
+
+/* 行 0 は左端だけ、行 1 は右端だけ、行 2 以降は何も押されていないこと。
+ * (2 つのキーが別の行にある前提の書き方。AVR 版 Vial はフラッシュの空きが
+ *  100 バイト前後しかないため、汎用のループより小さくなるこの形にしている) */
+_Static_assert(GBC24_BOOT_A_ROW == 0 && GBC24_BOOT_B_ROW == 1, "gbc24_boot_combo() assumes rows 0 and 1");
+
+static bool gbc24_boot_combo(void) {
+    if (matrix_get_row(0) != ((matrix_row_t)1 << GBC24_BOOT_A_COL)) return false;
+    if (matrix_get_row(1) != ((matrix_row_t)1 << GBC24_BOOT_B_COL)) return false;
+    for (uint8_t r = 2; r < MATRIX_ROWS; r++) {
+        if (matrix_get_row(r)) return false;
+    }
+    return true;
+}
+
+bool bootmagic_should_reset(void);
+bool bootmagic_should_reset(void) {
+    return gbc24_boot_combo();
+}
+
+void bootmagic_lite(void);
+void bootmagic_lite(void) {
+    /* デバウンスを無効にできないので 2 回スキャンする (QMK 標準と同じ) */
+    matrix_scan();
+#    if defined(DEBOUNCE) && DEBOUNCE > 0
+    wait_ms(DEBOUNCE * 2);
+#    else
+    wait_ms(30);
+#    endif
+    matrix_scan();
+
+    if (gbc24_boot_combo()) {
+        eeconfig_disable();
+        bootloader_jump();
+    }
+}
+#endif /* BOOTMAGIC_ENABLE || BOOTMAGIC_LITE */
+
 /* トラックボール構成の軸補正 (x = -d.x, y = d.y) は lib/gbc/gbc.c の
  * gbc_on_apply_motion_to_mouse_move() で行う。キーボード側では何もしない。 */
 

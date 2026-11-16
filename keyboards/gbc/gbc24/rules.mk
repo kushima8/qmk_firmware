@@ -5,7 +5,7 @@ MCU = atmega32u4
 BOOTLOADER = caterina
 
 # Build Options
-BOOTMAGIC_ENABLE = yes      # VIA_ENABLE により強制 yes (no と書いても効かない)。左上キー (0,0) を押しながら USB 接続で EEPROM 初期化 + ブートローダー
+BOOTMAGIC_ENABLE = yes      # VIA_ENABLE により強制 yes (no と書いても効かない)。上段の左端 (0,0) と右端 (1,2) の 2 キーだけを押しながら USB 接続で EEPROM 初期化 + ブートローダー (gbc24.c で上書き)
 EXTRAKEY_ENABLE = yes       # メディアキー (音量など)。ATmega32u4 でもエンドポイントは足りる (KBD/MOUSE/EXTRA/RAW x2/JOYSTICK = 6)
 CONSOLE_ENABLE = no         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
